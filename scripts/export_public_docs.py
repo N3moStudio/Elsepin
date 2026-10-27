@@ -33,6 +33,7 @@ def documents():
     setup = setup.replace("[privacy and limits](docs/PRIVACY.md)", "[privacy and limits](https://elsepin.onrender.com/privacy.html)")
     return {
         "README.md": (ROOT / "docs/public/README.md").read_text(encoding="utf-8"),
+        "docs/images/elsepin-cover.svg": (ROOT / "docs/public/elsepin-cover.svg").read_text(encoding="utf-8"),
         "SETUP.md": setup,
         "CHANGELOG.md": changelog,
         "docs/BUILD-HISTORY.md": (ROOT / "docs/BUILD-HISTORY.md").read_text(encoding="utf-8"),
