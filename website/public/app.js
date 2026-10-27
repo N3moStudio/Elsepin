@@ -4,7 +4,7 @@
   if (!catalog) return;
   const $ = id => document.getElementById(id);
   let selectedTheme = 'ion';
-  let selectedIcon = 'ShiftIcon-PrismJumpgate-Default';
+  let selectedIcon = 'ElsepinIcon-PrismJumpgate-Default';
   let demoActive = false;
   const fonts = {system:'Arial,Helvetica,sans-serif',rounded:'ui-rounded,"Arial Rounded MT Bold",Arial,sans-serif',serif:'Georgia,serif',monospaced:'ui-monospace,Consolas,monospace'};
   function paint() {

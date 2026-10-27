@@ -45,7 +45,7 @@ def catalog():
     for entry in manifest:
         title = re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', entry['design'])
         if entry['finish'] != 'Default': title += ' · ' + entry['finish']
-        icons.append(dict(id=entry['preview'], title=title))
+        icons.append(dict(id=entry['preview'].replace('ShiftIcon-', 'ElsepinIcon-'), title=title))
     return dict(themes=themes, icons=icons)
 
 
@@ -70,7 +70,7 @@ def build():
         shutil.copyfile(PUBLIC / name, OUT / name)
     (OUT / 'catalog.js').write_text('window.ELSEPIN_CATALOG = ' + json.dumps(data, ensure_ascii=True) + ';\n', encoding='utf-8')
     for icon in data['icons']:
-        shutil.copyfile(ROOT / 'Locus/Resources/IconPreviews' / (icon['id'] + '.png'), OUT / 'assets' / (icon['id'] + '.png'))
+        shutil.copyfile(ROOT / 'Locus/Resources/IconPreviews' / (icon['id'].replace('ElsepinIcon-', 'ShiftIcon-') + '.png'), OUT / 'assets' / (icon['id'] + '.png'))
     shutil.copyfile(ROOT / 'Locus/Resources/IconPreviews/ShiftIcon-PrismJumpgate-Default.png', OUT / 'assets/prism.png')
     shutil.copyfile(ROOT / 'Locus/Resources/OpenSourceNotices.txt', OUT / 'licenses.txt')
     print(f'Static site ready: {OUT} ({len(data["themes"])} themes, {len(data["icons"])} icons).')

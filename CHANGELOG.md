@@ -9,7 +9,7 @@
 - Back up/review/import the new appearance settings individually, preserving older library files. Preserve existing bundle IDs, defaults, keychain services and widget links to protect upgrades.
 - Add a responsive static website with nine interactive theme previews, thirteen icon choices, setup/privacy pages and no tracking or keep-alive requirement. Build assets from an explicit allowlist and reject stale unexpected output.
 - Establish private Elsepin development and a public Elsepin-Releases download/help endpoint. Preserve inherited notices and accurately scope restrictions to identified new original files. Catalog dependencies and compatibility traps in the Product Atlas.
-- Validation: 404 shared Swift tests and 14 packaging/icon tests passed before migration. Native app/extension build and device acceptance are pending; no new release, IPA distribution or hosted deployment is claimed.
+- Validation: [private Mac run 40442493014](https://github.com/N3moStudio/Elsepin/actions/runs/40442493014) passed 533 automated tests (404 shared Swift, 14 packaging/icon, 19 Windows-helper, 96 cloud-helper) and native app/extension compilation at b5f5b24. Website phone-frame checks at 320/375/430/768 pixels showed no horizontal overflow; all preview images loaded. The static website is live at https://elsepin.onrender.com. Device appearance, provider, battery and accessibility acceptance remain pending. No new IPA or GitHub release.
 
 
 ## 2.5.8 (58) — official — 26 October 2026

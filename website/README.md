@@ -8,7 +8,11 @@ Preview: `python3 -m http.server 8770 --bind 127.0.0.1 --directory website/dist`
 
 ## Render
 
-Create a **Static Site** connected to the replacement repository:
+Live site: https://elsepin.onrender.com
+
+The Render service is connected to the public **Elsepin-Releases** repository, which holds only the built website under `website/`. Private source stays in Elsepin. Deploys are manual.
+
+To reproduce directly from the private source (if Render has access):
 
 - Build command: `python3 website/build.py`
 - Publish directory: `website/dist`
@@ -29,3 +33,5 @@ The site currently labels the redesigned app as in development. Add a verified p
 - `public/privacy.html`: actual website data behavior.
 
 The map is an illustration, not live MapKit. App-owned surfaces can match; iOS maps and system menus remain platform-controlled.
+
+Production build command: `test -f website/index.html`; publish directory: `website`. Copy only a verified `website/dist` export into Elsepin-Releases/website, push it, then deploy service `srv-dbg1bmkipgvc73e737ag`. Do not publish the source root or `.build`.
