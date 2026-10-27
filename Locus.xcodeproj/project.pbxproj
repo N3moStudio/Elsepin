@@ -272,13 +272,13 @@ isa = XCBuildConfiguration;
 buildSettings = {
     APPLICATION_EXTENSION_API_ONLY = YES;
     CODE_SIGN_STYLE = Automatic;
-    CURRENT_PROJECT_VERSION = 58;
+    CURRENT_PROJECT_VERSION = 59;
     GENERATE_INFOPLIST_FILE = NO;
     CODE_SIGN_ENTITLEMENTS = LocusActivity/LocusActivity.entitlements;
 				INFOPLIST_FILE = LocusActivity/Info.plist;
     IPHONEOS_DEPLOYMENT_TARGET = 18.0;
     LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-    MARKETING_VERSION = 2.5.8;
+    MARKETING_VERSION = 2.6.0;
     PRODUCT_BUNDLE_IDENTIFIER = com.n3mostudio.shift.activity;
     PRODUCT_NAME = LocusActivity;
     SDKROOT = iphoneos;
@@ -291,13 +291,13 @@ isa = XCBuildConfiguration;
 buildSettings = {
     APPLICATION_EXTENSION_API_ONLY = YES;
     CODE_SIGN_STYLE = Automatic;
-    CURRENT_PROJECT_VERSION = 58;
+    CURRENT_PROJECT_VERSION = 59;
     GENERATE_INFOPLIST_FILE = NO;
     CODE_SIGN_ENTITLEMENTS = LocusActivity/LocusActivity.entitlements;
 				INFOPLIST_FILE = LocusActivity/Info.plist;
     IPHONEOS_DEPLOYMENT_TARGET = 18.0;
     LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-    MARKETING_VERSION = 2.5.8;
+    MARKETING_VERSION = 2.6.0;
     PRODUCT_BUNDLE_IDENTIFIER = com.n3mostudio.shift.activity;
     PRODUCT_NAME = LocusActivity;
     SDKROOT = iphoneos;
@@ -699,7 +699,7 @@ buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Locus/Resources/Locus.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 58;
+				CURRENT_PROJECT_VERSION = 59;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_BITCODE = NO;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -711,7 +711,7 @@ buildSettings = {
 					"$(inherited)",
 					"$(PROJECT_DIR)/Vendor/idevice",
 				);
-				MARKETING_VERSION = 2.5.8;
+				MARKETING_VERSION = 2.6.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-lidevice_ffi",
@@ -808,7 +808,7 @@ buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Locus/Resources/Locus.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 58;
+				CURRENT_PROJECT_VERSION = 59;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_BITCODE = NO;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -820,7 +820,7 @@ buildSettings = {
 					"$(inherited)",
 					"$(PROJECT_DIR)/Vendor/idevice",
 				);
-				MARKETING_VERSION = 2.5.8;
+				MARKETING_VERSION = 2.6.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-lidevice_ffi",

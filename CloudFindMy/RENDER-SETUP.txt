@@ -1,6 +1,6 @@
 SHIFT 2.5.8 (57) TEST — NEARBY ALERTS
 The complete current guide is docs/CLOUD-GUIDE.md in the repository:
-https://github.com/N3moStudio/Elsepin/blob/main/docs/CLOUD-GUIDE.md
+https://github.com/N3moStudio/Elsepin-Releases/blob/main/docs/CLOUD-GUIDE.md
 Use this guide for the current development source and Nearby setup.
 Nearby rules are separate from the older spoof-check flow below. Rules and Web
 Push subscriptions use encrypted CloudFindMy/data/nearby.enc; provider passwords

@@ -51,9 +51,23 @@ jobs:
             inventory_status=$?
             test "$inventory_status" -eq 1
           fi
+          mkdir -p build
+          set +e
           xcodebuild -project Locus.xcodeproj -scheme Locus -configuration Release \
             -destination 'generic/platform=iOS' -derivedDataPath build/DerivedData \
-            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY='' build
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY='' build > build/native-build.log 2>&1
+          result=$?
+          tail -n 80 build/native-build.log
+          exit "$result"
+      - name: Save native diagnostics and generated project
+        if: always() && !inputs.package_ipa
+        uses: actions/upload-artifact@v7
+        with:
+          name: native-validation
+          path: |
+            build/native-build.log
+            Locus.xcodeproj/project.pbxproj
+          retention-days: 7
       - name: Upload IPA
         if: inputs.package_ipa
         uses: actions/upload-artifact@v7

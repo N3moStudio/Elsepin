@@ -3,7 +3,7 @@ import UniformTypeIdentifiers
 
 enum CloudHelp {
     // Published with the matching source update; no credentials in documentation URLs.
-    static let guide = URL(string: "https://github.com/N3moStudio/Elsepin/blob/main/docs/CLOUD-GUIDE.md")!
+    static let guide = URL(string: "https://github.com/N3moStudio/Elsepin-Releases/blob/main/docs/CLOUD-GUIDE.md")!
 }
 
 struct RemoteFindMyView: View {

@@ -1,12 +1,12 @@
-# Shift cloud setup and Nearby alerts
+# Elsepin cloud setup and Nearby alerts
 
-Shift 2.5.8 (57) test guide · 25 October 2026 · no official release.
+Elsepin 2.6.0 development guide · 26 October 2026 · no new release.
 
 ## What is available
 
 | Feature | Current scope |
 | --- | --- |
-| Find My Devices checks | Compare your selected iPhone with Shift's sent locations during a spoofing session. Real account acceptance must be tested. |
+| Find My Devices checks | Compare your selected iPhone with Elsepin's sent locations during a spoofing session. Real account acceptance must be tested. |
 | Life360 checks | Compare your selected own profile using an authorized observer account. Unofficial access can fail. |
 | Nearby alerts (new, experimental) | Fixed circular places, enter/leave rules, selected Find My device or an authorized member of the connected Life360 Circle. Independent of the phone's spoof-check lease. |
 | Find My People | Not connected. The research code is separate and is not included in the helper. |
@@ -17,14 +17,14 @@ receipt, continuous free hosting, or physical-device behavior.
 
 ## 1. Host your private helper
 
-Use `main`, which contains the current development source, this guide and the matching helper. The latest published IPA remains 2.5.7 until a separate release is approved.
+Use the matching **Elsepin-FindMy-Cloud.zip** exported from the app. Unzip it and upload its contents to your own private repository for hosting. The helper is independent of the private app source; include both CloudFindMy and Companion folders.
 This test build does not create or update a hosted service automatically.
 In Render create a **Web Service** with:
 
 | Field | Value |
 | --- | --- |
 | Runtime | Python 3 |
-| Repository | Your copy of Shift |
+| Repository | Your private repository containing the exported helper |
 | Branch | `main`, or an explicitly selected fixed commit for reproducible testing |
 | Root Directory | Leave blank |
 | Build Command | `pip install -r CloudFindMy/requirements.txt` |
@@ -52,7 +52,7 @@ enabled. This connects **Devices**, not people sharing through Find My People.
 
 **Life360:** use an authorized observer account that already sees your profile.
 Using the account signed into a phone may sign it out elsewhere. Choose the
-Circle, then your own profile for Shift's spoof-check comparison. Nearby can
+Circle, then your own profile for Elsepin's spoof-check comparison. Nearby can
 separately select another member of that same Circle who shares their location
 with you and permits this use. It does not request device pings, change sharing,
 invite people, or silently replace your own comparison profile.
@@ -61,9 +61,9 @@ Each service signs in independently. Restarting the helper loses these sign-ins.
 Apple/Life360 may decline unofficial access; reconnect through their official apps
 as needed, and do not disable account security to make the helper work.
 
-## 3. Connect Shift
+## 3. Connect Elsepin
 
-In Shift open **Settings → Find My & Life360 → Cloud helper → Advanced → Connect
+In Elsepin open **Settings → Find My & Life360 → Cloud helper → Advanced → Connect
 your helper**. Enter the helper HTTPS address and helper key, or use **Import
 setup file instead** with `ElsepinFindMyPairing.json` downloaded from the website.
 The app derives a separate phone token; it does not store the admin key.
@@ -75,7 +75,7 @@ link. The test confirms connectivity, not that a location matched.
 Enable **Check while spoofing**, choose the services, then manually start a location
 session on the Map. Wait for a fresh report and compare it with iCloud Find Devices
 or the authorized Life360 account. Old reports must not appear as a current match.
-The Dynamic Island switches show/hide status inside Shift's existing activity.
+The Dynamic Island switches show/hide status inside Elsepin's existing activity.
 They do not turn off checks. The 3–15 second connection setting does not speed up
 Apple or Life360's own location updates.
 
@@ -88,7 +88,7 @@ On iPhone, use Safari's **Add to Home Screen**, open that web app, unlock your
 helper, and tap **Enable notifications**. Allow the system prompt, then use
 **Send test**. A successful server response is not proof you saw the notification:
 verify it actually appears on the phone, including with the web app closed.
-Notifications belong to **Shift Nearby**, the web app, not the sideloaded IPA.
+Notifications belong to **Elsepin Nearby**, the web app, not the sideloaded IPA.
 Native IPA push requires compatible signing; this setup uses Apple's Web Push.
 
 No paid Apple developer membership is required for Web Push. iOS notification
@@ -103,7 +103,7 @@ and longitude, radius (100–50,000 metres), enter/leave event, reminder pattern
 and monitoring duration (1, 4, 8 or 24 hours, or Until I pause). Confirm authorized sharing, then
 press **Start monitoring**. Up to 20 rules and five distinct locations are allowed.
 This version uses fixed coordinates; it does not follow a claimed “real me” while
-Shift may be spoofing the phone location. It does not import library areas yet.
+Elsepin may be spoofing the phone location. It does not import library areas yet.
 
 A first location establishes a baseline. Two distinct, fresh and sufficiently
 accurate reports must confirm the other side before a crossing triggers. An
@@ -162,7 +162,7 @@ preview privacy. Monitoring does not grant access beyond existing sharing.
 
 A cron-job.org GET to `https://YOUR-SERVICE.onrender.com/healthz` every five minutes
 may reduce inactivity sleep. Send no body, headers, passwords or tokens.
-Pings do not fetch locations, sign into Apple, renew Shift's 150-second check
+Pings do not fetch locations, sign into Apple, renew Elsepin's 150-second check
 lease, create Nearby rules, or prove an alert reached your phone. They consume
 free instance hours. Maintenance, restarts and quotas can still interrupt service.
 
@@ -171,7 +171,7 @@ free instance hours. Maintenance, restarts and quotas can still interrupt servic
 - **Sign-in needed:** open the helper website and reconnect that service.
 - **Old / unavailable location:** check the report in the provider's official app;
   repeatedly pressing Check now cannot force a fresh location.
-- **No Nearby link in Shift:** update the helper, then use Test connection.
+- **No Nearby link in Elsepin:** update the helper, then use Test connection.
 - **No browser notifications:** open the Home Screen web app, enable notifications,
   reconnect the subscription and send one test. Check Focus and system permissions.
 - **Rules disappeared after sleep/redeploy:** free ephemeral storage was lost;

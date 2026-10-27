@@ -1,5 +1,17 @@
 # Shift Change Ledger
 
+## 2.6.0 (59) — Elsepin development — 26 October 2026
+
+- Rebrand the regular app, setup/pairing prompts, notifications, Live Activities, helper downloads and backup filenames to Elsepin. Use Prism Jumpgate as the primary icon; retain all thirteen icon options and nine themes.
+- Give Ion its dark olive canvas, solid panels and citron actions. Apply theme defaults for color mode, surfaces, font design and relative text size, with independent persistent overrides and a reset-to-theme control. Keep accessibility text sizes and Reduce Transparency respected.
+- Replace translucent app-owned navigation/control surfaces when Solid is selected; keep one map and session alive during appearance changes. System-owned menus retain system behavior.
+- Refresh Settings with an appearance card and clearer groups. Add Software updates and a manual stable-release check with progress, empty/error feedback, cancellation guards and server-requested cooldowns. Automatic checks remain foreground-only and once daily.
+- Back up/review/import the new appearance settings individually, preserving older library files. Preserve existing bundle IDs, defaults, keychain services and widget links to protect upgrades.
+- Add a responsive static website with nine interactive theme previews, thirteen icon choices, setup/privacy pages and no tracking or keep-alive requirement. Build assets from an explicit allowlist and reject stale unexpected output.
+- Establish private Elsepin development and a public Elsepin-Releases download/help endpoint. Preserve inherited notices and accurately scope restrictions to identified new original files. Catalog dependencies and compatibility traps in the Product Atlas.
+- Validation: 404 shared Swift tests and 14 packaging/icon tests passed before migration. Native app/extension build and device acceptance are pending; no new release, IPA distribution or hosted deployment is claimed.
+
+
 The release log and source map for this fork. Update this ledger and
 [CHANGELOG.md](../CHANGELOG.md) for every version/build; record failed or repaired
 build attempts under the same entry without presenting an earlier success as a

@@ -1,5 +1,14 @@
 ELSEPIN — LICENSES & CREDITS
 
+NEW ORIGINAL ELSEPIN ADDITIONS
+Copyright (c) 2026 N3mo Studio. All rights reserved only for the new
+AppearancePolicy and AppearancePresentation implementations and the new
+Elsepin marketing website. Those original additions are not licensed for
+copying, modification, redistribution, sublicensing or sale without a separate
+written agreement. This does not restrict inherited or previously released
+MIT/ISC material. The complete third-party terms below remain in effect.
+
+
 Elsepin continues the Shift application and includes code derived from Locus.
 Original notices are retained below. Product branding does not change authorship
 or the licenses on inherited code.

@@ -50,3 +50,7 @@ Selective import (official from 2.5.7): `Shared/BackupImportReview.swift` owns p
 Named areas: `Shared/NamedArea.swift` owns interior-overlap geometry; `NamedAreasView.swift` and `PathEditorSheet.swift` show validation; `SketchMapView.swift` caches saved outlines and labels. Persistence/import guards are in `SpoofSession.swift` and `LibraryBackup.swift`.
 
 Location widgets: `Shared/WidgetLibrary.swift` owns the bounded name/ID catalog and preview links; `HomeWidgetPublisher.swift` publishes on changes; `LocusHomeWidgets.swift` owns App Intents configuration; `RootView.swift` resolves saved IDs into preview pins only. Only manual controls call Teleport/Start.
+
+## Elsepin 2.6 maintenance
+
+Start with the [Product Atlas](BRAND-MAP.md) for appearance, identity, distribution and compatibility dependencies. The older entries above describe historical source owners.

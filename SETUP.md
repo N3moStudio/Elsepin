@@ -2,8 +2,8 @@
 
 ## Install
 
-1. Download the official **2.6.0** IPA from this repository’s Releases. For a requested development build, use [GitHub Actions](docs/BUILDING.md) with IPA packaging enabled.
-2. Add the IPA to **SideStore** and keep the **LocusActivity** extension. SideStore signs both for your device.
+1. This 2.6.0 guide describes an unreleased build. Approved downloads will appear in [Elsepin Releases](https://github.com/N3moStudio/Elsepin-Releases/releases). Do not install an unverified development artifact.
+2. Add the IPA to **SideStore** and keep the bundled Live Activity extension. SideStore signs both for your device.
 3. **For 2.4.x → 2.5.x, export your library first:** the new app identity creates a separate installation. Follow [the migration checklist](docs/TESTING-2.5.md). For later updates with the same identity, use the same signing setup and install over the current app.
 
 Direct SideStore installation is the primary setup described here. Import a

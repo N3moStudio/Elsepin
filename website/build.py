@@ -50,12 +50,24 @@ def catalog():
 
 
 def build():
+    # Fail closed on stale output: never deploy an old QA page or stray file.
+    # The caller can move its prior dist folder aside, then rebuild cleanly.
+    data = catalog()
+    allowed = {Path(name) for name in ['index.html', 'styles.css', 'app.js', 'guide.html', 'privacy.html', '404.html', 'robots.txt', 'healthz', 'catalog.js', 'licenses.txt']}
+    allowed |= {Path('assets') / (icon['id'] + '.png') for icon in data['icons']}
+    allowed.add(Path('assets/prism.png'))
+    if OUT.is_symlink():
+        raise ValueError('The site output must not be a symbolic link.')
+    for existing in OUT.rglob('*') if OUT.exists() else []:
+        if existing.is_symlink() or not existing.resolve().is_relative_to(OUT.resolve()):
+            raise ValueError('The site output contains an unsafe path.')
+        if existing.is_file() and existing.relative_to(OUT) not in allowed:
+            raise ValueError(f'Unexpected site output; move it aside before building: {existing.name}')
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / 'assets').mkdir(exist_ok=True)
     # Explicit allowlist: a stray secret or future helper file cannot enter the site.
     for name in ['index.html', 'styles.css', 'app.js', 'guide.html', 'privacy.html', '404.html', 'robots.txt', 'healthz']:
         shutil.copyfile(PUBLIC / name, OUT / name)
-    data = catalog()
     (OUT / 'catalog.js').write_text('window.ELSEPIN_CATALOG = ' + json.dumps(data, ensure_ascii=True) + ';\n', encoding='utf-8')
     for icon in data['icons']:
         shutil.copyfile(ROOT / 'Locus/Resources/IconPreviews' / (icon['id'] + '.png'), OUT / 'assets' / (icon['id'] + '.png'))
