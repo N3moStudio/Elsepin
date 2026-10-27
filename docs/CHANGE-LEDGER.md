@@ -1,5 +1,10 @@
 # Elsepin Change Ledger
 
+Updated through **26 October 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
+is unreleased. Earlier Shift entries retain their original names and release status.
+
+See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all recorded 2.5.x/2.6.0 native runs.
+
 ## 2.6.0 (59) — Elsepin development — 26 October 2026
 
 - Rebrand the regular app, setup/pairing prompts, notifications, Live Activities, helper downloads and backup filenames to Elsepin. Use Prism Jumpgate as the primary icon; retain all thirteen icon options and nine themes.
@@ -18,6 +23,15 @@ The release log and source map for this fork. Update this ledger and
 build attempts under the same entry without presenting an earlier success as a
 later build's result. Dates use America/Los_Angeles. Commit descriptions should
 name the behavior changed and the affected area.
+
+### Documentation, workflow and build-record follow-up — 26 October 2026
+
+- Refresh the public README with the app introduction, Prism Jumpgate artwork, feature groups, all nine themes/thirteen icons, setup, honest release status, optional-provider limits and support links.
+- Preserve the entire earlier changelog and publish a synchronized public copy plus a build register. Record the two failed Elsepin attempts and their fixes, rather than reporting only the successful run.
+- Run `40441280998` (`a863660`) failed during appearance initialization; `ea91bd2` fixes initialization ordering. Run `40441622492` then failed the icon-resource check because XcodeGen uses grouped paths; `b5f5b24` fixes that validation. Run `40442493014` passed 533 tests and native app/extension compilation. No IPA was packaged by any of these three runs.
+- Simplify the manual workflow to **Build Elsepin IPA**: remove the packaging checkbox and validation-only artifact; keep automatic tests, identity/resource checks and one downloadable IPA for future runs. Update the maintainer build guide.
+- Retain private application development and public downloads/help. This documentation/workflow update creates no IPA, tag or release and does not change app behavior. Previous successful native validation applies to its recorded source, not to an unrun future workflow.
+
 
 ## 2.5.8 / build 58 — official promotion (26 October 2026)
 

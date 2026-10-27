@@ -1,4 +1,4 @@
-# Build Shift
+# Build Elsepin
 
 The source includes the app, WidgetKit/Live Activity extension, tests, artwork,
 helper source/downloads, Xcode project, and the bundled idevice engine library.
@@ -6,9 +6,9 @@ No Apple signing credentials or deployed helper are included.
 
 ## GitHub Actions — works from Windows
 
-1. Upload the extracted repository using **GitHub Desktop**. Preserve `.github`, `Vendor`, `Shared`, and `LocusActivity`; put `project.yml` at the repository root.
-2. Open **Actions → Build Shift IPA → Run workflow**. Choose the branch containing these files. The default **Package a downloadable IPA** switch is off: tests and native compilation run without generating an IPA. Turn it on only for a requested distributable/device-test build.
-3. With packaging enabled, after the run succeeds, download **Shift <version>.ipa** directly under Artifacts and sign it with SideStore. There is no extra ZIP to extract. Retain its extension. The filename automatically follows the app version in future builds.
+1. Open the private Elsepin repository and choose **Actions → Build Elsepin IPA → Run workflow**.
+2. Select `main` (or the specific branch you intend to build). There is no packaging checkbox: every run checks, builds and packages the IPA.
+3. After success, download **Elsepin <version>.ipa** under Artifacts. This is the only downloadable build artifact; there is no outer ZIP to extract. Sign it with SideStore and retain the extension.
 
 The manual workflow uses GitHub’s `xcode-27` runner, verifies bundled helper
 downloads, runs Python helper tests and Swift model tests, regenerates the
@@ -28,7 +28,7 @@ swift test
 bash scripts/build-ipa.sh
 ```
 
-Output: `build/Shift <version>.ipa` (the current development version is 2.5.8).
+Output: `build/Elsepin <version>.ipa` (the current development version is 2.6.0).
 The filename uses the built app’s version. The packager verifies the extension,
 required resources, app-group entitlements, and appearance metadata. Its ad-hoc
 signatures are placeholders; SideStore still needs to sign the installation.
@@ -57,7 +57,7 @@ changing helper source or guides, regenerate the in-app downloads with
 
 | Folder | Contents |
 | --- | --- |
-| `Locus/` | Shift’s SwiftUI app and connection/session engine |
+| `Locus/` | Elsepin’s SwiftUI app and connection/session engine |
 | `Shared/` | App/extension models, appearance and status rules |
 | `LocusActivity/` | Live Activities, Dynamic Island and widgets |
 | `Companion/`, `CloudFindMy/` | Optional Windows and cloud helpers |
@@ -79,12 +79,11 @@ IPA validator checks the compiled bundle IDs and URL scheme.
 
 ## Official versus prerelease builds
 
-Official 2.5.8 (58) uses `SHIFT_RELEASE_CHANNEL: stable` in `project.yml`
-and the checked-in project. Its IPA is the exact release candidate tested and
-accepted by the maintainer; promotion changes documentation only. For future
-version/channel changes, regenerate/build and verify the resolved
-`ShiftReleaseChannel` in the packaged app Info.plist. Small fixes are collected
-on `main` without changing the published release; do not build or publish a prerelease for every fix.
-Build a distributable IPA when a release or device-test build is requested.
-Do not change an already-distributed beta into an official release merely by
-editing GitHub labels. See [the release/update checklist](UPDATES.md).
+The current source is Elsepin 2.6.0 (59), still in development. Creating an IPA
+artifact does not publish a release or declare it stable. Verify both target
+versions and the resolved `ShiftReleaseChannel` metadata before distribution;
+that internal compatibility key intentionally retains its old name.
+
+Collect small fixes on `main`. Start a distributable build when one is needed;
+do not create a prerelease for every small fix. Publishing an official release
+is a separate action, after device acceptance, in `Elsepin-Releases`.

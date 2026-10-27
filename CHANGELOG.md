@@ -1,4 +1,9 @@
-# Changelog
+# Elsepin changelog
+
+Updated through **26 October 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
+is unreleased. Earlier Shift entries retain their original names and release status.
+
+[App introduction](README.md) · [Build history](docs/BUILD-HISTORY.md) · [Detailed Change Ledger](docs/CHANGE-LEDGER.md)
 
 ## 2.6.0 (59) — Elsepin development — 26 October 2026
 
@@ -11,6 +16,15 @@
 - Establish private Elsepin development and a public Elsepin-Releases download/help endpoint. Preserve inherited notices and accurately scope restrictions to identified new original files. Catalog dependencies and compatibility traps in the Product Atlas.
 - Branding follow-up: remove the old product name from the incomplete-backup message and exported diagnostic-log description. Keep old backup formats, storage keys and notification IDs compatible. The public update endpoint returns no official release until one is published. Follow-up validation: 32 backup-import and diagnostic-log tests passed on WSL; no native rebuild or IPA. The first test invocation had a shell-quoting error; rerunning the existing compiled tests with direct argument passing passed.
 - Validation: [private Mac run 40442493014](https://github.com/N3moStudio/Elsepin/actions/runs/40442493014) passed 533 automated tests (404 shared Swift, 14 packaging/icon, 19 Windows-helper, 96 cloud-helper) and native app/extension compilation at b5f5b24. Website phone-frame checks at 320/375/430/768 pixels showed no horizontal overflow; all preview images loaded. The static website is live at https://elsepin.onrender.com. Device appearance, provider, battery and accessibility acceptance remain pending. No new IPA or GitHub release.
+
+
+### Documentation, workflow and build-record follow-up — 26 October 2026
+
+- Refresh the public README with the app introduction, Prism Jumpgate artwork, feature groups, all nine themes/thirteen icons, setup, honest release status, optional-provider limits and support links.
+- Preserve the entire earlier changelog and publish a synchronized public copy plus a build register. Record the two failed Elsepin attempts and their fixes, rather than reporting only the successful run.
+- Run `40441280998` (`a863660`) failed during appearance initialization; `ea91bd2` fixes initialization ordering. Run `40441622492` then failed the icon-resource check because XcodeGen uses grouped paths; `b5f5b24` fixes that validation. Run `40442493014` passed 533 tests and native app/extension compilation. No IPA was packaged by any of these three runs.
+- Simplify the manual workflow to **Build Elsepin IPA**: remove the packaging checkbox and validation-only artifact; keep automatic tests, identity/resource checks and one downloadable IPA for future runs. Update the maintainer build guide.
+- Retain private application development and public downloads/help. This documentation/workflow update creates no IPA, tag or release and does not change app behavior. Previous successful native validation applies to its recorded source, not to an unrun future workflow.
 
 
 ## 2.5.8 (58) — official — 26 October 2026
@@ -53,7 +67,7 @@
 - Package the matching source-only cloud helper and guide. Mac run 40259930059 passed all 524 tests, compiled the app and extension with Xcode 27.1, and produced the test IPA in 5m 42s. Independently verify build 57, the prerelease channel, icons, helper contents and the downloaded checksum against GitHub. Save the IPA, helper and setup/test checklist to Downloads; exact evidence and remaining device/provider checks are in the Change Ledger.
 
 
-Dates below use America/Los_Angeles. The [Shift Change Ledger](docs/CHANGE-LEDGER.md)
+Dates below use America/Los_Angeles. The [Elsepin Change Ledger](docs/CHANGE-LEDGER.md)
 maps each build to its changes, source owners, validation and distribution status.
 
 ## Unreleased — lightweight cloud setup and Nearby alerts — 25 October 2026
