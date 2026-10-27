@@ -654,3 +654,8 @@ plan selected. Deploy the updated helper separately and sign in to each provider
 No cloud deployment, helper behavior change, automatic installation or other
 battery proposal is included. Physical-iPhone layout and energy measurement remain
 separate acceptance checks.
+
+
+## 27 October 2026 — Elsepin 2.6.0 official publication
+
+Publish the user-supplied Downloads IPA unchanged. Successful source/build: `304756f` / `40460137350`. App and extension are 2.6.0 (59); Prism Jumpgate primary. SHA-256 matches GitHub artifact: `c8cb9197d1b856bcd90a9de7d29311f82411eddd7b825a5d32a2080747156d22`. Release notes cover changes since Shift 2.5.8. Device/provider claims remain separate.
