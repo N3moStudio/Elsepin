@@ -110,8 +110,9 @@ final class SessionPreferences: ObservableObject {
         // Migrate it once so Ion becomes dark; retain explicit Light/Dark choices.
         let oldAppearance = defaults.string(forKey: "locus.appearance") ?? "theme"
         if defaults.object(forKey: "shift.appearancePresetMigration.v1") == nil {
-            appearance = oldAppearance == "system" ? "theme" : oldAppearance
-            defaults.set(appearance, forKey: "locus.appearance")
+            let migratedAppearance = oldAppearance == "system" ? "theme" : oldAppearance
+            appearance = migratedAppearance
+            defaults.set(migratedAppearance, forKey: "locus.appearance")
             defaults.set(true, forKey: "shift.appearancePresetMigration.v1")
         } else { appearance = oldAppearance }
         appLockEnabled = defaults.bool(forKey: "locus.appLockEnabled")
