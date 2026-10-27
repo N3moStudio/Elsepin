@@ -41,7 +41,7 @@
     });$('icons').append(button);
   });
   ['mode','surface','font'].forEach(id=>$(id).addEventListener('change',paint));
-  $('reset-preview').addEventListener('click',()=>{selectedTheme='ion';$('mode').value='theme';$('font').value='theme';$('surface').value='solid';paint();});
+  $('reset-preview').addEventListener('click',()=>{selectedTheme='ion';$('mode').value='theme';$('font').value='theme';$('surface').value='solid';demoActive=false;$('demo-status').textContent='● Ready · Pin selected';$('demo-teleport').textContent='Teleport';document.querySelector('#icons button').click();document.querySelector('.phone-tabs button').click();paint();});
   document.querySelectorAll('.phone-tabs button').forEach(button=>button.addEventListener('click',()=>{
     const screen=button.dataset.screen;
     document.querySelectorAll('.phone-screen').forEach(panel=>{panel.hidden=panel.id!=='screen-'+screen;});

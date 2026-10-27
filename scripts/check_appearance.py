@@ -45,7 +45,13 @@ def check():
             assert depth == 8 and color in (0,2), 'App icons must have no alpha channel'
         preview = ROOT / 'Locus/Resources/IconPreviews' / (entry['preview'] + '.png')
         read_resource(preview.parent, preview.name)
-        assert preview.relative_to(ROOT).as_posix() in project, 'Preview missing from Xcode project'
+        # Hand-maintained projects use SOURCE_ROOT paths; XcodeGen uses a group
+        # path plus a basename. Both must still register the image as a resource.
+        full_path = preview.relative_to(ROOT).as_posix() in project
+        grouped_path = (f'path = "{preview.name}";' in project and
+                        'path = IconPreviews;' in project and
+                        f'/* {preview.name} in Resources */' in project)
+        assert full_path or grouped_path, 'Preview missing from Xcode project'
     assert 'Permission to use' in (ROOT / 'Brand/AppearanceIcons/LICENSE-Lucide.txt').read_text(encoding='utf-8-sig')
     print(f'Verified {len(entries)} icon choices, {rendition_count} supplied appearance images, previews and license.')
 

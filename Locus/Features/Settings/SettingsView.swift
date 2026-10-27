@@ -262,7 +262,7 @@ private struct LocusAboutSettingsView: View {
             Section {
                 VStack(alignment: .leading, spacing: 18) {
                     ShiftMark().fill(LocusTheme.accent.gradient).frame(width: 72, height: 72).accessibilityHidden(true)
-                    Text("Elsepin").font(.system(size: titleSize, weight: .bold, design: .rounded)).tracking(-2)
+                    Text("Elsepin").font(.system(size: titleSize, weight: .bold)).tracking(-2)
                     ShiftSignature()
                 }.padding(.vertical, 24).frame(maxWidth: .infinity, alignment: .leading)
                     .listRowBackground(Color.clear)

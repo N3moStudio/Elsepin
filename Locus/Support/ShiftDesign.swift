@@ -28,7 +28,7 @@ struct ShiftScreenHeading: View {
                 .frame(width: 40, height: 40).accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 7) {
                 Text(eyebrow.uppercased()).font(.footnote.weight(.semibold)).tracking(1).foregroundStyle(.secondary)
-                Text(title).font(.system(.largeTitle, design: .rounded, weight: .bold)).tracking(-0.9)
+                Text(title).font(.system(.largeTitle, weight: .bold)).tracking(-0.9)
                 Text(detail).font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
