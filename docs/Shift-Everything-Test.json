@@ -1,0 +1,213 @@
+{
+  "format": "Shift library",
+  "version": 2,
+  "createdAt": 814622400.0,
+  "categories": [
+    "places",
+    "trips",
+    "settings"
+  ],
+  "places": [
+    {
+      "name": "REVIEW TEST - South start",
+      "latitude": 40.7701,
+      "longitude": -73.9751,
+      "folder": "Shift review test"
+    },
+    {
+      "name": "REVIEW TEST - North start",
+      "latitude": 40.7731,
+      "longitude": -73.9731,
+      "folder": "Shift review test"
+    }
+  ],
+  "trips": [
+    {
+      "version": 1,
+      "id": "493E8928-B002-5FDE-9AB5-4760542BDE0E",
+      "name": "REVIEW TEST - South loop",
+      "mode": "walk",
+      "speedMPH": 3,
+      "smoothMovement": false,
+      "originName": "REVIEW TEST - South start",
+      "destinationName": "REVIEW TEST - South start",
+      "points": [
+        {
+          "latitude": 40.7701,
+          "longitude": -73.9751
+        },
+        {
+          "latitude": 40.7711,
+          "longitude": -73.9751
+        },
+        {
+          "latitude": 40.7711,
+          "longitude": -73.97409999999999
+        },
+        {
+          "latitude": 40.7701,
+          "longitude": -73.97409999999999
+        },
+        {
+          "latitude": 40.7701,
+          "longitude": -73.9751
+        }
+      ],
+      "source": {
+        "drawn": {}
+      },
+      "instructions": [],
+      "stops": [
+        {
+          "id": "2F390145-7415-5C66-B70A-674F54D2070B",
+          "name": "REVIEW TEST - 15s stop",
+          "metres": 75,
+          "waitSeconds": 15
+        },
+        {
+          "id": "0C17B5F3-91CA-529B-A58D-285C185E530B",
+          "name": "REVIEW TEST - 90s stop",
+          "metres": 175,
+          "waitSeconds": 90
+        }
+      ],
+      "calculatedAt": 814622400.0,
+      "savedAt": 814622400.0,
+      "folder": "Shift review test"
+    },
+    {
+      "version": 1,
+      "id": "0A533505-0071-5404-8160-65D8262F1EDA",
+      "name": "REVIEW TEST - North loop",
+      "mode": "run",
+      "speedMPH": 6,
+      "smoothMovement": true,
+      "originName": "REVIEW TEST - North start",
+      "destinationName": "REVIEW TEST - North start",
+      "points": [
+        {
+          "latitude": 40.7731,
+          "longitude": -73.9731
+        },
+        {
+          "latitude": 40.7741,
+          "longitude": -73.9731
+        },
+        {
+          "latitude": 40.7741,
+          "longitude": -73.9721
+        },
+        {
+          "latitude": 40.7731,
+          "longitude": -73.9721
+        },
+        {
+          "latitude": 40.7731,
+          "longitude": -73.9731
+        }
+      ],
+      "source": {
+        "drawn": {}
+      },
+      "instructions": [],
+      "stops": [
+        {
+          "id": "0DC46BD1-DD71-53FE-BC52-A0A181A58517",
+          "name": "REVIEW TEST - 30s stop",
+          "metres": 75,
+          "waitSeconds": 30
+        },
+        {
+          "id": "FD3924CE-517A-50F7-80F8-F36C3C34CA9E",
+          "name": "REVIEW TEST - 7200s stop",
+          "metres": 175,
+          "waitSeconds": 7200
+        }
+      ],
+      "calculatedAt": 814622400.0,
+      "savedAt": 814622400.0,
+      "folder": "Shift review test"
+    }
+  ],
+  "areas": [
+    {
+      "id": "35FAD9DE-6274-5312-A342-A9DFC04C009E",
+      "name": "REVIEW TEST - South area",
+      "points": [
+        {
+          "latitude": 40.7701,
+          "longitude": -73.9751
+        },
+        {
+          "latitude": 40.7711,
+          "longitude": -73.9751
+        },
+        {
+          "latitude": 40.7711,
+          "longitude": -73.97409999999999
+        },
+        {
+          "latitude": 40.7701,
+          "longitude": -73.97409999999999
+        }
+      ]
+    },
+    {
+      "id": "82A1C86E-C146-5DF3-8E2D-00813B80100A",
+      "name": "REVIEW TEST - North area",
+      "points": [
+        {
+          "latitude": 40.7731,
+          "longitude": -73.9731
+        },
+        {
+          "latitude": 40.7741,
+          "longitude": -73.9731
+        },
+        {
+          "latitude": 40.7741,
+          "longitude": -73.9721
+        },
+        {
+          "latitude": 40.7731,
+          "longitude": -73.9721
+        }
+      ]
+    }
+  ],
+  "preferences": {
+    "usualSpeeds": {
+      "walk": 4,
+      "run": 6.5,
+      "cycle": 12,
+      "eBike": 18,
+      "drive": 32
+    },
+    "glassPanel": true,
+    "appearance": "light",
+    "smoothMovement": false,
+    "preferWalkingPaths": false,
+    "shortcuts": [
+      "joystick",
+      "saved",
+      "settings"
+    ],
+    "speedUnit": "mph",
+    "display": {
+      "liveActivities": true,
+      "hideLocation": false,
+      "hideIslandLocation": true,
+      "lockScreenProgress": true,
+      "islandProgress": false,
+      "islandTimer": false,
+      "connectionAlerts": true,
+      "reminderMinutes": 60,
+      "saveRecentLocations": true,
+      "recentHistoryRetention": "forever",
+      "mapStyle": 0,
+      "connectionCheckSeconds": 15,
+      "showFindMyStatus": true,
+      "showLife360Status": false
+    }
+  }
+}

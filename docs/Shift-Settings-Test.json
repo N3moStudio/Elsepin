@@ -1,0 +1,45 @@
+{
+  "format": "Shift library",
+  "version": 2,
+  "createdAt": 814622400.0,
+  "categories": [
+    "settings"
+  ],
+  "places": [],
+  "trips": [],
+  "preferences": {
+    "usualSpeeds": {
+      "walk": 4,
+      "run": 6.5,
+      "cycle": 12,
+      "eBike": 18,
+      "drive": 32
+    },
+    "glassPanel": true,
+    "appearance": "light",
+    "smoothMovement": false,
+    "preferWalkingPaths": false,
+    "shortcuts": [
+      "joystick",
+      "saved",
+      "settings"
+    ],
+    "speedUnit": "mph",
+    "display": {
+      "liveActivities": true,
+      "hideLocation": false,
+      "hideIslandLocation": true,
+      "lockScreenProgress": true,
+      "islandProgress": false,
+      "islandTimer": false,
+      "connectionAlerts": true,
+      "reminderMinutes": 60,
+      "saveRecentLocations": true,
+      "recentHistoryRetention": "forever",
+      "mapStyle": 0,
+      "connectionCheckSeconds": 15,
+      "showFindMyStatus": true,
+      "showLife360Status": false
+    }
+  }
+}

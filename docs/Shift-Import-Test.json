@@ -1,0 +1,114 @@
+{
+  "format": "Shift library",
+  "version": 2,
+  "createdAt": 814622400.0,
+  "categories": [
+    "places",
+    "trips",
+    "settings"
+  ],
+  "places": [
+    {
+      "name": "TEST - Park start",
+      "latitude": 40.7712,
+      "longitude": -73.9742,
+      "folder": "Shift import test"
+    },
+    {
+      "name": "TEST - Park midpoint",
+      "latitude": 40.7726,
+      "longitude": -73.9748,
+      "folder": "Shift import test"
+    }
+  ],
+  "trips": [
+    {
+      "version": 1,
+      "id": "A43C5333-03F5-4E38-A327-DD2B5170CB1B",
+      "name": "TEST - Park loop",
+      "mode": "walk",
+      "speedMPH": 3,
+      "smoothMovement": false,
+      "originName": "TEST - Park start",
+      "destinationName": "TEST - Park start",
+      "points": [
+        {
+          "latitude": 40.7712,
+          "longitude": -73.9742
+        },
+        {
+          "latitude": 40.772,
+          "longitude": -73.9736
+        },
+        {
+          "latitude": 40.7726,
+          "longitude": -73.9748
+        },
+        {
+          "latitude": 40.7718,
+          "longitude": -73.9754
+        },
+        {
+          "latitude": 40.7712,
+          "longitude": -73.9742
+        }
+      ],
+      "source": {
+        "drawn": {}
+      },
+      "instructions": [],
+      "stops": [
+        {
+          "id": "E1D0FD5E-BBF7-4815-9327-B9489AA8122A",
+          "name": "TEST - Short stop",
+          "metres": 75,
+          "waitSeconds": 15
+        },
+        {
+          "id": "F628C7F6-6DEB-48CD-BD21-21D0AC8B4539",
+          "name": "TEST - Longer stop",
+          "metres": 175,
+          "waitSeconds": 90
+        }
+      ],
+      "calculatedAt": 814622400.0,
+      "savedAt": 814622400.0,
+      "folder": "Shift import test"
+    }
+  ],
+  "preferences": {
+    "usualSpeeds": {
+      "walk": 3.1068559611866697,
+      "run": 6.2137119223733395,
+      "cycle": 12.427423844746679,
+      "eBike": 15.534279805933348,
+      "drive": 31.068559611866696
+    },
+    "glassPanel": false,
+    "appearance": "dark",
+    "smoothMovement": true,
+    "preferWalkingPaths": true,
+    "shortcuts": [
+      "saved",
+      "speed",
+      "pause"
+    ],
+    "speedUnit": "kilometersPerHour",
+    "display": {
+      "liveActivities": true,
+      "hideLocation": true,
+      "hideIslandLocation": false,
+      "lockScreenProgress": false,
+      "islandProgress": true,
+      "islandTimer": true,
+      "connectionAlerts": true,
+      "reminderMinutes": 30,
+      "saveRecentLocations": true,
+      "recentHistoryRetention": "forever",
+      "mapStyle": 1,
+      "connectionCheckSeconds": 10,
+      "showFindMyStatus": true,
+      "showLife360Status": true
+    }
+  }
+}

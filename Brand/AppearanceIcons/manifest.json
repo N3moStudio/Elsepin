@@ -1,0 +1,84 @@
+[
+  {
+    "design": "PrismJumpgate",
+    "finish": "Default",
+    "asset": "AppIconPrismJumpgate",
+    "preview": "ShiftIcon-PrismJumpgate-Default",
+    "systemAppearances": "automatic"
+  },
+  {
+    "design": "Glacier",
+    "finish": "Default",
+    "asset": "AppIcon",
+    "preview": "ShiftIcon-Glacier-Default"
+  },
+  {
+    "design": "Glacier",
+    "finish": "Dark",
+    "asset": "AppIconGlacierDark",
+    "preview": "ShiftIcon-Glacier-Dark"
+  },
+  {
+    "design": "Glacier",
+    "finish": "Tinted",
+    "asset": "AppIconGlacierTinted",
+    "preview": "ShiftIcon-Glacier-Tinted"
+  },
+  {
+    "design": "Afterhours",
+    "finish": "Default",
+    "asset": "AppIconAfterhours",
+    "preview": "ShiftIcon-Afterhours-Default"
+  },
+  {
+    "design": "Afterhours",
+    "finish": "Dark",
+    "asset": "AppIconAfterhoursDark",
+    "preview": "ShiftIcon-Afterhours-Dark"
+  },
+  {
+    "design": "Afterhours",
+    "finish": "Tinted",
+    "asset": "AppIconAfterhoursTinted",
+    "preview": "ShiftIcon-Afterhours-Tinted"
+  },
+  {
+    "design": "Porcelain",
+    "finish": "Default",
+    "asset": "AppIconPorcelain",
+    "preview": "ShiftIcon-Porcelain-Default"
+  },
+  {
+    "design": "Porcelain",
+    "finish": "Dark",
+    "asset": "AppIconPorcelainDark",
+    "preview": "ShiftIcon-Porcelain-Dark"
+  },
+  {
+    "design": "Porcelain",
+    "finish": "Tinted",
+    "asset": "AppIconPorcelainTinted",
+    "preview": "ShiftIcon-Porcelain-Tinted"
+  },
+  {
+    "design": "IonJumpgate",
+    "finish": "Default",
+    "asset": "AppIconIonJumpgate",
+    "preview": "ShiftIcon-IonJumpgate-Default",
+    "systemAppearances": "automatic"
+  },
+  {
+    "design": "TitaniumJumpgate",
+    "finish": "Default",
+    "asset": "AppIconTitaniumJumpgate",
+    "preview": "ShiftIcon-TitaniumJumpgate-Default",
+    "systemAppearances": "automatic"
+  },
+  {
+    "design": "EmberSwitchpath",
+    "finish": "Default",
+    "asset": "AppIconEmberSwitchpath",
+    "preview": "ShiftIcon-EmberSwitchpath-Default",
+    "systemAppearances": "automatic"
+  }
+]

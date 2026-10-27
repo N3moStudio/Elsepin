@@ -1,0 +1,18 @@
+{
+  "name": "Elsepin",
+  "sourceRepository": "N3moStudio/Elsepin",
+  "releaseRepository": "N3moStudio/Elsepin-Releases",
+  "primaryIcon": "AppIconPrismJumpgate",
+  "defaultTheme": "glacier",
+  "version": "2.6.0",
+  "build": 59,
+  "releaseState": "development",
+  "compatibility": {
+    "bundleIdentifier": "com.n3mostudio.shift",
+    "extensionIdentifier": "com.n3mostudio.shift.activity",
+    "appGroup": "group.com.n3mostudio.shift",
+    "urlScheme": "shift",
+    "backupFormat": "Shift library",
+    "note": "These are installation/data identifiers, not visible branding. Changing them requires a separate migration."
+  }
+}

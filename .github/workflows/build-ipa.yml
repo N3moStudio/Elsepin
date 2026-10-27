@@ -1,0 +1,64 @@
+name: Validate Elsepin or build IPA
+
+on:
+  workflow_dispatch:
+    inputs:
+      package_ipa:
+        description: 'Package a downloadable IPA (off runs tests and native compilation only)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: xcode-27
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify app and extension identities
+        run: python3 scripts/check_app_identity.py
+      - name: Verify source-only helper downloads
+        run: python3 scripts/package_helpers.py --check
+      - name: Test IPA validation and icon sources
+        run: python3 -m unittest discover -s scripts/tests -p 'test_*.py' -v
+      - name: Show Apple toolchain
+        run: xcodebuild -version
+      - name: Install project generator
+        run: brew install xcodegen
+      - name: Test Windows and cloud Find My helpers
+        run: |
+          python3 -m venv "$RUNNER_TEMP/findmy-qa"
+          "$RUNNER_TEMP/findmy-qa/bin/python" -m pip install -r CloudFindMy/requirements.txt
+          "$RUNNER_TEMP/findmy-qa/bin/python" -m unittest discover -s Companion -p "test_*.py" -v
+          "$RUNNER_TEMP/findmy-qa/bin/python" -m unittest discover -s CloudFindMy -p "test_*.py" -v
+      - name: Test status, privacy, and route rules
+        run: swift test
+      - name: Generate and build app with Live Activity extension
+        if: inputs.package_ipa
+        id: ipa
+        run: bash scripts/build-ipa.sh
+      - name: Validate native app without packaging an IPA
+        if: ${{ !inputs.package_ipa }}
+        run: |
+          python3 scripts/check_appearance.py
+          xcodegen generate
+          if pgrep -lx xcodebuild; then
+            echo "Another Xcode build is active; refusing an overlapping build."
+            exit 1
+          else
+            inventory_status=$?
+            test "$inventory_status" -eq 1
+          fi
+          xcodebuild -project Locus.xcodeproj -scheme Locus -configuration Release \
+            -destination 'generic/platform=iOS' -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY='' build
+      - name: Upload IPA
+        if: inputs.package_ipa
+        uses: actions/upload-artifact@v7
+        with:
+          path: ${{ steps.ipa.outputs.ipa_path }}
+          archive: false
+          if-no-files-found: error
+          retention-days: 7

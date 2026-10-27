@@ -1,0 +1,26 @@
+[
+  {
+    "version": "A1",
+    "file": "Approved/a1-ion.png",
+    "sha256": "8e2c8d9f9738e152051efe64e0e784afd4cfb3dd5a433c808039581a2a85ad9f",
+    "asset": "AppIconIonJumpgate"
+  },
+  {
+    "version": "A2",
+    "file": "Approved/a2-titanium.png",
+    "sha256": "c97d66209af251a916c2707dd15b65449f6df39e99ce1f8d4feed30fdaef35f4",
+    "asset": "AppIconTitaniumJumpgate"
+  },
+  {
+    "version": "A3",
+    "file": "Approved/a3-prism.png",
+    "sha256": "6ef02981f5519b3aa1de43bc68e590cfdcc1f3d4e16cdb2490e63a8bd2225f6b",
+    "asset": "AppIconPrismJumpgate"
+  },
+  {
+    "version": "B1",
+    "file": "Approved/b1-ember.png",
+    "sha256": "ca0c13d7b59d8df3d06f6d2f7b48d745a1f1c5d194b3e124d0be14b736c4e46d",
+    "asset": "AppIconEmberSwitchpath"
+  }
+]

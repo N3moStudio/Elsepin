@@ -1,0 +1,39 @@
+schema_version: 1
+status: approved-for-local-integration
+approval:
+  explicitly_approved: true
+  approved_at: 2026-10-26
+  evidence_note: 'User: Okay implement all of them as available options and themes!!'
+  scope: Add A1, A2, A3 and B1 as alternatives; preserve all existing icons and themes.
+concepts:
+  A1: Approved/a1-ion.png
+  A2: Approved/a2-titanium.png
+  A3: Approved/a3-prism.png
+  B1: Approved/b1-ember.png
+source_digests: approved-sources.json
+design_lock:
+  product_promise: Location simulation with deliberate user control.
+  recognition_anchor: Offset brackets and destination dot for A1-A3; stepped route and dot for B1.
+  protected_invariants:
+    - Preserve approved silhouette, composition, palette and intrinsic material finish.
+    - Preserve historical icons, saved icon identifiers and primary icon.
+    - Keep the Shift name and current application identity.
+  permitted_production_translations:
+    - Resample opaque square artwork to 1024 pixels and 256-pixel selection thumbnails.
+    - Tag unprofiled RGB artwork as sRGB without recoloring.
+production_plan:
+  authorized: true
+  delivery_route: flattened-asset-catalog-alternates
+  composer_feasibility: Integrated metal/prism lighting would require a new adapted design; preserve the explicitly approved complete images.
+  composer_used: false
+  source_geometry: Complete approved RGB raster images; no traced or invented layers.
+  system_appearances: iOS automatic dark and tinted treatment for the four additions.
+  reapproval_triggers:
+    - Material change to silhouette, palette or composition.
+    - Replacement of existing icons or default selection.
+    - A new app name or primary identity.
+validation:
+  asset_exports: Prepared; see the Change Ledger for current test results.
+  native_xcode_build: Not tested for this change.
+  icon_composer: Not used.
+  simulator_and_device: Not tested.
