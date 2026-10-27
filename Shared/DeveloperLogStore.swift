@@ -202,7 +202,7 @@ final class DeveloperLogStore: @unchecked Sendable {
                     let header = DeveloperLogEvent(time: self.now(), process: self.process, event: "export_information", details: [
                         "version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown",
                         "build": Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "unknown",
-                        "format": "Locus developer log v1, one JSON object per line; UTC time, Unix timeMilliseconds and monotonic uptime",
+                        "format": "Elsepin developer log v1, one JSON object per line; UTC time, Unix timeMilliseconds and monotonic uptime",
                         "window_start": self.window?.startedAt.ISO8601Format() ?? "unknown",
                         "window_end": self.window?.endsAt.ISO8601Format() ?? "unknown",
                         "privacy": "Includes exact locations sent by Elsepin and optional problem notes you enter. No automatic keyboard capture, credentials, pairing file, or automatic upload.",

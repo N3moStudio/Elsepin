@@ -69,7 +69,7 @@ enum BackupImportError: LocalizedError {
         switch self {
         case .notFile: return "Choose a backup file, not a folder. Nothing was imported."
         case .invalidContent:
-            return "This isn't a complete Elsepin or Locus library backup. If pasting, copy all of the JSON text, not a file link or just part of the file. Nothing was imported."
+            return "This isn't a complete Elsepin backup. If pasting, copy all of the JSON text, not a file link or just part of the file. Nothing was imported."
         }
     }
 }
