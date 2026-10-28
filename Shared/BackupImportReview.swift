@@ -11,14 +11,12 @@ enum BackupSettingValue: Equatable {
 }
 
 enum BackupSettingKey: String, CaseIterable, Identifiable {
-    case visualStyle, material, font, textSize, appearance, glassPanel, speedUnit, smoothMovement, preferWalkingPaths, shortcuts, walkSpeed, runSpeed, cycleSpeed, eBikeSpeed, driveSpeed, liveActivities, hideLocation, hideIslandLocation, lockScreenProgress, islandProgress, islandTimer, showFindMyStatus, showLife360Status, connectionAlerts, reminderMinutes, connectionCheckSeconds, saveRecentLocations, recentHistoryRetention, mapStyle
+    case visualStyle, material, appearance, glassPanel, speedUnit, smoothMovement, preferWalkingPaths, shortcuts, walkSpeed, runSpeed, cycleSpeed, eBikeSpeed, driveSpeed, liveActivities, hideLocation, hideIslandLocation, lockScreenProgress, islandProgress, islandTimer, showFindMyStatus, showLife360Status, connectionAlerts, reminderMinutes, connectionCheckSeconds, saveRecentLocations, recentHistoryRetention, mapStyle
     var id: String { rawValue }
     var title: String {
         switch self {
         case .visualStyle: return "Theme"
         case .material: return "Surfaces"
-        case .font: return "Font"
-        case .textSize: return "Text size"
         case .appearance: return "Color mode"
         case .glassPanel: return "Liquid Glass (legacy setting)"
         case .speedUnit: return "Speed units"
@@ -50,8 +48,6 @@ enum BackupSettingKey: String, CaseIterable, Identifiable {
         switch self {
         case .visualStyle: return p.visualStyle.map { .text($0.title) }
         case .material: return p.material.map { .text($0.rawValue.capitalized) }
-        case .font: return p.font.map { .text($0.rawValue.capitalized) }
-        case .textSize: return p.textSize.map { .text($0.rawValue.capitalized) }
         case .appearance: return .text(p.appearance)
         case .glassPanel: return p.material == nil ? .boolean(p.glassPanel) : nil
         case .speedUnit: return p.speedUnit.map { .text($0.title) }
@@ -94,8 +90,6 @@ enum BackupSettingKey: String, CaseIterable, Identifiable {
         switch self {
         case .visualStyle: current.visualStyle = incoming.visualStyle
         case .material: current.material = incoming.material
-        case .font: current.font = incoming.font
-        case .textSize: current.textSize = incoming.textSize
         case .appearance: current.appearance = incoming.appearance
         case .glassPanel:
             current.glassPanel = incoming.glassPanel

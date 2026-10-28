@@ -7,6 +7,7 @@ See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all re
 
 ## 2.6.0 (59) — Elsepin development — 26 October 2026
 
+- Simplify Appearance: remove the Abyss theme (retired saves and backups load as Bloom), make Bloom the starting theme, and fix font to rounded and text size to compact. Surfaces remain the only override (Theme default, Solid, Liquid Glass; Theme default is selected). Older backups and overrides with font or text-size values still import; exports write the fixed values so older versions match. Build check: website catalog (8 themes).
 - Rebrand the regular app, setup/pairing prompts, notifications, Live Activities, helper downloads and backup filenames to Elsepin. Use Prism Jumpgate as the primary icon; retain all thirteen icon options and nine themes.
 - Give Ion its dark olive canvas, solid panels and citron actions. Apply theme defaults for color mode, surfaces, font design and relative text size, with independent persistent overrides and a reset-to-theme control. Keep accessibility text sizes and Reduce Transparency respected.
 - Replace translucent app-owned navigation/control surfaces when Solid is selected; keep one map and session alive during appearance changes. System-owned menus retain system behavior.

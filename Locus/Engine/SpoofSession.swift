@@ -228,7 +228,7 @@ final class SpoofSession: ObservableObject {
                 mapStyle: mapStyleIndex, connectionCheckSeconds: preferences.connectionCheckSeconds,
                 showFindMyStatus: preferences.showFindMyStatus, showLife360Status: preferences.showLife360Status), speedUnit: preferences.speedUnit,
             visualStyle: preferences.visualStyle, material: preferences.appearanceOverrides.material,
-            font: preferences.appearanceOverrides.font, textSize: preferences.appearanceOverrides.textSize)
+            font: AppearanceFixed.font, textSize: AppearanceFixed.textSize)
     }
     func importLibraryPlaces(_ places: [BackupPlace], settings: BackupPreferences?) {
         favorites = places.map { SavedPlace(name: $0.name, latitude: $0.latitude, longitude: $0.longitude, folder: $0.folder, icon: $0.icon, color: $0.color) }
@@ -238,8 +238,6 @@ final class SpoofSession: ObservableObject {
             if let material = settings.material { preferences.appearanceOverrides.material = material }
             else { preferences.glassPanel = settings.glassPanel }
             if let style = settings.visualStyle { preferences.visualStyle = style }
-            if let font = settings.font { preferences.appearanceOverrides.font = font }
-            if let size = settings.textSize { preferences.appearanceOverrides.textSize = size }
             preferences.appearance = settings.appearance
             if let unit = settings.speedUnit { preferences.speedUnit = unit }
             preferences.panelShortcuts = settings.shortcuts

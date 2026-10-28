@@ -53,7 +53,7 @@ enum SettingsDestination: String, CaseIterable, Identifiable {
         switch self {
         case .updates: return "check force manual software update updates latest release version download"
         case .connection: return "wifi wi-fi vpn localdevvpn pair pairing tunnel retry"
-        case .appearance: return "font typography text size solid opaque transparency liquid glass panel theme light dark system style glacier afterhours porcelain ion ember abyss bloom blueprint titanium prism jumpgate switchpath icon icons logo tinted"
+        case .appearance: return "typography surface solid opaque transparency liquid glass panel theme light dark system style glacier afterhours porcelain ion ember bloom blueprint titanium prism jumpgate switchpath icon icons logo tinted"
         case .activity: return "lock screen lockscreen dynamic island hide location progress timer"
         case .notifications: return "alert alerts warning warnings reminders sound"
         case .privacy: return "face id passcode app switcher contents recent locations history retention"

@@ -20,7 +20,6 @@ DETAILS = {
     'porcelain': ('QUIET CONFIDENCE', 'Chalk, graphite, and a considered serif.', 'light', 'serif'),
     'ion': ('HIGH VOLTAGE', 'Citron on deep olive. Bright controls. Solid surfaces.', 'dark', 'system'),
     'ember': ('SLOW BURN', 'Copper highlights on warm charcoal.', 'dark', 'system'),
-    'abyss': ('BELOW THE SURFACE', 'Electric cyan in deep ocean blue.', 'dark', 'system'),
     'bloom': ('A SOFTER SIDE', 'Petal pink, berry, and rounded details.', 'light', 'rounded'),
     'blueprint': ('A CLEAR DIRECTION', 'Cobalt, pale paper, and precise typography.', 'light', 'monospaced'),
     'titanium': ('BUILT TO LAST', 'Platinum details on a grounded ink canvas.', 'dark', 'system'),
@@ -30,7 +29,7 @@ DETAILS = {
 def catalog():
     source = (ROOT / 'Shared/ShiftAppearance.swift').read_text(encoding='utf-8')
     palettes = re.findall(r'case \.(\w+):\s*light = \[([^]]+)\]\s*night = \[([^]]+)\]', source)
-    assert len(palettes) == 9, 'Update the catalog parser when the palette format changes.'
+    assert len(palettes) == 8, 'Update the catalog parser when the palette format changes.'
     themes = []
     for name, light, dark in palettes:
         eyebrow, detail, mode, font = DETAILS[name]

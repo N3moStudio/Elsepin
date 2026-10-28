@@ -22,7 +22,7 @@ struct AppearanceSettingsView: View {
                     .accessibilityLabel(style.title + ", " + style.detail)
                     .accessibilityAddTraits(preferences.visualStyle == style ? [.isSelected] : [])
                 }
-            } header: { Text("Themes") } footer: { Text("Each theme sets its colors, font and surface style. Your icon stays independent.") }.shiftSettingsRows()
+            } header: { Text("Themes") } footer: { Text("Each theme sets its colors and default surface. Your icon stays independent.") }.shiftSettingsRows()
             Section {
                 Picker("Color mode", selection: $preferences.appearance) {
                     Text("Theme default").tag("theme")
@@ -35,22 +35,9 @@ struct AppearanceSettingsView: View {
                     Text("Solid · no glass").tag(AppearanceMaterial.solid)
                     Text("Liquid Glass").tag(AppearanceMaterial.glass)
                 }
-                Picker("Font", selection: $preferences.appearanceOverrides.font) {
-                    Text("Theme default").tag(AppearanceFont.theme)
-                    Text("System").tag(AppearanceFont.system)
-                    Text("Rounded").tag(AppearanceFont.rounded)
-                    Text("Serif").tag(AppearanceFont.serif)
-                    Text("Monospaced").tag(AppearanceFont.monospaced)
-                }
-                Picker("Text size", selection: $preferences.appearanceOverrides.textSize) {
-                    Text("Theme default").tag(AppearanceTextSize.theme)
-                    Text("Compact").tag(AppearanceTextSize.compact)
-                    Text("Standard").tag(AppearanceTextSize.standard)
-                    Text("Larger").tag(AppearanceTextSize.large)
-                }
                 Button("Use theme defaults") { preferences.useThemeDefaults() }.frame(minHeight: 44)
             } header: { Text("Make it yours") } footer: {
-                Text("Your choices stay when you switch themes. Larger accessibility text is always respected. System menus follow iOS.")
+                Text("Your surface choice stays when you switch themes. Text stays compact and rounded, and accessibility text sizes are always respected. System menus follow iOS.")
             }.shiftSettingsRows()
             Section {
                 NavigationLink {

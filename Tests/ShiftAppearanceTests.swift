@@ -50,7 +50,7 @@ final class ShiftAppearanceTests: XCTestCase {
     func testExistingSelectionsRetainTheirStorageAndInstalledNames() {
         XCTAssertEqual(ShiftAppearanceSelection.styleKey, "shift.visualStyle")
         XCTAssertEqual(ShiftAppearanceSelection.iconKey, "shift.appIcon")
-        XCTAssertEqual(ShiftAppearanceSelection().style, .glacier)
+        XCTAssertEqual(ShiftAppearanceSelection().style, .bloom)
         XCTAssertEqual(ShiftIconSelection().design, .prismJumpgate)
         let names = ["AppIcon", "AppIconGlacierDark", "AppIconGlacierTinted",
                      "AppIconAfterhours", "AppIconAfterhoursDark", "AppIconAfterhoursTinted",
@@ -59,14 +59,14 @@ final class ShiftAppearanceTests: XCTestCase {
         XCTAssertEqual(Array(ShiftVisualStyle.allCases.prefix(3)), [.glacier, .afterhours, .porcelain])
     }
     func testNewChoicesDoNotExposeUnbundledFinishCombinations() {
-        XCTAssertEqual(ShiftVisualStyle.allCases.count, 9)
+        XCTAssertEqual(ShiftVisualStyle.allCases.count, 8)
         for design in ShiftIconDesign.additions {
             XCTAssertEqual(design.finishes, [.standard])
             XCTAssertNil(ShiftIconSelection.installed(named: "AppIcon" + design.assetStem + "Dark"))
             XCTAssertNil(ShiftIconSelection.installed(named: "AppIcon" + design.assetStem + "Tinted"))
         }
     }
-    func testOlderActivityStillDecodesAndUsesGlacierFallback() throws {
+    func testOlderActivityStillDecodesAndUsesBloomFallback() throws {
         let old = SessionSnapshot(phase: .active, startedAt: Date(timeIntervalSince1970: 100), lastConfirmedAt: nil,
                                   expiresAt: nil, place: nil, lowPower: false)
         var object = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(old)) as? [String: Any])
@@ -75,7 +75,7 @@ final class ShiftAppearanceTests: XCTestCase {
         let decoded = try JSONDecoder().decode(SessionSnapshot.self, from: JSONSerialization.data(withJSONObject: object))
         XCTAssertNil(decoded.visualStyle)
         XCTAssertNil(decoded.iconDesign)
-        XCTAssertEqual(ShiftVisualStyle(storedValue: decoded.visualStyle), .glacier)
+        XCTAssertEqual(ShiftVisualStyle(storedValue: decoded.visualStyle), .bloom)
         XCTAssertEqual(decoded.phase, .active)
     }
     func testTextAndActionsMeetContrastInEveryPalette() {

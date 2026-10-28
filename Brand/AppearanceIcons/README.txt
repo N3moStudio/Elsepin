@@ -1,6 +1,6 @@
 Shift appearance artwork
 
-Settings > Appearance offers Glacier, Afterhours, Porcelain, Ion, Ember, Abyss,
+Settings > Appearance offers Glacier, Afterhours, Porcelain, Ion, Ember,
 Bloom, Blueprint and Titanium independently from Choose App Icon. The original
 three icon families retain Default, Dark and Tinted choices. Glacier Default
 remains the primary icon and saved selections retain the same identifiers.
