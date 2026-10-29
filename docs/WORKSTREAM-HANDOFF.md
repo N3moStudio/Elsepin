@@ -1,6 +1,6 @@
 # Product workstreams and next decisions
 
-Updated 26 October 2026. Planning record, not implemented entitlement changes.
+Updated 26 October 2026. Historical planning record, not current entitlement guidance. Start with [current work](CURRENT-WORK.md). Veypax now uses one fixed icon in every tier; its own docs/PRO-PLAN.md is authoritative.
 
 ## Recommended organization
 

@@ -1,0 +1,9 @@
+# Elsepin project guide
+
+- Read [current work](docs/CURRENT-WORK.md) when starting a workstream and [chat workflow](docs/CHAT-WORKFLOW.md) for handoffs or optional external supporting analysis.
+- App sources remain under `Locus/`, extension under `LocusActivity/`, portable rules/tests under `Shared/` and `Tests/`. The visible product is Elsepin; do not blindly rename compatibility identifiers. Helpers are in `Companion/` and `CloudFindMy/`; website is in `website/`.
+- Before building, read [building](docs/BUILDING.md). The manual GitHub workflow uses `xcode-27`; local native builds require macOS/Xcode and XcodeGen. Discover tools before assuming availability. `project.yml` is authoritative; regenerate `Locus.xcodeproj` before native builds.
+- Checks include `swift test`, `python3 -m unittest discover -s scripts/tests -v`, identity/appearance checks and helper tests documented in BUILDING.md. Portable tests do not prove device pairing, signing, accessibility, gestures, battery or provider accounts.
+- Before identity changes read [brand map](docs/BRAND-MAP.md); before backup changes read [backups](docs/BACKUPS.md). Preserve defaults/Keychain keys, bundle IDs, app group and existing backup formats unless implementing an explicit migration. Retain required third-party notices and keep credentials out of source.
+- Elsepin remains the full product: never copy Veypax paid gates into it. Widgets prepare a pin and always require manual in-app confirmation before movement. Keep Stop available.
+- Locate related code with [app map](docs/APP-MAP.md); maintain historical evidence in [change ledger](docs/CHANGE-LEDGER.md). User approval is still required by task scope for publication; a handoff does not grant it.
