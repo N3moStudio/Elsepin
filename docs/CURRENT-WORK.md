@@ -30,3 +30,13 @@ merged. Recoverable full Git bundle is .build/elsepin-arena-3430259.bundle local
 Do not assume those appearance changes are on main. Documentation setup was
 committed and pushed as 5fb9586. No Elsepin application code changed in this cleanup;
 its workflow always packages an IPA, so it was not triggered under the no-IPA rule.
+
+## Verified handoff readiness — 28 October 2026
+
+This section supersedes earlier intake status and pending-work wording above.
+- Local main and GitHub main matched `2d26695452aa4d9aea6a413647479394ca79695e` before this documentation update; working tree was clean. GitHub has only main.
+- Successful native run: https://github.com/N3moStudio/Elsepin/actions/runs/40460137350 at `304756f035172d6e8e3406a451ee57c25cd07951`. Rechecked all job steps: Swift, Python helper/script checks, native app/extension build and artifact verification succeeded.
+- Compared that successful source to current main: only documentation changed. App, tests, build configuration and workflow are identical. Reused this native evidence rather than starting the IPA-only workflow.
+- Fresh checks: 14 Python script tests passed; appearance, identity and helper archive consistency checks passed. Log: `.build/handoff-python-tests.log`.
+- Veypax's newer Bloom/compact/rounded changes and warning fixes are NOT Elsepin changes. The deleted arena branch remains intentionally unmerged and recoverable in the bundle described above. No unresolved failed build applies to current main: the newer failed run belonged to that deleted branch.
+- No new IPA, release or deployment. Physical-device/provider/accessibility/battery checks are not established by CI. Read APP-MAP.md for navigation, BRAND-MAP.md for compatibility-sensitive branding and BACKUPS.md before import changes.
