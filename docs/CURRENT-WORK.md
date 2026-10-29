@@ -20,3 +20,13 @@ Updated 28 October 2026. Verify Git status and source before acting.
 - Outstanding: physical-device/provider, accessibility/gesture and measured battery acceptance. Older APP-MAP.md/BUILDING.md and ledger passages retain historical Shift/unreleased wording; reconcile when documentation maintenance is requested. No new app implementation is assigned.
 - Product boundary: Elsepin remains the full app. Veypax paid restrictions and its latest Bloom/compact/rounded changes must not be copied into Elsepin implicitly; the user's current clarification supersedes the older pending-appearance wording above.
 - Validation this turn: read-only source/status/remote checks; no tests, IPA build, push, publication or deployment. GitHub CLI was unavailable on PATH, so release metadata was checked through the public GitHub API.
+
+
+## Branch cleanup — 28 October 2026
+
+User explicitly requested deletion of arena/fad0aa5a-elsepin. Remote branch was
+deleted; unique appearance commit 3430259496e636b20f6bcc854fd5277ac2771497 was NOT
+merged. Recoverable full Git bundle is .build/elsepin-arena-3430259.bundle locally.
+Do not assume those appearance changes are on main. Documentation setup was
+committed and pushed as 5fb9586. No Elsepin application code changed in this cleanup;
+its workflow always packages an IPA, so it was not triggered under the no-IPA rule.
