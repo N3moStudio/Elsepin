@@ -14,6 +14,21 @@ final class LibraryBackupTests: XCTestCase {
         XCTAssertEqual(restored.trips, backup.trips)
         XCTAssertEqual(restored.preferences, backup.preferences)
     }
+    func testRetiredAppearanceBackupKeepsLibraryAndMapsAbyssToBloom() throws {
+        var backup = fixture()
+        backup.preferences?.visualStyle = .bloom
+        backup.preferences?.font = .serif
+        backup.preferences?.textSize = .large
+        let legacy = String(decoding: try backup.encoded(), as: UTF8.self)
+            .replacingOccurrences(of: "\"bloom\"", with: "\"abyss\"")
+        let restored = try LibraryBackup.decode(Data(legacy.utf8))
+        XCTAssertEqual(restored.preferences?.visualStyle, .bloom)
+        XCTAssertEqual(restored.preferences?.font, .serif) // Decodes for old-file compatibility only.
+        XCTAssertEqual(restored.places, backup.places)
+        XCTAssertEqual(restored.trips, backup.trips)
+        XCTAssertEqual(restored.areas, backup.areas)
+        XCTAssertEqual(try LibraryBackup.decode(restored.encoded()).preferences, restored.preferences)
+    }
     func testUnitPreferenceRoundTripsWithoutReinterpretingLegacySpeeds() throws {
         var backup = fixture()
         XCTAssertNil(try LibraryBackup.decode(backup.encoded()).preferences?.speedUnit)

@@ -1,8 +1,11 @@
 import Foundation
 
 /// Interface style and Home Screen artwork deliberately have separate storage.
-enum ShiftVisualStyle: String, CaseIterable, Codable, Identifiable, Sendable {
-    case glacier, afterhours, porcelain, ion, ember, abyss, bloom, blueprint, titanium
+enum ShiftVisualStyle: String, CaseIterable, Identifiable, Sendable {
+    case glacier, afterhours, porcelain, ion, ember, bloom, blueprint, titanium
+    static let defaultStyle = ShiftVisualStyle.bloom
+    /// Retired themes map to the current default so old backups and saved choices still load.
+    static let retiredStyles: [String: ShiftVisualStyle] = ["abyss": .bloom]
     var id: String { rawValue }
     var title: String { rawValue.capitalized }
     var detail: String {
@@ -12,7 +15,6 @@ enum ShiftVisualStyle: String, CaseIterable, Codable, Identifiable, Sendable {
         case .porcelain: return "Chalk & graphite"
         case .ion: return "Citron & graphite"
         case .ember: return "Copper & charcoal"
-        case .abyss: return "Cyan & ocean blue"
         case .bloom: return "Petal pink & berry"
         case .blueprint: return "Paper & cobalt"
         case .titanium: return "Platinum & ink"
@@ -24,10 +26,12 @@ enum ShiftVisualStyle: String, CaseIterable, Codable, Identifiable, Sendable {
         case .glacier: return "Make your\nnext move."
         case .afterhours: return "One connection.\nYour next move."
         case .porcelain: return "Ready.\nSet. Elsepin."
-        case .ion, .ember, .abyss, .bloom, .blueprint, .titanium: return "Make your\nnext move."
+        case .ion, .ember, .bloom, .blueprint, .titanium: return "Make your\nnext move."
         }
     }
-    init(storedValue: String?) { self = storedValue.flatMap(Self.init(rawValue:)) ?? .glacier }
+    init(storedValue: String?) { self = storedValue.flatMap(Self.resolve) ?? Self.defaultStyle }
+    /// Returns nil only for names this version has never known.
+    static func resolve(_ raw: String) -> Self? { Self(rawValue: raw) ?? retiredStyles[raw] }
 
     enum Ink: CaseIterable { case accent, onAccent, secondary, canvas, surface, text, muted }
     func hex(_ ink: Ink, dark: Bool) -> Int {
@@ -48,9 +52,6 @@ enum ShiftVisualStyle: String, CaseIterable, Codable, Identifiable, Sendable {
         case .ember:
             light = [0xA74416, 0xFFFFFF, 0x79523E, 0xFCF4EE, 0xFFFFFF, 0x302019, 0x735A4D]
             night = [0xFF9C68, 0x321B0E, 0xDDB49D, 0x21150F, 0x33231B, 0xFFF2E9, 0xD1B8AA]
-        case .abyss:
-            light = [0x006A7C, 0xFFFFFF, 0x365E75, 0xEFF8FB, 0xFFFFFF, 0x102D3C, 0x496675]
-            night = [0x61E7F5, 0x052B33, 0xA0D4E3, 0x061D29, 0x12323F, 0xEAF9FE, 0xACCAD6]
         case .bloom:
             light = [0xA62E76, 0xFFFFFF, 0x81516C, 0xF8EFF3, 0xFFF9FC, 0x352131, 0x755C6D]
             night = [0xF4A9D7, 0x3A1330, 0xDCB6CF, 0x241820, 0x35252F, 0xFFF0F9, 0xD0B6C6]
@@ -65,6 +66,21 @@ enum ShiftVisualStyle: String, CaseIterable, Codable, Identifiable, Sendable {
         switch ink { case .accent: index = 0; case .onAccent: index = 1; case .secondary: index = 2
         case .canvas: index = 3; case .surface: index = 4; case .text: index = 5; case .muted: index = 6 }
         return (dark ? night : light)[index]
+    }
+}
+
+/// Lenient on read so backups and widget snapshots from retired themes still load.
+extension ShiftVisualStyle: Codable {
+    init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        guard let style = Self.resolve(raw) else {
+            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unknown theme"))
+        }
+        self = style
+    }
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
     }
 }
 
@@ -120,11 +136,11 @@ struct ShiftIconSelection: Codable, Equatable, Hashable, Identifiable, Sendable 
 }
 
 struct ShiftAppearanceSelection: Codable, Equatable, Sendable {
-    var style: ShiftVisualStyle = .glacier
+    var style: ShiftVisualStyle = ShiftVisualStyle.defaultStyle
     var icon: ShiftIconSelection = .init()
     static let styleKey = "shift.visualStyle"
     static let iconKey = "shift.appIcon"
-    init(style: ShiftVisualStyle = .glacier, icon: ShiftIconSelection = .init()) {
+    init(style: ShiftVisualStyle = ShiftVisualStyle.defaultStyle, icon: ShiftIconSelection = .init()) {
         self.style = style; self.icon = icon
     }
     init(defaults: UserDefaults) {

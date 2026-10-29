@@ -22,35 +22,16 @@ struct AppearanceSettingsView: View {
                     .accessibilityLabel(style.title + ", " + style.detail)
                     .accessibilityAddTraits(preferences.visualStyle == style ? [.isSelected] : [])
                 }
-            } header: { Text("Themes") } footer: { Text("Each theme sets its colors, font and surface style. Your icon stays independent.") }.shiftSettingsRows()
+            } header: { Text("Themes") } footer: { Text("Each theme sets its colors and default surface. Your icon stays independent.") }.shiftSettingsRows()
             Section {
-                Picker("Color mode", selection: $preferences.appearance) {
-                    Text("Theme default").tag("theme")
-                    Text("Follow iPhone").tag("system")
-                    Text("Light").tag("light")
-                    Text("Dark").tag("dark")
-                }
                 Picker("Surfaces", selection: $preferences.appearanceOverrides.material) {
                     Text("Theme default").tag(AppearanceMaterial.theme)
-                    Text("Solid · no glass").tag(AppearanceMaterial.solid)
+                    Text("Solid Â· no glass").tag(AppearanceMaterial.solid)
                     Text("Liquid Glass").tag(AppearanceMaterial.glass)
-                }
-                Picker("Font", selection: $preferences.appearanceOverrides.font) {
-                    Text("Theme default").tag(AppearanceFont.theme)
-                    Text("System").tag(AppearanceFont.system)
-                    Text("Rounded").tag(AppearanceFont.rounded)
-                    Text("Serif").tag(AppearanceFont.serif)
-                    Text("Monospaced").tag(AppearanceFont.monospaced)
-                }
-                Picker("Text size", selection: $preferences.appearanceOverrides.textSize) {
-                    Text("Theme default").tag(AppearanceTextSize.theme)
-                    Text("Compact").tag(AppearanceTextSize.compact)
-                    Text("Standard").tag(AppearanceTextSize.standard)
-                    Text("Larger").tag(AppearanceTextSize.large)
                 }
                 Button("Use theme defaults") { preferences.useThemeDefaults() }.frame(minHeight: 44)
             } header: { Text("Make it yours") } footer: {
-                Text("Your choices stay when you switch themes. Larger accessibility text is always respected. System menus follow iOS.")
+                Text("Your surface choice stays when you switch themes. Text stays compact and rounded, and accessibility text sizes are always respected. System menus follow iOS.")
             }.shiftSettingsRows()
             Section {
                 NavigationLink {
@@ -97,7 +78,7 @@ struct AppIconSettingsView: View {
                 HStack(spacing: 15) {
                     ShiftAppIconPreview(selection: icons.selected, size: 64)
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(icons.changing ? "Changing Icon…" : "Current Icon").font(.headline)
+                        Text(icons.changing ? "Changing Iconâ€¦" : "Current Icon").font(.headline)
                         Text(icons.selected.title).font(.subheadline).foregroundStyle(.secondary)
                     }
                     Spacer(minLength: 0)
@@ -123,12 +104,12 @@ struct AppIconSettingsView: View {
                 }.shiftSettingsRows()
             }
             if !icons.supported {
-                Section { Text("Icon changes aren’t available in this installation.").font(.subheadline).foregroundStyle(.secondary) }.shiftSettingsRows()
+                Section { Text("Icon changes arenâ€™t available in this installation.").font(.subheadline).foregroundStyle(.secondary) }.shiftSettingsRows()
             }
         }
         .shiftSettingsScreen().loggedNavigationTitle("App Icon").navigationBarTitleDisplayMode(.inline)
         .onAppear { icons.refresh() }
-        .alert("Couldn’t Change Icon", isPresented: Binding(get: { icons.error != nil }, set: { if !$0 { icons.error = nil } })) {
+        .alert("Couldnâ€™t Change Icon", isPresented: Binding(get: { icons.error != nil }, set: { if !$0 { icons.error = nil } })) {
             Button("OK", role: .cancel) { icons.error = nil }
         } message: { Text(icons.error ?? "Try again while Elsepin is open.") }
     }

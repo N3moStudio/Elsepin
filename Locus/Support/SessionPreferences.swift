@@ -106,15 +106,8 @@ final class SessionPreferences: ObservableObject {
         showLife360Status = defaults.bool(forKey: "locus.showLife360Status")
         connectionAlerts = defaults.bool(forKey: "locus.connectionAlerts")
         reminderMinutes = defaults.integer(forKey: "locus.reminderMinutes")
-        // The former System default did not represent a deliberate theme override.
-        // Migrate it once so Ion becomes dark; retain explicit Light/Dark choices.
-        let oldAppearance = defaults.string(forKey: "locus.appearance") ?? "theme"
-        if defaults.object(forKey: "shift.appearancePresetMigration.v1") == nil {
-            let migratedAppearance = oldAppearance == "system" ? "theme" : oldAppearance
-            appearance = migratedAppearance
-            defaults.set(migratedAppearance, forKey: "locus.appearance")
-            defaults.set(true, forKey: "shift.appearancePresetMigration.v1")
-        } else { appearance = oldAppearance }
+        // Legacy color preferences remain readable in backups; themes now own color mode.
+        appearance = "theme"
         appLockEnabled = defaults.bool(forKey: "locus.appLockEnabled")
         hideInAppSwitcher = defaults.bool(forKey: "locus.hideInAppSwitcher")
         saveRecentLocations = defaults.bool(forKey: "locus.saveRecentLocations")
@@ -122,7 +115,7 @@ final class SessionPreferences: ObservableObject {
     }
 
     var colorScheme: ColorScheme? {
-        let resolved = appearance == "theme" ? visualStyle.defaultAppearance : appearance
+        let resolved = visualStyle.defaultAppearance
         return resolved == "dark" ? .dark : resolved == "light" ? .light : nil
     }
 

@@ -10,14 +10,14 @@ final class BackupImportReviewTests: XCTestCase {
     private func context() throws -> BackupImportContext {
         BackupImportContext(preferences: try XCTUnwrap(sample("Shift-Import-Test").preferences), places: [], trips: [], areas: [])
     }
-    func testSettingsFileContainsOnlyAll25SupportedPreferencesAndStartsUnchecked() throws {
+    func testSettingsFileContainsOnlyAll24SupportedPreferencesAndStartsUnchecked() throws {
         let backup = try sample("Shift-Settings-Test")
         let review = BackupImportReview(backup: backup, current: try context())
         XCTAssertEqual(backup.included, [.settings])
         XCTAssertTrue(backup.places.isEmpty && backup.trips.isEmpty && (backup.areas ?? []).isEmpty)
         XCTAssertEqual(review.title, "Settings Import Overview")
-        XCTAssertEqual(review.changes.count, 25)
-        XCTAssertEqual(review.changedSettings.count, 20)
+        XCTAssertEqual(review.changes.count, 24)
+        XCTAssertEqual(review.changedSettings.count, 19)
         XCTAssertEqual(try review.plan(review.defaultSelection).count, 0)
         XCTAssertNil(try review.plan(review.defaultSelection).preferences)
         let p = try XCTUnwrap(backup.preferences)
@@ -83,7 +83,9 @@ final class BackupImportReviewTests: XCTestCase {
             }
         }
         let all = try review.plan(BackupImportSelection(settings: Set(BackupSettingKey.allCases)))
-        XCTAssertEqual(all.preferences, incoming)
+        var expected = incoming
+        expected.appearance = current.preferences.appearance // Retired color mode is not imported.
+        XCTAssertEqual(all.preferences, expected)
         XCTAssertEqual(all.count, review.changedSettings.count)
     }
     func testSameValuesAndUnknownIDsDoNotBecomeChanges() throws {
@@ -124,7 +126,7 @@ final class BackupImportReviewTests: XCTestCase {
         for key in absent { XCTAssertEqual(key.value(in: after), key.value(in: current.preferences)) }
         backup.preferences?.display = nil
         let noDisplay = BackupImportReview(backup: try LibraryBackup.decode(backup.encoded()), current: current)
-        XCTAssertEqual(noDisplay.changes.count, 10)
+        XCTAssertEqual(noDisplay.changes.count, 9)
         XCTAssertEqual(try noDisplay.plan(BackupImportSelection(settings: noDisplay.changedSettings)).preferences?.display, current.preferences.display)
     }
     func testSparseLegacySpeedDictionaryUsesDefaultOnlyForSelectedPreset() throws {
@@ -169,15 +171,15 @@ final class BackupImportReviewTests: XCTestCase {
         current.areas = [try XCTUnwrap(backup.areas?.first)]
         let review = BackupImportReview(backup: backup, current: current)
         XCTAssertEqual(review.title, "Settings & Library Import Overview")
-        XCTAssertTrue(review.overview.contains("1 new routes · 1 new saved places · 1 new areas · 20 different settings"))
-        XCTAssertEqual(review.changes.prefix(20).filter(\.changesValue).count, 20)
-        XCTAssertTrue(review.changes.dropFirst(20).allSatisfy { !$0.changesValue })
+        XCTAssertTrue(review.overview.contains("1 new routes Â· 1 new saved places Â· 1 new areas Â· 19 different settings"))
+        XCTAssertEqual(review.changes.prefix(19).filter(\.changesValue).count, 19)
+        XCTAssertTrue(review.changes.dropFirst(19).allSatisfy { !$0.changesValue })
     }
     func testOnlySelectedSettingsNeedAStoppedSession() throws {
         let library = BackupImportReview(backup: try sample("Shift-Routes-Areas-Test"), current: try context())
         XCTAssertFalse(try library.plan(library.defaultSelection).needsStoppedSession(hasSession: true, isBusy: true))
         let settings = BackupImportReview(backup: try sample("Shift-Settings-Test"), current: try context())
-        let plan = try settings.plan(BackupImportSelection(settings: [.appearance]))
+        let plan = try settings.plan(BackupImportSelection(settings: [.smoothMovement]))
         XCTAssertTrue(plan.needsStoppedSession(hasSession: true, isBusy: false))
         XCTAssertTrue(plan.needsStoppedSession(hasSession: false, isBusy: true))
         XCTAssertFalse(plan.needsStoppedSession(hasSession: false, isBusy: false))

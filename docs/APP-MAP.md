@@ -54,3 +54,13 @@ Location widgets: `Shared/WidgetLibrary.swift` owns the bounded name/ID catalog 
 ## Elsepin 2.6 maintenance
 
 Start with the [Product Atlas](BRAND-MAP.md) for appearance, identity, distribution and compatibility dependencies. The older entries above describe historical source owners.
+
+## 2.6.1 appearance and compatibility navigation
+- `Shared/ShiftAppearance.swift`: theme catalog, Bloom default, retired Abyss decoder. Keep unknown JSON values as errors; do not silently map every invalid theme.
+- `Shared/AppearancePolicy.swift`: surface options and fixed typography constants. Legacy backup enums remain for decoding.
+- `Locus/Support/AppearancePresentation.swift`: rounded/compact presentation; never shrink accessibility categories.
+- `Locus/Support/SessionPreferences.swift`: persisted surface/theme and theme-owned color mode. Preserve storage keys.
+- `Locus/Features/Settings/AppearanceSettingsView.swift`: theme/surface/icon UI. All Elsepin icons remain available.
+- `Locus/Engine/SpoofSession.swift`: backup export/import integration; fixed exported typography and ignored retired controls.
+- `Shared/BackupImportReview.swift`: selectable import fields; retired presentation controls must not reappear.
+- `Tests/AppearancePolicyTests.swift`, `Tests/LibraryBackupTests.swift`, `Tests/BackupImportReviewTests.swift`: migration, library preservation and selective-import regression coverage.

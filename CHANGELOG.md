@@ -1,9 +1,18 @@
 # Elsepin changelog
 
-Updated through **27 October 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
+Updated through **28 October 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
 is the official release. Earlier Shift entries retain their original names and release status.
 
 [App introduction](README.md) · [Build history](docs/BUILD-HISTORY.md) · [Detailed Change Ledger](docs/CHANGE-LEDGER.md)
+
+## 2.6.1 (60) — unreleased draft — 28 October 2026
+
+- Default to Bloom; remove Abyss with a compatibility mapping to Bloom for existing settings and backups.
+- Fix typography to rounded/compact while respecting accessibility sizes. Remove font, text-size and color-mode controls; retain theme and surface selection and all thirteen icons.
+- Preserve backup schema and old-file decoding, hide retired controls in import review, and export compatible fixed typography values.
+- Refresh website catalog source; not deployed. No paid feature gates added.
+- Verified 410 portable Swift tests, 14 Python tests, appearance/identity/helper checks and static website generation. Native iOS compilation and device acceptance pending; no IPA built.
+- See [draft release notes](docs/releases/2.6.1-DRAFT.md).
 
 ## 2.6.0 (59) — official — 27 October 2026
 

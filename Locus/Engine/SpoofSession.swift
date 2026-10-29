@@ -228,7 +228,7 @@ final class SpoofSession: ObservableObject {
                 mapStyle: mapStyleIndex, connectionCheckSeconds: preferences.connectionCheckSeconds,
                 showFindMyStatus: preferences.showFindMyStatus, showLife360Status: preferences.showLife360Status), speedUnit: preferences.speedUnit,
             visualStyle: preferences.visualStyle, material: preferences.appearanceOverrides.material,
-            font: preferences.appearanceOverrides.font, textSize: preferences.appearanceOverrides.textSize)
+            font: AppearanceFixed.font, textSize: AppearanceFixed.textSize)
     }
     func importLibraryPlaces(_ places: [BackupPlace], settings: BackupPreferences?) {
         favorites = places.map { SavedPlace(name: $0.name, latitude: $0.latitude, longitude: $0.longitude, folder: $0.folder, icon: $0.icon, color: $0.color) }
@@ -238,9 +238,7 @@ final class SpoofSession: ObservableObject {
             if let material = settings.material { preferences.appearanceOverrides.material = material }
             else { preferences.glassPanel = settings.glassPanel }
             if let style = settings.visualStyle { preferences.visualStyle = style }
-            if let font = settings.font { preferences.appearanceOverrides.font = font }
-            if let size = settings.textSize { preferences.appearanceOverrides.textSize = size }
-            preferences.appearance = settings.appearance
+            preferences.appearance = "theme"
             if let unit = settings.speedUnit { preferences.speedUnit = unit }
             preferences.panelShortcuts = settings.shortcuts
             smoothMovement = settings.smoothMovement
@@ -273,17 +271,17 @@ final class SpoofSession: ObservableObject {
 
     var hasSession: Bool { sessionRequested || requiresClear || stopInFlight }
     var statusTitle: String {
-        if status.isDropped && !hasSession { return "Couldn’t start spoofing" }
+        if status.isDropped && !hasSession { return "Couldnâ€™t start spoofing" }
         if isBusy { return effectivePhase.title }
         if reopenedWithoutConnection { return "Previous session needs a connection" }
         return effectivePhase.title
     }
     var stopButtonTitle: String {
-        if stopInFlight { return "Stopping…" }
+        if stopInFlight { return "Stoppingâ€¦" }
         return effectivePhase == .active ? "Stop spoofing" : "Try clearing location"
     }
     var recoveryExplanation: String {
-        "Closing Elsepin fully ends its connection. Your iPhone may keep the last spoofed location, but Elsepin cannot move or clear it until a new connection works. If Wi-Fi isn’t available now, you can’t finish reconnecting yet. When you have Wi-Fi, connect LocalDevVPN and try clearing the location. Leaving Wi-Fi during an already working session is different: that connection may keep working."
+        "Closing Elsepin fully ends its connection. Your iPhone may keep the last spoofed location, but Elsepin cannot move or clear it until a new connection works. If Wi-Fi isnâ€™t available now, you canâ€™t finish reconnecting yet. When you have Wi-Fi, connect LocalDevVPN and try clearing the location. Leaving Wi-Fi during an already working session is different: that connection may keep working."
     }
     var isSpoofing: Bool { sessionRequested && effectivePhase == .active }
     var effectivePhase: SessionPhase {
@@ -505,7 +503,7 @@ final class SpoofSession: ObservableObject {
                 monitorTask?.cancel()
                 monitorTask = nil
             case .failure(let error):
-                let message = "Elsepin could not clear the last location. It may still be set. A new connection needs Wi-Fi and LocalDevVPN; if Wi-Fi isn’t available now, try clearing it when you can connect again. Elsepin won’t say it stopped until the clear command succeeds. " + error.localizedDescription
+                let message = "Elsepin could not clear the last location. It may still be set. A new connection needs Wi-Fi and LocalDevVPN; if Wi-Fi isnâ€™t available now, try clearing it when you can connect again. Elsepin wonâ€™t say it stopped until the clear command succeeds. " + error.localizedDescription
                 status = .unverified
                 lastError = message
                 warn(title: "Elsepin could not confirm Stop", message: message)
@@ -1124,7 +1122,7 @@ final class SpoofSession: ObservableObject {
             endBackground()
             if !warnedFailure {
                 warnedFailure = true
-                warn(title: requiresClear ? "Elsepin connection lost" : "Elsepin couldn’t start", message: requiresClear ? "A location update failed. The previous location may still be set." : "The connection failed before a location could be sent.")
+                warn(title: requiresClear ? "Elsepin connection lost" : "Elsepin couldnâ€™t start", message: requiresClear ? "A location update failed. The previous location may still be set." : "The connection failed before a location could be sent.")
             }
             publishActivity(force: true)
             return .failed
