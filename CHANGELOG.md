@@ -11,7 +11,7 @@ is the official release. Earlier Shift entries retain their original names and r
 - Fix typography to rounded/compact while respecting accessibility sizes. Remove font, text-size and color-mode controls; retain theme and surface selection and all thirteen icons.
 - Preserve backup schema and old-file decoding, hide retired controls in import review, and export compatible fixed typography values.
 - Refresh website catalog source; not deployed. No paid feature gates added.
-- Verified 410 portable Swift tests, 14 Python tests, appearance/identity/helper checks and static website generation. Native iOS compilation and device acceptance pending; no IPA built.
+- Verified 410 portable Swift tests, 14 Python tests, appearance/identity/helper checks and static website generation. Native app/extension build and IPA validation subsequently passed in run `40826806154`; test IPA delivered privately. Device acceptance pending; release remains unpublished.
 - See [draft release notes](docs/releases/2.6.1-DRAFT.md).
 
 ## 2.6.0 (59) — official — 27 October 2026

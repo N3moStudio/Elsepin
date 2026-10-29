@@ -663,3 +663,7 @@ Publish the user-supplied Downloads IPA unchanged. Successful source/build: `304
 ## 28 October 2026 — 2.6.1 appearance draft
 
 Applied the now-authorized Elsepin Bloom/compact/rounded/surface-only changes, retaining icons and legacy backup decoding. Corrected old test expectations for retired color mode and a search alias collision. Final 410 Swift and 14 Python tests pass; identity/appearance/helper checks and website generation pass. Native iOS compilation pending: no IPA workflow started. Updated project.yml to 2.6.1 (60), navigation map, handoff, changelog and unpublished release draft. No release publication or site deployment.
+
+## 28 October 2026 — Authorized native validation and private IPA
+
+Run 40826806154 passed on source 506923c. Both app and extension report 2.6.1 (60); local IPA checks passed for all 13 icons and linked SDK 27.1. Artifact digest matched SHA-256 3e72bc2646e112e9664d586e60332bc4341e2ff08aa9370d26b9628f43fba547. Saved to Downloads and uploaded to Google Drive with no sharing changes. Release remains an unpublished draft with no assets. Device acceptance remains pending.
