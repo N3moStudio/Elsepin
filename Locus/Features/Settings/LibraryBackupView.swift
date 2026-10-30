@@ -13,29 +13,43 @@ struct LibraryBackupView: View {
     @State private var exportScope = BackupExportScope.everything
     @State private var exportName = "Elsepin-Routes-Areas.json"
     @State private var message: String?
+    @State private var showingJSONSite = false
 
     var body: some View {
         List {
             Section {
                 Button { message = nil; input.chooseFile() } label: {
-                    Label("Choose backup file", systemImage: "doc").frame(minHeight: 44)
+                    HStack(spacing: 12) {
+                        ShiftSettingsIcon(symbol: "doc")
+                        Text("Choose backup file").foregroundStyle(.primary)
+                    }.frame(minHeight: 44)
                 }.disabled(input.state.isLoading)
-                HStack {
-                    Label("Paste backup text", systemImage: "doc.on.clipboard")
+                HStack(spacing: 12) {
+                    ShiftSettingsIcon(symbol: "doc.on.clipboard")
+                    Text("Paste backup text")
                     Spacer(minLength: 8)
                     PasteButton(payloadType: String.self) { strings in message = nil; input.paste(strings) }
                         .labelStyle(.titleOnly).accessibilityLabel("Paste backup text")
                         .accessibilityHint("Analyze copied JSON and review individual changes before importing.")
                         .disabled(input.state.isLoading || input.request != nil)
                 }.frame(minHeight: 44)
-                Text("Open the file at [json.site](https://json.site), copy its JSON, then tap Paste here.")
-                    .font(.footnote).foregroundStyle(.secondary)
                 if input.state.isLoading { ProgressView("Analyzing backup…") }
                 if input.state.preview != nil {
                     Button("Review selected backup") { reviewing = true }.frame(minHeight: 44)
                         .disabled(input.state.isLoading)
                 }
-            } header: { Text("Import settings, routes & areas") }.shiftSettingsRows()
+            } header: { Text("Import settings, routes & areas") } footer: {
+                Text("Open [json.site](https://json.site), copy the JSON, then tap Done and Paste here.")
+                    .font(.footnote).foregroundStyle(.secondary)
+                    // Intercept only this help link. Safari never receives backup
+                    // contents from the app; choosing a file and copying are manual.
+                    .environment(\.openURL, OpenURLAction { url in
+                        guard url == BackupJSONBrowser.siteURL else { return .systemAction }
+                        guard !input.state.isLoading, input.request == nil, !exporting, !confirmExport else { return .handled }
+                        showingJSONSite = true
+                        return .handled
+                    })
+            }.shiftSettingsRows()
             if let notice = message ?? input.state.message {
                 Section { Text(notice).font(.footnote).textSelection(.enabled) }.shiftSettingsRows()
             }
@@ -44,10 +58,13 @@ struct LibraryBackupView: View {
                     ForEach(BackupExportScope.allCases) { Text($0.title).tag($0) }
                 }
                 Button { confirmExport = true } label: {
-                    Label("Export backup", systemImage: "square.and.arrow.up").frame(minHeight: 44)
+                    HStack(spacing: 12) {
+                        ShiftSettingsIcon(symbol: "square.and.arrow.up")
+                        Text("Export backup").foregroundStyle(.primary)
+                    }.frame(minHeight: 44)
                 }
             } header: { Text("Export a backup") } footer: {
-                Text("Export settings separately from routes, saved places and named areas, or put everything in one file.")
+                Text("Save everything together, or choose settings or your saved library.")
             }.shiftSettingsRows()
             Section {
                 SettingsHelp(title: "What's in a backup?", lines: [
@@ -91,6 +108,9 @@ struct LibraryBackupView: View {
         }
         .sheet(item: $input.request, onDismiss: input.dismissed) { request in
             LibraryBackupPicker { url in input.picked(url, for: request) }.id(request.id)
+        }
+        .sheet(isPresented: $showingJSONSite) {
+            BackupJSONBrowser()
         }
         .onChange(of: input.state.preview?.id) { _, id in
             guard id != nil, let backup = input.state.preview?.backup else { return }

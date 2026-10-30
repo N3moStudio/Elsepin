@@ -39,3 +39,11 @@ identify as 2.4.4 (47).
 
 Passing model tests and an IPA build do not establish native gesture behavior,
 account sign-in success, notification appearance, or continuous background operation.
+
+## Build 61 Settings and JSON sheet acceptance (pending device checks)
+- With Solid and Glass, reveal/cancel Settings search, open a search result, return, and confirm the first card has space below the search area. Repeat at an accessibility text size.
+- Tap the compact Appearance card. Confirm Surface is near the top, both choices persist across themes, all eight themes/thirteen icons remain reachable, and Back preserves navigation.
+- In Import & export, tap json.site. Confirm Safari opens inside the app. Use a non-sensitive fixture file on the site, copy JSON, tap Done, then tap the app's Paste button. Check the same selective preview/confirmation flow; dismissal alone must not import anything.
+- Close Safari with Done and swipe dismissal, reopen it, and test offline/error pages. The importer must remain usable and must not retain a stuck sheet.
+- Cancel the Files picker; then open Safari. Repeat with a successful file import and an export. Confirm modal presentations do not overlap and cancellation cannot write imported data.
+- Check VoiceOver link/action labels, long translated labels, keyboard behavior and the compact Appearance card at the largest accessibility size.

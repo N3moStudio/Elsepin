@@ -1,31 +1,28 @@
 # Elsepin current handoff
 
-Updated 28 October 2026. Read AGENTS.md, inspect status and preserve newer work.
+Updated 30 October 2026. Read AGENTS.md, inspect Git status, preserve newer work.
 
-## Current state
-Private Elsepin source on main; public downloads/help in Elsepin-Releases. Development version 2.6.1 (60); published version remains 2.6.0. User authorized an unpublished release draft only. No IPA builds or publication without a new request.
+## Current source and boundaries
+Private source: N3moStudio/Elsepin, main. Development version 2.6.1 (61), unreleased. Public downloads/help: Elsepin-Releases. Last known public release 2.6.0; 2.6.1 is a draft with no assets. Recheck remote state before publication. No release, IPA build or deployment was authorized by this UI-polish task.
+Elsepin is the full app. Veypax is separate; do not copy paid gates or branding. Preserve bundle IDs, defaults/Keychain keys, app group, backup formats and manual movement confirmation.
 
-## Completed appearance changes
-Bloom is fresh/reset default; Abyss maps to Bloom for stored choices and old backups. Eight selectable themes, all thirteen icons retained. Rounded/compact shared presentation retains accessibility categories. Only surface override remains (Theme default by default, Solid, Liquid Glass); color mode follows theme. Old typography/color backup fields decode but do not affect presentation. Library data, identities, keys and full Elsepin capabilities remain intact. No Veypax gates.
+## Current UI and compatibility
+- Eight themes, Bloom default/reset, legacy Abyss maps to Bloom. Thirteen icons retained. Rounded/compact shared presentation respects accessibility sizes.
+- Only Solid and Liquid Glass are selectable surfaces, in that order. Solid is default. Legacy serialized theme material maps to Solid; explicit Glass persists. Color mode follows theme; legacy typography/color backup fields decode without overriding fixed presentation.
+- Settings retains its automatic swipe-revealed native search drawer, inline title and top content margin. Compact Appearance summary replaces promotional text and duplicate row; Appearance remains searchable. Surface picker is above themes.
+- LibraryBackupView opens json.site in BackupJSONBrowser, a native Safari sheet. The footer intercepts only that link. No script bridge, automatic upload or clipboard read; native Paste and existing selective import review/confirmation remain unchanged. Done returns to the importer. File picker and export paths remain intact.
 
-## Evidence and remaining checks
-410 Swift tests passed using Swift 6.4 in WSL, including backup migration/round trips. 14 Python script tests passed; appearance, app identity and helper archive checks passed. Website catalog generation passed (eight themes, thirteen icons); not deployed. Logs: .build/appearance-swift.log and .build/appearance-python-final.log.
-These edits have NOT been compiled with the iOS SDK. The current GitHub workflow always packages an IPA and was deliberately not triggered. Next authorized native build must regenerate from project.yml and validate both targets, followed by iPhone import/appearance acceptance. Do not describe this source as natively build-verified or publish the older IPA as 2.6.1.
-Last native success 40460137350 applies to the prior 2.6.0 baseline, not these changes. Physical-device/provider/accessibility/battery acceptance remains separate.
+## Validation
+30 October: 60 focused Swift tests passed for BackupImport, LibraryBackup, AppearancePolicy and Personalization. Swift syntax parsing passed for changed UI files. Logs: .build/settings-polish-swift.log, .build/settings-polish-parse.log. Syntax parsing is NOT iOS SDK type-checking.
+29 October: full 414 portable Swift tests and 14 Python tests passed for the surface migration/search-spacing change. Logs: .build/settings-surface-swift.log and .build/settings-surface-python.log. No newer shared-model changes in this polish pass.
+Build 61 has NOT been natively compiled. Next requested native build must regenerate project.yml with XcodeGen. Use the acceptance checklist in TESTING.md. Phone layout, Safari file/copy/dismissal flow, provider behavior, signing and battery remain separate acceptance.
 
-## Navigation and continuity
-APP-MAP.md identifies feature ownership and appearance migration paths. BACKUPS.md describes import rules. CHANGE-LEDGER.md records evidence; docs/releases/2.6.1-DRAFT.md is the release text. CHAT-WORKFLOW.md covers sparse optional delegation.
-The deleted arena branch remains deleted. Its saved bundle .build/elsepin-arena-3430259.bundle is recovery history only; reviewed appearance work has now been explicitly reapplied and corrected under the user's new authorization. Veypax is a separate repository with its own verified handoff.
+## Last delivered IPA (does not contain build 61 follow-ups)
+Native run https://github.com/N3moStudio/Elsepin/actions/runs/40826806154 passed at source 506923c3f2f3d7a545ea660474361c575079732f. Both targets: 2.6.1 (60), SDK 27.1. Thirteen icons verified. Ad-hoc packaged; user sideload signing required.
+Local: C:/Users/naith/Downloads/Elsepin 2.6.1.ipa (18,192,618 bytes).
+SHA-256: 3e72bc2646e112e9664d586e60332bc4341e2ff08aa9370d26b9628f43fba547.
+Drive file ID: 1xrv44UVD0SLQ9yQEKvqtI9BjrfwRJi03. Do not claim it contains the current Settings/browser changes.
 
-## Native validation and private delivery — 28 October 2026
-This supersedes the earlier native-build-pending status above. User explicitly authorized packaging and private Drive upload while keeping the release unpublished.
-- Run https://github.com/N3moStudio/Elsepin/actions/runs/40826806154 succeeded at source `506923c3f2f3d7a545ea660474361c575079732f`: tests, native app/extension compilation, signatures and IPA checks passed.
-- Both bundles: 2.6.1 (60), iOS SDK 27.1; all 13 icon choices verified. IPA is ad-hoc packaged and still requires user sideload signing.
-- Local file: C:/Users/naith/Downloads/Elsepin 2.6.1.ipa (18,192,618 bytes).
-- SHA-256: 3e72bc2646e112e9664d586e60332bc4341e2ff08aa9370d26b9628f43fba547; matches GitHub artifact digest.
-- Google Drive file ID: 1xrv44UVD0SLQ9yQEKvqtI9BjrfwRJi03. Release 2.6.1 remains draft with no assets; 2.6.0 remains public. No deployment. Physical-device/provider/accessibility/battery acceptance is still separate.
-
-## Current follow-up — 29 October 2026 (build 61)
-Supersedes the surface policy above: only Solid and Liquid Glass are selectable, in that order. Solid is the fresh/reset default. The retired serialized `theme` value decodes as Solid; existing Glass stays Glass. Theme color/rounded/compact behavior and all icons are unchanged.
-Settings now uses a compact navigation title, automatic native search drawer (not always visible), and 16-point scroll-content top margin. Verify search reveal, dismissal, scrolling and first-card spacing on iPhone across solid/glass and accessibility sizes; no simulator/device visual acceptance was performed here.
-414 portable Swift and 14 Python tests passed. Logs: .build/settings-surface-swift.log and .build/settings-surface-python.log. App identity and diff checks passed. Build 61 has no native compilation or IPA yet. The Drive IPA remains build 60, and its earlier native success does not cover this follow-up. No release or deployment.
+## Navigation
+APP-MAP.md locates UI/migration entry points; BACKUPS.md describes import rules; CHANGE-LEDGER.md records evidence; docs/releases/2.6.1-DRAFT.md contains release text. CHAT-WORKFLOW.md covers sparse optional delegation.
+Deleted arena branch remains deleted; recovery history is .build/elsepin-arena-3430259.bundle. Its reviewed appearance changes were subsequently explicitly authorized and reapplied. Website catalog source has eight themes but has not been redeployed in these follow-ups.

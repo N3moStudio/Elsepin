@@ -671,3 +671,7 @@ Run 40826806154 passed on source 506923c. Both app and extension report 2.6.1 (6
 ## 29 October 2026 — Settings search spacing and explicit surfaces (61)
 
 Address screenshot feedback with compact Settings title, native automatic search drawer and top scroll margin; search is intentionally not always visible. Remove Theme default choice/reset button, default to Solid, migrate legacy theme values to Solid, preserve Glass. Added migration/round-trip tests: 414 Swift and 14 Python pass. Updated project build to 61 to distinguish from delivered IPA 60. No native build, IPA, publication or deployment; on-device scrolling still needs validation.
+
+## 30 October 2026 — Focused Settings/import polish (build 61)
+Applied complementary design guidance without changing palettes, defaults, identity, serialization or movement behavior. Compact Appearance summary replaces the slogan and duplicate row; surface picker moves above themes. Import/export actions share Settings icons; JSON help moves to the footer and opens a native Safari sheet with explicit Done/Paste/review. No automatic web upload, JS bridge or clipboard reading.
+60 targeted Swift tests passed; changed UI sources passed syntax parsing. No iOS SDK type-check or device test; detailed acceptance is in TESTING.md. No IPA, release publication or deployment. Full 414/14 results from 29 October remain earlier evidence, not repeated claims.

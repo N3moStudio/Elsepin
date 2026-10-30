@@ -6,6 +6,14 @@ struct AppearanceSettingsView: View {
     var body: some View {
         List {
             Section {
+                Picker("Surfaces", selection: $preferences.appearanceOverrides.material) {
+                    Text("Solid").tag(AppearanceMaterial.solid)
+                    Text("Liquid Glass").tag(AppearanceMaterial.glass)
+                }
+            } footer: {
+                Text("Your surface choice stays when you switch themes.")
+            }.shiftSettingsRows()
+            Section {
                 ForEach(ShiftVisualStyle.allCases) { style in
                     Button { preferences.visualStyle = style } label: {
                         HStack(spacing: 14) {
@@ -23,14 +31,6 @@ struct AppearanceSettingsView: View {
                     .accessibilityAddTraits(preferences.visualStyle == style ? [.isSelected] : [])
                 }
             } header: { Text("Themes") } footer: { Text("Each theme sets its colors. Your surface and icon choices stay independent.") }.shiftSettingsRows()
-            Section {
-                Picker("Surfaces", selection: $preferences.appearanceOverrides.material) {
-                    Text("Solid").tag(AppearanceMaterial.solid)
-                    Text("Liquid Glass").tag(AppearanceMaterial.glass)
-                }
-            } header: { Text("Make it yours") } footer: {
-                Text("Your surface choice stays when you switch themes. Text stays compact and rounded, and accessibility text sizes are always respected. System menus follow iOS.")
-            }.shiftSettingsRows()
             Section {
                 NavigationLink {
                     AppIconSettingsView()

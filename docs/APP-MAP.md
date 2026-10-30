@@ -66,3 +66,6 @@ Start with the [Product Atlas](BRAND-MAP.md) for appearance, identity, distribut
 - `Tests/AppearancePolicyTests.swift`, `Tests/LibraryBackupTests.swift`, `Tests/BackupImportReviewTests.swift`: migration, library preservation and selective-import regression coverage.
 
 Settings search layout: `Locus/Features/Settings/SettingsView.swift` owns the inline title, automatic navigation search drawer and scroll-content top margin. Preserve swipe-to-reveal; do not force `.always` or overlay search over the list. Confirm scroll behavior on-device.
+
+## Settings polish and JSON helper (build 61)
+`SettingsView.settingsIdentity` is the single compact Appearance entry; `destination(for:)` retains search navigation. `AppearanceSettingsView` places surfaces before themes. `LibraryBackupView` owns the JSON link's sheet state and blocks it while a picker, export or analysis is active. `BackupJSONBrowser` wraps Safari and dismisses through its coordinator; never add script/clipboard bridges or auto-upload backup data. Preserve the file picker's existing access-lease lifecycle in `LibraryBackupInput`.

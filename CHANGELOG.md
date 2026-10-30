@@ -1,11 +1,18 @@
 # Elsepin changelog
 
-Updated through **29 October 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
+Updated through **30 October 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
 is the official release. Earlier Shift entries retain their original names and release status.
 
 [App introduction](README.md) · [Build history](docs/BUILD-HISTORY.md) · [Detailed Change Ledger](docs/CHANGE-LEDGER.md)
 
-## 2.6.1 (61) — unreleased follow-up — 29 October 2026
+## 2.6.1 (61) — unreleased follow-up — 29–30 October 2026
+
+- Replace the oversized Settings promotional card and duplicate Appearance row with one compact theme/surface summary. Keep Appearance in search; preserve all settings destinations.
+- Move the two-choice surface picker above the theme list, retaining all eight themes and thirteen icons.
+- Open the optional json.site helper inside an iOS Safari sheet. Done returns to import; file selection, copy, Paste and import confirmation remain explicit. No JavaScript bridge, automatic backup upload or clipboard reads.
+- Align import/export actions with Settings icon rows; move concise JSON instructions into the section footer.
+- 30 October checks: 60 focused Swift import/backup/appearance/search tests passed, plus syntax parsing of changed UI sources. This is not iOS SDK type-checking or device acceptance.
+
 
 - Keep Settings search in the native swipe-revealed drawer; use a compact navigation title and 16-point content-top spacing to address the reported crowding between search and the first card. Device scroll/layout acceptance remains pending.
 - Simplify Surfaces to Solid first and Liquid Glass second. New/reset preferences use Solid. Remove Theme default and its reset button; old `theme` values decode as Solid without changing explicit Glass choices.

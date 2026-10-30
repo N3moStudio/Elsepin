@@ -22,8 +22,7 @@ struct SettingsView: View {
                         NavigationLink { ConnectionSettingsView() } label: { SettingsConnectionSummary() }
                         setting(.remoteFindMy)
                     }.shiftSettingsRows()
-                    Section("Look & feel") {
-                        setting(.appearance, value: appearanceName)
+                    Section("Display & alerts") {
                         setting(.activity, value: preferences.liveActivities ? "On" : "Off")
                         setting(.widgets)
                         setting(.notifications)
@@ -71,15 +70,15 @@ struct SettingsView: View {
     private var settingsIdentity: some View {
         Section {
             NavigationLink { AppearanceSettingsView() } label: {
-                HStack(alignment: .center, spacing: 18) {
-                    ShiftAppIconPreview(selection: preferences.iconSelection, size: 70)
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("MAKE IT YOURS").font(.caption.weight(.semibold)).tracking(1.5).foregroundStyle(LocusTheme.accent)
-                        Text("Your space. Your way.").font(.title2.weight(.bold)).foregroundStyle(.primary)
+                HStack(alignment: .center, spacing: 14) {
+                    ShiftAppIconPreview(selection: preferences.iconSelection, size: 52)
+                        .accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Appearance").font(.headline).foregroundStyle(.primary)
                         Text(preferences.visualStyle.title + " · " + (preferences.glassPanel ? "Glass" : "Solid"))
                             .font(.subheadline).foregroundStyle(.secondary)
                     }.fixedSize(horizontal: false, vertical: true)
-                }.padding(.vertical, 16)
+                }.padding(.vertical, 8)
             }
         }.shiftSettingsRows()
     }
@@ -121,9 +120,6 @@ struct SettingsView: View {
         }
     }
 
-    private var appearanceName: String {
-        preferences.visualStyle.title
-    }
 }
 
 private struct SettingsConnectionSummary: View {
