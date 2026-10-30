@@ -5,6 +5,21 @@ is the official release. Earlier Shift entries retain their original names and r
 
 [App introduction](README.md) · [Build history](docs/BUILD-HISTORY.md) · [Detailed Change Ledger](docs/CHANGE-LEDGER.md)
 
+## 2.6.1 (62) — private UI test build — 30 October 2026
+
+Requested for Downloads delivery only; native validation is pending. No release publication.
+
+- Give the on-device pairing sheet three connected steps in task order and shorter
+  introductory text. Remove the Pairing help section per the preview feedback.
+  Preserve the real code/status display and native pairing lifecycle.
+- Use the selected theme behind the pairing sheet and the existing themed button
+  style for its primary actions, including existing Reduce Motion behavior.
+- Show all five draft route modes in a wrapping grid; use a single flexible column
+  for accessibility text sizes. Keep mode selection and speed behavior unchanged.
+- Preserve Bloom/Solid defaults, compact rounded text, the larger Settings identity
+  card, all themes/icons and backup compatibility. 57 focused tests and Swift
+  syntax checks passed; native compilation/device checks remain pending.
+
 ## 2.6.1 (61) — unreleased follow-up — 29–30 October 2026
 
 - 30 October private test build: native run `41103527856` passed at source `e7065f2`, with 551 tests (422 Swift, 14 packaging/icon, 19 Companion, 96 cloud). Both bundles are 2.6.1 (61), SDK 27.1; the IPA passed package checks and matched GitHub SHA-256 `59031619b950c09b915b9b70ca7a29501dbef3cf2df321356f7098740fe91cbc`. Saved as `Elsepin 2.6.1 build 61.ipa` in Downloads. Three existing trust/delegate compiler warnings remain recorded in the build history. Release is still an unpublished draft; real-device acceptance is pending.

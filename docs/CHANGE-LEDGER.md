@@ -1,9 +1,22 @@
 # Elsepin Change Ledger
 
-Updated through **26 October 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
-is unreleased. Earlier Shift entries retain their original names and release status.
+Updated through **30 October 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
+is the last recorded public release. Earlier entries retain their original validation context.
 
 See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all recorded 2.5.x/2.6.0 native runs.
+
+## Video-inspired UI polish — local, unbuilt — 30 October 2026
+
+Reviewed all three supplied videos through sampled visuals and local transcripts.
+Installed Damir Sokolovsky's `unslop` alongside existing skills, keeping its
+original guidance/credit and the project's native constraints. [UI-POLISH](UI-POLISH.md)
+records provenance, before/after decisions, exclusions and device acceptance.
+Changed only pairing-sheet presentation and draft route-mode layout; engines,
+Dynamic Island ownership, stored values, imports and manual confirmation remain.
+57 focused tests and both Swift syntax checks passed. Responsive mockup checks
+passed at 320/390/736px; native layout/compilation remain unverified for this pass.
+No push, IPA, release, deployment or API-key use. Delivered build 61 is unchanged.
+Preview feedback: retain Connected steps, remove the Pairing help section entirely.
 
 ## 2.6.0 (59) — Elsepin development — 26 October 2026
 

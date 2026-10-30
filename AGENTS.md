@@ -7,3 +7,4 @@
 - Before identity changes read [brand map](docs/BRAND-MAP.md); before backup changes read [backups](docs/BACKUPS.md). Preserve defaults/Keychain keys, bundle IDs, app group and existing backup formats unless implementing an explicit migration. Retain required third-party notices and keep credentials out of source.
 - Elsepin remains the full product: never copy Veypax paid gates into it. Widgets prepare a pin and always require manual in-app confirmation before movement. Keep Stop available.
 - Locate related code with [app map](docs/APP-MAP.md); maintain historical evidence in [change ledger](docs/CHANGE-LEDGER.md). User approval is still required by task scope for publication; a handoff does not grant it.
+- Before visual polish, read [UI polish constraints and evidence](docs/UI-POLISH.md). Supplemental web design skills must preserve Elsepin's approved native appearance and interactions.

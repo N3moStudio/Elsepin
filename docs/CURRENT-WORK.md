@@ -2,8 +2,23 @@
 
 Updated 30 October 2026. Read AGENTS.md, inspect Git status, preserve newer work.
 
+## Build 62 UI follow-up — native validation pending
+
+Video-inspired UI pass: pairing sheet now uses the selected theme, three connected
+instructions in task order and existing themed button feedback. The user requested
+removal of Pairing help; do not restore that disclosure/card. Draft route modes
+wrap into a grid with a single accessibility column.
+No engine, PIN lifetime, Live Activity, storage or backup changes. `unslop` was
+installed alongside existing skills; see [UI-POLISH](UI-POLISH.md) for provenance,
+constraints and checks. 57 focused Swift tests and changed-file syntax parsing
+passed; the browser comparison was checked at 320/390/736px. Apple SDK compilation
+and real-device interaction remain pending for these edits. The user has now
+authorized uploading these changes to the private repository and building an IPA
+for Downloads. Build 62 is being prepared; no release publication, website
+deployment or Drive upload is authorized by this follow-up.
+
 ## Current source and boundaries
-Private source: N3moStudio/Elsepin, main. Development version 2.6.1 (61), privately built for user testing on 30 October. Public downloads/help: Elsepin-Releases. Last known public release 2.6.0; 2.6.1 remains a draft with no assets. The user authorized this native build and Downloads delivery, explicitly excluding release publication. No website deployment or Drive upload was requested.
+Private source: N3moStudio/Elsepin, main. Development version 2.6.1 (62); build 61 is the latest delivered IPA until the new native run passes. Public downloads/help: Elsepin-Releases. Last known public release 2.6.0; 2.6.1 remains a draft with no assets. The user authorized this native build and Downloads delivery, explicitly excluding release publication. No website deployment or Drive upload was requested.
 Elsepin is the full app. Veypax is separate; do not copy paid gates or branding. Preserve bundle IDs, defaults/Keychain keys, app group, backup formats and manual movement confirmation.
 
 ## Current UI and compatibility

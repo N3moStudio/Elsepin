@@ -11,6 +11,7 @@ struct RoutePlannerSheet: View {
     @EnvironmentObject private var library: TripLibrary
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var searchEndpoint: Endpoint?
     @State private var showImporter = false
     @State private var showExporter = false
@@ -363,8 +364,9 @@ struct RoutePlannerSheet: View {
                         }.buttonStyle(.borderless)
                     }
                 } else {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
+                    // Keep every mode discoverable without a hidden horizontal
+                    // scroll. Accessibility text gets full-width wrapping rows.
+                    LazyVGrid(columns: modeColumns, alignment: .leading, spacing: 8) {
                             ForEach(TravelMode.allCases) { mode in
                                 Button {
                                     planner.draftMode = mode
@@ -372,7 +374,9 @@ struct RoutePlannerSheet: View {
                                     planner.modeChanged(mode)
                                 } label: {
                                     Label(mode.title, systemImage: mode.icon).font(.subheadline.weight(.semibold))
-                                        .padding(.horizontal, 14).frame(minHeight: 44)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                        .padding(.horizontal, 12).padding(.vertical, 8)
+                                        .frame(maxWidth: .infinity, minHeight: 44)
                                         .foregroundStyle(planner.draftMode == mode ? LocusTheme.onAccent : Color.primary)
                                         .background(planner.draftMode == mode ? LocusTheme.accent : Color.primary.opacity(0.055), in: Capsule())
                                         .contentShape(Capsule())
@@ -380,13 +384,18 @@ struct RoutePlannerSheet: View {
                                     .accessibilityLabel(mode.title)
                                     .accessibilityAddTraits(planner.draftMode == mode ? .isSelected : [])
                             }
-                        }.padding(.vertical, 4)
-                    }.accessibilityLabel("Travel mode")
+                    }.padding(.vertical, 4).accessibilityLabel("Travel mode")
                     draftSpeedControl
                 }
                 }
             }
         }
+    }
+
+    private var modeColumns: [GridItem] {
+        typeSize.isAccessibilitySize
+            ? [GridItem(.flexible(minimum: 0))]
+            : [GridItem(.adaptive(minimum: 110), spacing: 8)]
     }
 
     private var draftSpeedControl: some View {

@@ -23,7 +23,6 @@ struct PairOnDeviceView: View {
             if mode == .sheet {
                 NavigationStack {
                     scrollContent
-                        .background(Color(uiColor: .systemBackground).ignoresSafeArea())
                         .shiftScreen().loggedNavigationTitle("Pair on this iPhone")
                         .navigationBarTitleDisplayMode(.inline)
                         .toolbar {
@@ -65,10 +64,6 @@ struct PairOnDeviceView: View {
 
                 statusCard
 
-                if mode == .sheet {
-                    tipCard
-                }
-
                 actions
             }
             .padding(mode == .embedded ? 16 : 20)
@@ -79,7 +74,7 @@ struct PairOnDeviceView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("No computer needed")
                 .font(.title2.weight(.bold))
-            Text("Elsepin advertises a pairable host. iOS connects from Developer Mode, then Elsepin shows a 6-digit code for you to type.")
+            Text("Start in Elsepin, then finish in iPhone Settings.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
@@ -96,42 +91,44 @@ struct PairOnDeviceView: View {
     }
 
     private var steps: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            step(1, "Tap Start pairing and allow Local Network + Location when asked.")
-            step(2, "Touch and hold Elsepin in the Dynamic Island for the code. Notifications and this screen are fallbacks.")
-            step(3, "Open Settings › Privacy & Security › Developer Mode › Pair with Elsepin → Pair.")
-            step(4, "Enter your unlock passcode first. On the next prompt, type Elsepin’s 6-digit code.")
+        // These are instructions, not inferred completion states. The native
+        // pairing service remains the only source of success or a real code.
+        VStack(alignment: .leading, spacing: 0) {
+            step(1, title: "Start here", detail: "Tap Start pairing. Allow Local Network and Location when asked.")
+            step(2, title: "Open iPhone Settings", detail: "Privacy & Security › Developer Mode › Pair with Elsepin. Tap Pair, then enter your unlock passcode.")
+            step(3, title: "Enter the pairing code", detail: "Touch and hold Elsepin in the Dynamic Island. Enter its 6-digit code in the second Settings prompt.", isLast: true)
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .locusGlass(.regular, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
-    private func step(_ n: Int, _ text: String) -> some View {
+    private func step(_ n: Int, title: String, detail: String, isLast: Bool = false) -> some View {
         HStack(alignment: .top, spacing: 12) {
-            Text("\(n)")
-                .font(.caption.weight(.bold))
-                .foregroundStyle(LocusTheme.onAccent)
-                .frame(width: 22, height: 22)
-                .background(LocusTheme.accent, in: Circle())
-            Text(text)
-                .font(.subheadline)
-                .foregroundStyle(.primary)
+            Text("\(n)").font(.caption.weight(.semibold))
+                .foregroundStyle(LocusTheme.accent)
+                .frame(width: 24, height: 24)
+                .background(LocusTheme.accent.opacity(0.10), in: Circle())
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title).font(.subheadline.weight(.semibold))
+                Text(detail).font(.subheadline).foregroundStyle(.secondary)
+            }
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.bottom, isLast ? 0 : 20)
         }
-    }
-
-    private var tipCard: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Label("If the code isn’t here yet", systemImage: "lightbulb.fill")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(LocusTheme.accentSecondary)
-            Text("Keep the app listening while you confirm in Developer Mode. Don’t force-quit. If “Pair with Elsepin” vanishes, stop/start pairing and reopen Developer Mode.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+        .fixedSize(horizontal: false, vertical: true)
+        // Background receives the final wrapped row height. It needs no
+        // geometry state, timer or animated progress/completion assumption.
+        .background(alignment: .leading) {
+            if !isLast {
+                Rectangle().fill(LocusTheme.accent.opacity(0.22))
+                    .frame(width: 1).padding(.leading, 11.5).padding(.top, 24)
+            }
         }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(LocusTheme.accentSecondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Step \(n) of 3. \(title). \(detail)")
     }
 
     @ViewBuilder
@@ -212,14 +209,9 @@ struct PairOnDeviceView: View {
                 host.start(pairingStore: pairing, preferences: preferences)
             } label: {
                 Text(host.phase == .idle ? "Start pairing" : "Try again")
-                    .font(.headline)
-                    .foregroundStyle(LocusTheme.onAccent)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(Capsule().fill(LocusTheme.accent))
-                    .contentShape(Capsule())
+                    .frame(maxWidth: .infinity, minHeight: 52)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(ShiftActionStyle())
         case .succeeded:
             Button {
                 if let onFinished {
@@ -229,14 +221,9 @@ struct PairOnDeviceView: View {
                 }
             } label: {
                 Text(mode == .embedded ? "Continue" : "Done")
-                    .font(.headline)
-                    .foregroundStyle(LocusTheme.onAccent)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(Capsule().fill(LocusTheme.accent))
-                    .contentShape(Capsule())
+                    .frame(maxWidth: .infinity, minHeight: 52)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(ShiftActionStyle())
         case .advertising, .deviceConnected, .awaitingPIN:
             Text({
                 switch host.phase {
