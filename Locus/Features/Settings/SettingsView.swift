@@ -68,17 +68,20 @@ struct SettingsView: View {
     }
 
     private var settingsIdentity: some View {
+        // Intentionally roomier than the compact settings rows: the user kept
+        // this larger identity card while choosing compact layout elsewhere.
         Section {
             NavigationLink { AppearanceSettingsView() } label: {
-                HStack(alignment: .center, spacing: 14) {
-                    ShiftAppIconPreview(selection: preferences.iconSelection, size: 52)
+                HStack(alignment: .center, spacing: 18) {
+                    ShiftAppIconPreview(selection: preferences.iconSelection, size: 70)
                         .accessibilityHidden(true)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Appearance").font(.headline).foregroundStyle(.primary)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("MAKE IT YOURS").font(.caption.weight(.semibold)).tracking(1.5).foregroundStyle(LocusTheme.accent)
+                        Text("Your space. Your way.").font(.title2.weight(.bold)).foregroundStyle(.primary)
                         Text(preferences.visualStyle.title + " · " + (preferences.glassPanel ? "Glass" : "Solid"))
                             .font(.subheadline).foregroundStyle(.secondary)
                     }.fixedSize(horizontal: false, vertical: true)
-                }.padding(.vertical, 8)
+                }.padding(.vertical, 16)
             }
         }.shiftSettingsRows()
     }
