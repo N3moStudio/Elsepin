@@ -9,6 +9,7 @@ struct PairOnDeviceView: View {
     }
 
     @EnvironmentObject private var pairing: PairingStore
+    @EnvironmentObject private var preferences: SessionPreferences
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
 
@@ -48,6 +49,7 @@ struct PairOnDeviceView: View {
                 _ = host.pin
             }
         }
+        .onDisappear { host.resetToIdle() }
     }
 
     private var scrollContent: some View {
@@ -87,7 +89,7 @@ struct PairOnDeviceView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Follow these steps")
                 .font(.headline)
-            Text("Keep Elsepin open. You’ll leave briefly for Settings, then come back with a code.")
+            Text("Start here, then open iPhone Settings. Touch and hold Elsepin in the Dynamic Island to read the code.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
@@ -96,7 +98,7 @@ struct PairOnDeviceView: View {
     private var steps: some View {
         VStack(alignment: .leading, spacing: 12) {
             step(1, "Tap Start pairing and allow Local Network + Location when asked.")
-            step(2, "Allow notifications — the code can appear as a banner over Settings.")
+            step(2, "Touch and hold Elsepin in the Dynamic Island for the code. Notifications and this screen are fallbacks.")
             step(3, "Open Settings › Privacy & Security › Developer Mode › Pair with Elsepin → Pair.")
             step(4, "Enter your unlock passcode first. On the next prompt, type Elsepin’s 6-digit code.")
         }
@@ -147,6 +149,8 @@ struct PairOnDeviceView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
+                Text("The code will appear in the expanded Dynamic Island when iOS connects. Live Activities must be enabled.")
+                    .font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center)
             case .deviceConnected:
                 ProgressView()
                 Text("iPhone connected")
@@ -164,6 +168,8 @@ struct PairOnDeviceView: View {
                     .monospacedDigit()
                     .foregroundStyle(LocusTheme.accent)
                     .textSelection(.enabled)
+                    .privacySensitive()
+                    .accessibilityLabel("Pairing code \(pin.map(String.init).joined(separator: " "))")
                 Text("Second prompt only — after your unlock passcode.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -203,7 +209,7 @@ struct PairOnDeviceView: View {
         case .idle, .failed:
             Button {
                 host.acknowledgeFailure()
-                host.start(pairingStore: pairing)
+                host.start(pairingStore: pairing, preferences: preferences)
             } label: {
                 Text(host.phase == .idle ? "Start pairing" : "Try again")
                     .font(.headline)

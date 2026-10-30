@@ -7,6 +7,9 @@ is the official release. Earlier Shift entries retain their original names and r
 
 ## 2.6.1 (61) — unreleased follow-up — 29–30 October 2026
 
+- Show on-device pairing progress and the generated six-digit code in the existing Live Activity, including the expanded Dynamic Island. Start before leaving Elsepin for iPhone Settings; retain notification and in-app fallbacks. Respect the Live Activities preference and system authorization.
+- Clear pairing presentation on success/failure/cancel, reject late callbacks from cancelled attempts, and bound code visibility to five minutes after the latest pairing event. Codes stay out of logs/backups and are privacy-sensitive/stale-aware. This display deadline does not change the native protocol's validity.
+- Pairing follow-up: all 422 portable Swift tests passed, including eight new code, expiry, compatibility and activity-ownership tests. Changed native sources passed syntax parsing only; native compilation, background pairing and Island presentation remain pending. No IPA or publication.
 - Replace the oversized Settings promotional card and duplicate Appearance row with one compact theme/surface summary. Keep Appearance in search; preserve all settings destinations.
 - Move the two-choice surface picker above the theme list, retaining all eight themes and thirteen icons.
 - Open the optional json.site helper inside an iOS Safari sheet. Done returns to import; file selection, copy, Paste and import confirmation remain explicit. No JavaScript bridge, automatic backup upload or clipboard reads.

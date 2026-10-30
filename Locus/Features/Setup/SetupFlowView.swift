@@ -185,6 +185,8 @@ struct SetupFlowView: View {
                 ProgressView("Waiting to pair…")
                 Text("Settings → Privacy & Security → Developer Mode → Pair with Elsepin")
                     .font(.subheadline).foregroundStyle(.secondary)
+                Text("In Settings, touch and hold Elsepin in the Dynamic Island for the code. If Live Activities are off, use the notification or return here.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
         case .deviceConnected: ProgressView("Preparing code…")
         case .awaitingPIN(let pin):
@@ -216,7 +218,7 @@ struct SetupFlowView: View {
             if supportsOnDevicePairing {
                 primaryButton("Pair iPhone") {
                     importHelp = nil; connection.cancelCheck()
-                    pairingHost.acknowledgeFailure(); pairingHost.start(pairingStore: pairing)
+                    pairingHost.acknowledgeFailure(); pairingHost.start(pairingStore: pairing, preferences: preferences)
                 }
             } else { primaryButton("Import pairing file") { showImporter = true } }
         } else {

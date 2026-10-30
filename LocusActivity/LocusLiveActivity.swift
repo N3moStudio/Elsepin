@@ -13,7 +13,7 @@ struct LocusLiveActivity: Widget {
             ActivityLockScreen(context: context)
                 .activityBackgroundTint(ShiftPalette.color(.canvas, style: ShiftVisualStyle(storedValue: context.state.visualStyle), dark: true))
                 .activitySystemActionForegroundColor(.white)
-                .widgetURL(URL(string: "shift://session"))
+                .widgetURL(context.state.pairing == nil ? URL(string: "shift://session") : nil)
         } dynamicIsland: { context in
             let phase = context.state.presentedPhase(at: Date(), systemIsStale: context.isStale)
             return DynamicIsland {
@@ -22,7 +22,9 @@ struct LocusLiveActivity: Widget {
                         .padding(.leading, 6)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    if let last = context.state.lastConfirmedAt, context.state.islandShowsTimer != false {
+                    if context.state.pairing != nil {
+                        Text("Setup").font(.caption).foregroundStyle(.secondary).padding(.trailing, 6)
+                    } else if let last = context.state.lastConfirmedAt, context.state.islandShowsTimer != false {
                         Text(last, style: .timer)
                             .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
                             .accessibilityLabel("Time since the last location update was sent")
@@ -32,18 +34,28 @@ struct LocusLiveActivity: Widget {
                     }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    ActivityDetails(state: context.state, phase: phase, place: context.state.islandPlace,
+                    if let pairing = context.state.pairing {
+                        PairingActivityDetails(pairing: pairing, systemIsStale: context.isStale)
+                            .padding(.horizontal, 14).padding(.top, 4).padding(.bottom, 6)
+                    } else {
+                        ActivityDetails(state: context.state, phase: phase, place: context.state.islandPlace,
                                     journey: context.state.visibleJourney(onIsland: true, at: Date(), systemIsStale: context.isStale),
                                     showCommandTime: false,
                                     systemIsStale: context.isStale, compactServiceRows: true)
                         .padding(.horizontal, 14).padding(.top, 4).padding(.bottom, 6)
+                    }
                 }
             } compactLeading: {
-                Image(systemName: phase.symbol).foregroundStyle(phase.tint(style: ShiftVisualStyle(storedValue: context.state.visualStyle)))
+                Image(systemName: context.state.pairing == nil ? phase.symbol : "key.fill")
+                    .foregroundStyle(phase.tint(style: ShiftVisualStyle(storedValue: context.state.visualStyle)))
             } compactTrailing: {
                 // A system-rendered timer reports the age of a historical fact,
                 // even when iOS delays host updates or the stale presentation.
-                if context.state.remoteFindMy != nil || context.state.remoteLife360 != nil {
+                if let pairing = context.state.pairing {
+                    Text(pairing.visibleCode(at: Date(), systemIsStale: context.isStale) == nil ? "Pair" : "Code")
+                        .font(.caption2).foregroundStyle(.secondary)
+                        .accessibilityLabel("Elsepin pairing. Touch and hold for details.")
+                } else if context.state.remoteFindMy != nil || context.state.remoteLife360 != nil {
                     ServiceActivityIcons(state: context.state, systemIsStale: context.isStale)
                 } else if let last = context.state.lastConfirmedAt, context.state.islandShowsTimer != false,
                    phase == .active || phase == .unverified {
@@ -54,13 +66,15 @@ struct LocusLiveActivity: Widget {
                     Image(systemName: phase.symbol).font(.caption2).foregroundStyle(phase.tint(style: ShiftVisualStyle(storedValue: context.state.visualStyle)))
                 }
             } minimal: {
-                if context.state.remoteFindMy != nil || context.state.remoteLife360 != nil {
+                if context.state.pairing != nil {
+                    Image(systemName: "key.fill").accessibilityLabel("Elsepin pairing")
+                } else if context.state.remoteFindMy != nil || context.state.remoteLife360 != nil {
                     ServiceActivityIcons(state: context.state, systemIsStale: context.isStale)
                 } else {
                     Image(systemName: phase.symbol).foregroundStyle(phase.tint(style: ShiftVisualStyle(storedValue: context.state.visualStyle)))
                 }
             }
-            .widgetURL(URL(string: "shift://session"))
+            .widgetURL(context.state.pairing == nil ? URL(string: "shift://session") : nil)
             .keylineTint(phase.tint(style: ShiftVisualStyle(storedValue: context.state.visualStyle)))
         }
     }
@@ -73,7 +87,7 @@ private struct ActivityLockScreen: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 ShiftWidgetBrand(design: ShiftIconDesign(rawValue: context.state.iconDesign ?? "")).foregroundStyle(phase.tint(style: ShiftVisualStyle(storedValue: context.state.visualStyle)))
-                Image(systemName: phase.symbol).font(.caption).foregroundStyle(phase.tint(style: ShiftVisualStyle(storedValue: context.state.visualStyle)))
+                Image(systemName: context.state.pairing == nil ? phase.symbol : "key.fill").font(.caption).foregroundStyle(phase.tint(style: ShiftVisualStyle(storedValue: context.state.visualStyle)))
                 Spacer()
                 if context.state.lowPower {
                     Image(systemName: "battery.25percent").foregroundStyle(.yellow)
@@ -85,12 +99,40 @@ private struct ActivityLockScreen: View {
                         .accessibilityLabel("Time since the last location update was sent")
                 }
             }
-            ActivityDetails(state: context.state, phase: phase, place: context.state.place,
+            if let pairing = context.state.pairing {
+                PairingActivityDetails(pairing: pairing, systemIsStale: context.isStale)
+            } else {
+                ActivityDetails(state: context.state, phase: phase, place: context.state.place,
                             journey: context.state.visibleJourney(onIsland: false, at: Date(), systemIsStale: context.isStale),
                             systemIsStale: context.isStale)
+            }
         }
         .padding(18)
         .foregroundStyle(.white)
+    }
+}
+
+private struct PairingActivityDetails: View {
+    let pairing: PairingActivity
+    let systemIsStale: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if pairing.isExpired(at: Date(), systemIsStale: systemIsStale) {
+                Text("Open Elsepin to check pairing").font(.headline)
+                Text("The code is no longer shown here.").font(.caption).foregroundStyle(.secondary)
+            } else {
+                Text(pairing.title).font(.headline)
+                if let code = pairing.visibleCode(at: Date(), systemIsStale: systemIsStale) {
+                    Text(code)
+                        .font(.system(.largeTitle, design: .rounded, weight: .bold))
+                        .monospacedDigit().tracking(5).lineLimit(1).minimumScaleFactor(0.7)
+                        .privacySensitive()
+                        .accessibilityLabel("Pairing code \(code.map(String.init).joined(separator: " "))")
+                }
+                Text(pairing.instruction).font(.caption).foregroundStyle(.secondary)
+            }
+        }.frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

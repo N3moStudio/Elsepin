@@ -107,7 +107,7 @@ final class SpoofSession: ObservableObject {
         didSet { saveTripCheckpoint(force: true) }
     }
     let preferences = SessionPreferences.shared
-    let activity = SessionActivityController()
+    let activity = SessionActivityController.shared
     private var sessionID = UUID()
     private var epoch = 0
     private var sessionRequested = false
