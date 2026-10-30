@@ -7,6 +7,7 @@ is the official release. Earlier Shift entries retain their original names and r
 
 ## 2.6.1 (61) — unreleased follow-up — 29–30 October 2026
 
+- 30 October private test build: native run `41103527856` passed at source `e7065f2`, with 551 tests (422 Swift, 14 packaging/icon, 19 Companion, 96 cloud). Both bundles are 2.6.1 (61), SDK 27.1; the IPA passed package checks and matched GitHub SHA-256 `59031619b950c09b915b9b70ca7a29501dbef3cf2df321356f7098740fe91cbc`. Saved as `Elsepin 2.6.1 build 61.ipa` in Downloads. Three existing trust/delegate compiler warnings remain recorded in the build history. Release is still an unpublished draft; real-device acceptance is pending.
 - Show on-device pairing progress and the generated six-digit code in the existing Live Activity, including the expanded Dynamic Island. Start before leaving Elsepin for iPhone Settings; retain notification and in-app fallbacks. Respect the Live Activities preference and system authorization.
 - Clear pairing presentation on success/failure/cancel, reject late callbacks from cancelled attempts, and bound code visibility to five minutes after the latest pairing event. Codes stay out of logs/backups and are privacy-sensitive/stale-aware. This display deadline does not change the native protocol's validity.
 - Pairing follow-up: all 422 portable Swift tests passed, including eight new code, expiry, compatibility and activity-ownership tests. Changed native sources passed syntax parsing only; native compilation, background pairing and Island presentation remain pending. No IPA or publication.

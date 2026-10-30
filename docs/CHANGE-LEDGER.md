@@ -683,3 +683,7 @@ All 422 portable Swift tests passed (eight new pairing tests), with native-sourc
 
 ## 30 October 2026 — Final Settings comparison choice
 User chose the compact overall Settings layout but retained the original larger identity card. Restored its 70-point icon, “MAKE IT YOURS” caption, title2 “Your space. Your way.” heading and original card spacing; theme/surface subtitle remains live. Keep the duplicate Appearance row removed, search spacing unchanged, and all theme/icon options. Updated the handoff/map/release draft to prevent future polish from undoing this choice. Swift syntax parsing and diff checks passed; no model changes, new tests, native build, IPA or publication.
+
+## 30 October 2026 — Authorized build 61 IPA delivery, unpublished
+Built source e7065f27ac863199b5d9a26ddcebe596a8154cc6 in native run 41103527856. All 551 tests passed (422 Swift, 14 packaging/icon, 19 Companion, 96 cloud), and app/extension Release compilation and package/signature checks succeeded. Recorded the three existing trust/delegate warnings in BUILD-HISTORY.md, retaining complete original logs under .build/artifacts/41103527856/.
+Downloaded artifact 13000346208, verified both bundles 2.6.1 (61)/SDK 27.1, all 13 icons, required resources and SHA-256 against GitHub, then copied the exact bytes to Downloads/Elsepin 2.6.1 build 61.ipa. Digest 59031619b950c09b915b9b70ca7a29501dbef3cf2df321356f7098740fe91cbc, 18,258,461 bytes. No public asset, release or deployment; old Drive IPA remains build 60. Device pairing, Island/UI behavior and battery are still acceptance checks.

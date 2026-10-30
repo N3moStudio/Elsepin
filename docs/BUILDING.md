@@ -28,7 +28,7 @@ swift test
 bash scripts/build-ipa.sh
 ```
 
-Output: `build/Elsepin <version>.ipa` (the current development version is 2.6.0).
+Output: `build/Elsepin <version>.ipa` (the current development version is 2.6.1).
 The filename uses the built app’s version. The packager verifies the extension,
 required resources, app-group entitlements, and appearance metadata. Its ad-hoc
 signatures are placeholders; SideStore still needs to sign the installation.
@@ -79,7 +79,7 @@ IPA validator checks the compiled bundle IDs and URL scheme.
 
 ## Official versus prerelease builds
 
-The current source is Elsepin 2.6.0 (59), still in development. Creating an IPA
+The current source is Elsepin 2.6.1 (61), privately built for testing. Creating an IPA
 artifact does not publish a release or declare it stable. Verify both target
 versions and the resolved `ShiftReleaseChannel` metadata before distribution;
 that internal compatibility key intentionally retains its old name.

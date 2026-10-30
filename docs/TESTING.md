@@ -48,7 +48,7 @@ account sign-in success, notification appearance, or continuous background opera
 - Cancel the Files picker; then open Safari. Repeat with a successful file import and an export. Confirm modal presentations do not overlap and cancellation cannot write imported data.
 - Check VoiceOver link/action labels, long translated labels, keyboard behavior and the larger Appearance card at the largest accessibility size.
 
-## Build 61 pairing Live Activity acceptance (pending native/device checks)
+## Build 61 pairing Live Activity acceptance (native build passed; device checks pending)
 - Start on-device pairing with Live Activities enabled, then switch directly to iPhone Settings. Confirm a single Elsepin activity appears before the code exists, progresses to Preparing code, then shows the six digits on press-and-hold. It must match the native pairing prompt/in-app code, including leading zeros.
 - Repeat with notification permission denied. The activity must not depend on notification authorization. Repeat with Live Activities disabled and the extension omitted; the app/notification fallback must remain usable and pairing must not crash.
 - Complete pairing, cancel from either setup entry point, fail a pairing attempt, and leave the setup screen. Confirm code/activity removal, cleared PIN notifications, and no late callback restoring the old code. After cancellation native work can still finish; retry must explain a busy worker rather than silently do nothing.

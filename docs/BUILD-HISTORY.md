@@ -1,10 +1,19 @@
 # Elsepin build history
 
-Updated **26 October 2026**, America/Los_Angeles. Read the [full changelog](../CHANGELOG.md)
+Updated **30 October 2026**, America/Los_Angeles. Read the [full changelog](../CHANGELOG.md)
 for feature details. This page separates compilation, test artifacts and published
 releases so a successful check is not mistaken for an available download.
 
-## Current status: 2.6.0 (59), official — 27 October 2026
+## Latest private test build: 2.6.1 (61) — 30 October 2026
+
+User authorized an IPA in Downloads for pairing/UI testing, with release publication explicitly excluded. [Run 41103527856](https://github.com/N3moStudio/Elsepin/actions/runs/41103527856) succeeded at source `e7065f27ac863199b5d9a26ddcebe596a8154cc6`. All 551 tests passed: 422 Swift model, 14 packaging/icon, 19 Companion and 96 cloud-helper tests. Native app/extension compilation, ad-hoc signature checks and packaging passed.
+
+Artifact `13000346208`: 18,258,461 bytes; both bundles 2.6.1 (61), SDK 27.1; 13 icons verified. Exact GitHub digest matches the copy at `C:/Users/naith/Downloads/Elsepin 2.6.1 build 61.ipa`:
+`59031619b950c09b915b9b70ca7a29501dbef3cf2df321356f7098740fe91cbc`.
+
+Original logs and local receipt: `.build/artifacts/41103527856/`. Three pre-existing compiler warnings: deprecated certificate lookup in `CompanionClient.swift:168` and `RemoteFindMyController.swift:392`, and delegate actor isolation in `LocationVerificationController.swift:6`. No new pairing/browser compile warnings. Device UI, background pairing/Island delivery, permissions, sideload signing and energy behavior remain user acceptance checks. Release 2.6.1 remains a draft with no uploaded assets; build 60 on Google Drive is unchanged.
+
+## Current public release: 2.6.0 (59), official — 27 October 2026
 
 Published the exact IPA from successful Mac run `40460137350`, source
 `304756f035172d6e8e3406a451ee57c25cd07951`. Workflow tests and native packaging
