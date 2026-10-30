@@ -79,10 +79,12 @@ The conversational comparison passed browser checks at 320/390/736px and its
 action/reset interactions; it is an illustrative mockup, not iPhone evidence.
 Local evidence: `.build/video-review/` (ignored, not part of the app).
 
-Before distribution, compile with the supported Mac workflow when a build is
-authorized and check on iPhone: all themes, small widths, accessibility sizes,
+The subsequently authorized build 62 passed native compilation and all 551 CI
+tests on run 41126221099; the exact Downloads IPA passed integrity/package checks.
+Three pre-existing warnings remain, with no new UI diagnostics. Still check on
+iPhone: all themes, small widths, accessibility sizes,
 VoiceOver step order, pairing cancel/retry/background PIN delivery, and each
 route mode's existing behavior. The delivered build 61 predates this pass.
 No IPA, push, deployment or release was made during the initial polish pass.
-The user subsequently requested build 62 in Downloads; its native evidence will
-be recorded in CURRENT-WORK and BUILD-HISTORY. Publication remains excluded.
+The user subsequently requested build 62 in Downloads; its native evidence
+is recorded in CURRENT-WORK and BUILD-HISTORY. Publication remains excluded.

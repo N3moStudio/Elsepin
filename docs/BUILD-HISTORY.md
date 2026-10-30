@@ -4,7 +4,25 @@ Updated **30 October 2026**, America/Los_Angeles. Read the [full changelog](../C
 for feature details. This page separates compilation, test artifacts and published
 releases so a successful check is not mistaken for an available download.
 
-## Latest private test build: 2.6.1 (61) — 30 October 2026
+## Latest private test build: 2.6.1 (62) — 30 October 2026
+
+[Run 41126221099](https://github.com/N3moStudio/Elsepin/actions/runs/41126221099) passed
+at source `a213d8b37a87759b0db719a9caa2ba571427330e`. This adds the three-step pairing
+guide without Pairing help, themed pairing surfaces/actions and all five visible
+draft travel modes. All 551 tests passed (422 Swift, 14 packaging/icon, 19 Companion,
+96 cloud), followed by native app/extension compilation and signature/package checks.
+
+Artifact `13010842478`: 18,260,198 bytes; both bundles 2.6.1 (62), SDK 27.1;
+13 icons and required resources verified. The GitHub digest matches the exact
+Downloads copy at `C:/Users/naith/Downloads/Elsepin 2.6.1 build 62.ipa`:
+`4d3ccac5a529b957a3ab2eb945747e2eae65d31b9c3837e6a7b8840d6f491d05`.
+
+Logs and receipt: `.build/artifacts/41126221099/`. The same three compiler warnings
+as build 61 remain: two deprecated certificate lookups and location-delegate actor
+isolation. No new UI diagnostics. Device acceptance is pending; release 2.6.1 is
+still an unpublished draft without assets. No website deployment or Drive upload.
+
+## Earlier private test build: 2.6.1 (61) — 30 October 2026
 
 User authorized an IPA in Downloads for pairing/UI testing, with release publication explicitly excluded. [Run 41103527856](https://github.com/N3moStudio/Elsepin/actions/runs/41103527856) succeeded at source `e7065f27ac863199b5d9a26ddcebe596a8154cc6`. All 551 tests passed: 422 Swift model, 14 packaging/icon, 19 Companion and 96 cloud-helper tests. Native app/extension compilation, ad-hoc signature checks and packaging passed.
 

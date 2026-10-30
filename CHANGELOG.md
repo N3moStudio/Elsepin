@@ -7,7 +7,12 @@ is the official release. Earlier Shift entries retain their original names and r
 
 ## 2.6.1 (62) — private UI test build — 30 October 2026
 
-Requested for Downloads delivery only; native validation is pending. No release publication.
+Delivered privately to Downloads. [Native run 41126221099](https://github.com/N3moStudio/Elsepin/actions/runs/41126221099)
+passed at source `a213d8b37a87759b0db719a9caa2ba571427330e`: 422 Swift, 14 packaging/icon,
+19 Companion and 96 cloud tests (551 total), native app/extension compilation and
+signature/package checks. Both bundles are 2.6.1 (62), SDK 27.1. Download integrity,
+thirteen icons and SHA-256 were verified. Three pre-existing certificate/delegate
+warnings remain; no new UI diagnostics. The release remains an unpublished draft.
 
 - Give the on-device pairing sheet three connected steps in task order and shorter
   introductory text. Remove the Pairing help section per the preview feedback.
@@ -17,8 +22,8 @@ Requested for Downloads delivery only; native validation is pending. No release 
 - Show all five draft route modes in a wrapping grid; use a single flexible column
   for accessibility text sizes. Keep mode selection and speed behavior unchanged.
 - Preserve Bloom/Solid defaults, compact rounded text, the larger Settings identity
-  card, all themes/icons and backup compatibility. 57 focused tests and Swift
-  syntax checks passed; native compilation/device checks remain pending.
+  card, all themes/icons and backup compatibility. The preceding 57 focused tests
+  and syntax checks passed; native compilation has now passed. Device checks remain pending.
 
 ## 2.6.1 (61) — unreleased follow-up — 29–30 October 2026
 

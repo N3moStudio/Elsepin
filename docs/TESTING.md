@@ -1,5 +1,20 @@
 # Validation
 
+## Build 62 UI acceptance (pending device checks)
+
+- In Settings → Connection → Pair on this iPhone, confirm three connected steps,
+  no Pairing help section, and a readable themed background. Check Bloom, Ion,
+  and one light theme, with both Solid and Liquid Glass.
+- Start pairing and confirm the real status/PIN still appears. Complete or cancel
+  the attempt; the existing Dynamic Island, notification and in-app fallbacks
+  must behave as in the build 61 acceptance checks below.
+- In a draft route's Mode & speed section, confirm Walk, Run, Cycle, E-bike and
+  Drive are visible without horizontal scrolling. Select each mode and check its
+  existing speed and route behavior. At accessibility text sizes, verify a single
+  readable column, VoiceOver selection feedback and no clipped labels.
+- Keep the larger Settings Appearance card, swipe-revealed search and existing
+  library/import/export behavior. Native compilation does not prove these phone checks.
+
 ## Public GitHub build — 2.4.4, build 47 · 15 October 2026
 
 - The original uploaded run compiled the app and extension successfully but failed the final IPA icon validator. It also warned about the capitalization of two default-icon image filenames.

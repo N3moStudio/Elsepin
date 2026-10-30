@@ -5,6 +5,19 @@ is the last recorded public release. Earlier entries retain their original valid
 
 See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all recorded 2.5.x/2.6.0 native runs.
 
+## Private UI IPA: 2.6.1 (62) — 30 October 2026
+
+User authorized a private native build and Downloads delivery, excluding release
+publication. Run `41126221099` passed at `a213d8b37a87759b0db719a9caa2ba571427330e`:
+551 tests, native app/extension compilation, signature checks and packaging.
+Artifact `13010842478` was downloaded and independently checked for integrity,
+both bundle versions/identities, SDK metadata, resources and thirteen icons.
+Downloads: `Elsepin 2.6.1 build 62.ipa`; SHA-256
+`4d3ccac5a529b957a3ab2eb945747e2eae65d31b9c3837e6a7b8840d6f491d05`.
+Three pre-existing certificate/delegate warnings remain; no new UI warnings.
+Release 2.6.1 remains a draft with no assets. Device checks are in TESTING.md;
+complete original logs and receipt are in `.build/artifacts/41126221099/`.
+
 ## Video-inspired UI polish — local, unbuilt — 30 October 2026
 
 Reviewed all three supplied videos through sampled visuals and local transcripts.

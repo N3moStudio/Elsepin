@@ -2,10 +2,10 @@
 
 Latest local presentation pass: [UI polish notes](UI-POLISH.md) maps the three-step
 pairing guide (`PairOnDeviceView.swift`) and visible draft mode grid
-(`RoutePlannerSheet.swift`). These edits are queued for build 62 native validation.
+(`RoutePlannerSheet.swift`). Build 62 passed native validation; device UI checks remain pending.
 
 Maintained alongside the [Change Ledger](CHANGE-LEDGER.md). Source paths
-are relative to the repository. Current source is unreleased 2.6.1 (61); see [current work](CURRENT-WORK.md) for build evidence and publication boundaries. Historical entries below retain their original validation context.
+are relative to the repository. Current source is unreleased 2.6.1 (62); see [current work](CURRENT-WORK.md) for build evidence and publication boundaries. Historical entries below retain their original validation context.
 This continues the original source/branding catalog without treating historical
 Locus identifiers as safe search-and-replace targets.
 
