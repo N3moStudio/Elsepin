@@ -57,10 +57,12 @@ Start with the [Product Atlas](BRAND-MAP.md) for appearance, identity, distribut
 
 ## 2.6.1 appearance and compatibility navigation
 - `Shared/ShiftAppearance.swift`: theme catalog, Bloom default, retired Abyss decoder. Keep unknown JSON values as errors; do not silently map every invalid theme.
-- `Shared/AppearancePolicy.swift`: surface options and fixed typography constants. Legacy backup enums remain for decoding.
+- `Shared/AppearancePolicy.swift`: Solid/Glass choices, fixed typography and legacy `theme`-to-Solid decoding. Preserve serialized backup compatibility.
 - `Locus/Support/AppearancePresentation.swift`: rounded/compact presentation; never shrink accessibility categories.
 - `Locus/Support/SessionPreferences.swift`: persisted surface/theme and theme-owned color mode. Preserve storage keys.
 - `Locus/Features/Settings/AppearanceSettingsView.swift`: theme/surface/icon UI. All Elsepin icons remain available.
 - `Locus/Engine/SpoofSession.swift`: backup export/import integration; fixed exported typography and ignored retired controls.
 - `Shared/BackupImportReview.swift`: selectable import fields; retired presentation controls must not reappear.
 - `Tests/AppearancePolicyTests.swift`, `Tests/LibraryBackupTests.swift`, `Tests/BackupImportReviewTests.swift`: migration, library preservation and selective-import regression coverage.
+
+Settings search layout: `Locus/Features/Settings/SettingsView.swift` owns the inline title, automatic navigation search drawer and scroll-content top margin. Preserve swipe-to-reveal; do not force `.always` or overlay search over the list. Confirm scroll behavior on-device.

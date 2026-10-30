@@ -119,8 +119,6 @@ final class SessionPreferences: ObservableObject {
         return resolved == "dark" ? .dark : resolved == "light" ? .light : nil
     }
 
-    func useThemeDefaults() { appearance = "theme"; appearanceOverrides = .init() }
-
     /// Rehydrate the live object after the reset policy removes preference keys.
     func reloadAfterReset() {
         let fresh = SessionPreferences(defaults: defaults)

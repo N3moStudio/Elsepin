@@ -22,14 +22,12 @@ struct AppearanceSettingsView: View {
                     .accessibilityLabel(style.title + ", " + style.detail)
                     .accessibilityAddTraits(preferences.visualStyle == style ? [.isSelected] : [])
                 }
-            } header: { Text("Themes") } footer: { Text("Each theme sets its colors and default surface. Your icon stays independent.") }.shiftSettingsRows()
+            } header: { Text("Themes") } footer: { Text("Each theme sets its colors. Your surface and icon choices stay independent.") }.shiftSettingsRows()
             Section {
                 Picker("Surfaces", selection: $preferences.appearanceOverrides.material) {
-                    Text("Theme default").tag(AppearanceMaterial.theme)
-                    Text("Solid Â· no glass").tag(AppearanceMaterial.solid)
+                    Text("Solid").tag(AppearanceMaterial.solid)
                     Text("Liquid Glass").tag(AppearanceMaterial.glass)
                 }
-                Button("Use theme defaults") { preferences.useThemeDefaults() }.frame(minHeight: 44)
             } header: { Text("Make it yours") } footer: {
                 Text("Your surface choice stays when you switch themes. Text stays compact and rounded, and accessibility text sizes are always respected. System menus follow iOS.")
             }.shiftSettingsRows()

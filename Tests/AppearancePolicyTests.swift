@@ -25,10 +25,30 @@ final class AppearancePolicyTests: XCTestCase {
         let decoded = try JSONDecoder().decode(AppearanceOverrides.self, from: legacy)
         XCTAssertEqual(decoded, AppearanceOverrides(material: .glass))
     }
-    func testDefaultThemeIsBloomWithThemeDefaultSurface() {
+    func testDefaultThemeIsBloomWithSolidSurface() {
         XCTAssertEqual(ShiftAppearanceSelection().style, .bloom)
-        XCTAssertEqual(AppearanceOverrides().material, .theme)
+        XCTAssertEqual(AppearanceOverrides().material, .solid)
         XCTAssertEqual(AppearanceOverrides().material(for: .bloom), .solid)
+    }
+    func testOnlyConcreteSurfacesAreOfferedInOrder() {
+        XCTAssertEqual(AppearanceMaterial.allCases, [.solid, .glass])
+    }
+    func testLegacyThemeSurfaceMigratesAndExportsAsSolid() throws {
+        let legacy = Data(#"{"material":"theme","font":"serif","textSize":"large"}"#.utf8)
+        let restored = try JSONDecoder().decode(AppearanceOverrides.self, from: legacy)
+        XCTAssertEqual(restored.material, .solid)
+        for style in ShiftVisualStyle.allCases {
+            XCTAssertEqual(restored.material(for: style), .solid)
+        }
+        let encoded = try JSONEncoder().encode(restored)
+        let object = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        XCTAssertEqual(object["material"] as? String, "solid")
+    }
+    func testUnknownSurfaceIsRejectedAndExplicitChoicesRoundTrip() throws {
+        XCTAssertThrowsError(try JSONDecoder().decode(AppearanceMaterial.self, from: Data(#""unknown""#.utf8)))
+        for material in AppearanceMaterial.allCases {
+            XCTAssertEqual(try JSONDecoder().decode(AppearanceMaterial.self, from: JSONEncoder().encode(material)), material)
+        }
     }
     func testRetiredAbyssThemeLoadsAsBloom() throws {
         XCTAssertEqual(ShiftVisualStyle(storedValue: "abyss"), .bloom)

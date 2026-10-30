@@ -39,6 +39,21 @@ final class LibraryBackupTests: XCTestCase {
         XCTAssertEqual(restored.preferences?.usualSpeeds, backup.preferences?.usualSpeeds)
         XCTAssertEqual(restored.trips, backup.trips)
     }
+    func testLegacyThemeSurfaceBackupPreservesLibraryAndImportsConcreteSurface() throws {
+        var backup = fixture()
+        backup.preferences?.material = .solid
+        let legacy = String(decoding: try backup.encoded(), as: UTF8.self)
+            .replacingOccurrences(of: "\"solid\"", with: "\"theme\"")
+        let restored = try LibraryBackup.decode(Data(legacy.utf8))
+        XCTAssertEqual(restored.preferences?.material, .solid)
+        XCTAssertEqual(restored.places, backup.places)
+        XCTAssertEqual(restored.trips, backup.trips)
+        var current = try XCTUnwrap(backup.preferences)
+        current.material = .glass
+        try BackupSettingKey.material.applying(from: XCTUnwrap(restored.preferences), to: &current)
+        XCTAssertEqual(current.material, .solid)
+        XCTAssertEqual(try LibraryBackup.decode(restored.encoded()).preferences?.material, .solid)
+    }
     func testShiftExportsKeepOlderLibraryFilesReadable() throws {
         var backup = fixture()
         XCTAssertEqual(backup.format, "Shift library")

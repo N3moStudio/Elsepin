@@ -1,11 +1,17 @@
 # Elsepin changelog
 
-Updated through **28 October 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
+Updated through **29 October 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
 is the official release. Earlier Shift entries retain their original names and release status.
 
 [App introduction](README.md) · [Build history](docs/BUILD-HISTORY.md) · [Detailed Change Ledger](docs/CHANGE-LEDGER.md)
 
-## 2.6.1 (60) — unreleased draft — 28 October 2026
+## 2.6.1 (61) — unreleased follow-up — 29 October 2026
+
+- Keep Settings search in the native swipe-revealed drawer; use a compact navigation title and 16-point content-top spacing to address the reported crowding between search and the first card. Device scroll/layout acceptance remains pending.
+- Simplify Surfaces to Solid first and Liquid Glass second. New/reset preferences use Solid. Remove Theme default and its reset button; old `theme` values decode as Solid without changing explicit Glass choices.
+- Verify old-backup import/re-export and surface persistence: 414 Swift tests and 14 Python script tests passed. No new native build, IPA, release or deployment for build 61. The delivered build 60 does not contain this follow-up.
+
+## 2.6.1 (60) — private test build — 28 October 2026
 
 - Default to Bloom; remove Abyss with a compatibility mapping to Bloom for existing settings and backups.
 - Fix typography to rounded/compact while respecting accessibility sizes. Remove font, text-size and color-mode controls; retain theme and surface selection and all thirteen icons.

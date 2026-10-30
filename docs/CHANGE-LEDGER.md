@@ -667,3 +667,7 @@ Applied the now-authorized Elsepin Bloom/compact/rounded/surface-only changes, r
 ## 28 October 2026 — Authorized native validation and private IPA
 
 Run 40826806154 passed on source 506923c. Both app and extension report 2.6.1 (60); local IPA checks passed for all 13 icons and linked SDK 27.1. Artifact digest matched SHA-256 3e72bc2646e112e9664d586e60332bc4341e2ff08aa9370d26b9628f43fba547. Saved to Downloads and uploaded to Google Drive with no sharing changes. Release remains an unpublished draft with no assets. Device acceptance remains pending.
+
+## 29 October 2026 — Settings search spacing and explicit surfaces (61)
+
+Address screenshot feedback with compact Settings title, native automatic search drawer and top scroll margin; search is intentionally not always visible. Remove Theme default choice/reset button, default to Solid, migrate legacy theme values to Solid, preserve Glass. Added migration/round-trip tests: 414 Swift and 14 Python pass. Updated project build to 61 to distinguish from delivered IPA 60. No native build, IPA, publication or deployment; on-device scrolling still needs validation.

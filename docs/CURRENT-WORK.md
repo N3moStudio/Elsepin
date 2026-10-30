@@ -24,3 +24,8 @@ This supersedes the earlier native-build-pending status above. User explicitly a
 - Local file: C:/Users/naith/Downloads/Elsepin 2.6.1.ipa (18,192,618 bytes).
 - SHA-256: 3e72bc2646e112e9664d586e60332bc4341e2ff08aa9370d26b9628f43fba547; matches GitHub artifact digest.
 - Google Drive file ID: 1xrv44UVD0SLQ9yQEKvqtI9BjrfwRJi03. Release 2.6.1 remains draft with no assets; 2.6.0 remains public. No deployment. Physical-device/provider/accessibility/battery acceptance is still separate.
+
+## Current follow-up — 29 October 2026 (build 61)
+Supersedes the surface policy above: only Solid and Liquid Glass are selectable, in that order. Solid is the fresh/reset default. The retired serialized `theme` value decodes as Solid; existing Glass stays Glass. Theme color/rounded/compact behavior and all icons are unchanged.
+Settings now uses a compact navigation title, automatic native search drawer (not always visible), and 16-point scroll-content top margin. Verify search reveal, dismissal, scrolling and first-card spacing on iPhone across solid/glass and accessibility sizes; no simulator/device visual acceptance was performed here.
+414 portable Swift and 14 Python tests passed. Logs: .build/settings-surface-swift.log and .build/settings-surface-python.log. App identity and diff checks passed. Build 61 has no native compilation or IPA yet. The Drive IPA remains build 60, and its earlier native success does not cover this follow-up. No release or deployment.

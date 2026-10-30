@@ -53,8 +53,11 @@ struct SettingsView: View {
                 }
             }
             .shiftSettingsScreen().loggedNavigationTitle("Settings")
-            .navigationBarTitleDisplayMode(.large)
-            .searchable(text: $search, prompt: "Find a setting")
+            // Keep the title compact, while the native drawer still reveals search
+            // on scroll. Reserve content spacing instead of overlaying a search bar.
+            .navigationBarTitleDisplayMode(.inline)
+            .searchable(text: $search, placement: .navigationBarDrawer(displayMode: .automatic), prompt: "Find a setting")
+            .contentMargins(.top, 16, for: .scrollContent)
             .task(id: scenePhase) {
                 guard scenePhase == .active else { return }
                 await updates.checkIfDue()
