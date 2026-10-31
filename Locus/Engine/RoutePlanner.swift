@@ -250,11 +250,18 @@ final class RoutePlanner: ObservableObject {
         isPresented = true
     }
 
-    func addWaypoint(_ place: RoutePlace, mode: TravelMode, speedMPH: Double? = nil) {
+    func addWaypoint(_ place: RoutePlace, mode: TravelMode, speedMPH: Double? = nil, insertAlongRoute: Bool = false) {
         guard waypoints.count < 8 else { return }
         let waypoint = TripWaypoint(name: place.name, point: RoutePoint(place.coordinate))
         if hasSectionSettings { sectionChoices[waypoint.id] = RouteLegChoice(mode: mode, speedMPH: mode.clampedSpeedMPH(speedMPH ?? mode.defaultSpeedMPH)) }
-        waypoints.append(waypoint)
+        var insertion = waypoints.count
+        if insertAlongRoute, let route = selectedRoute {
+            let positions = waypoints.compactMap { stop in route.stops.first { $0.id == stop.id }?.metres }
+            if positions.count == waypoints.count {
+                insertion = RouteSearchCorridor(track: route.track).insertionIndex(for: waypoint.point, stopMetres: positions)
+            }
+        }
+        waypoints.insert(waypoint, at: insertion)
         rebuild(mode: mode)
     }
     func removeWaypoint(_ id: UUID, mode: TravelMode) {

@@ -5,6 +5,32 @@ is the last recorded public release. Earlier entries retain their original valid
 
 See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all recorded 2.5.x/2.6.0 native runs.
 
+## 2.6.1 (64) — route interaction and stop discovery — 30 October 2026
+
+- Replace route-marker touch callbacks' SwiftUI map conversions with native
+  MapKit projection. Keep a weak map reference for marker drags; discard stale
+  marker state on disconnection/retry, backgrounding or route replacement.
+  Hold/drag remains preview-only; Teleport is still an explicit confirmation.
+- User-confirmed in build 63: keyboard Search works; route holding still exits
+  the app. A supplied optional developer log records successful location writes,
+  then `route_marker_hold_began`, followed by a new process. No jump was recorded.
+  This identifies the interaction boundary, not the exact iOS exception or a
+  verified fix. The supplied log does not include a retry attempt.
+- Add draft-stop search with Along route/Everywhere scopes, route/result map,
+  Coffee/Food/Groceries/Parks shortcuts, saved/recent places, addresses and
+  distance from the path. Filter and deduplicate actual coordinates; order
+  along-route matches and insert the chosen stop into the existing itinerary.
+  Rebuild the preview without starting movement. Live-path pause stops retain
+  their existing behavior; use Hold location and edit for a new destination detour.
+- Bound explicit MapKit searches to four cancellable requests; reject stale
+  results and disclose incomplete/long-route sampling. Distance from the path
+  is not a claimed detour time. No Google dependency, key or background polling.
+- Indent expanded Advanced/More options and give advanced child rows a subtle
+  theme-colored rail. Keep native controls, accessibility and all existing options.
+- Five portable corridor tests cover bent routes, invalid coordinates, bounded
+  regions, long routes, date-line geometry, stop insertion and deduplication.
+  Native validation and phone acceptance are recorded separately below.
+
 ## Route/search follow-up: 2.6.1 (63) — 30 October 2026
 
 [Run 41174566247](https://github.com/N3moStudio/Elsepin/actions/runs/41174566247) passed at

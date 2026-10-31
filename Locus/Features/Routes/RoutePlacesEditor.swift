@@ -3,6 +3,7 @@ import SwiftUI
 /// Edit a draft only. Applying geometry changes rebuilds directions before Start.
 struct RoutePlacesEditor: View {
     let onSave: ([TripWaypoint], Bool) -> Void
+    private let referenceRoute: PlannedRoute
     @Environment(\.dismiss) private var dismiss
     @State private var places: [TripWaypoint]
     @State private var savePlaces = false
@@ -11,6 +12,7 @@ struct RoutePlacesEditor: View {
 
     init(route: PlannedRoute, waypoints: [TripWaypoint], onSave: @escaping ([TripWaypoint], Bool) -> Void) {
         self.onSave = onSave
+        referenceRoute = route
         _places = State(initialValue:
             [TripWaypoint(id: Self.startID, name: route.origin.name, point: RoutePoint(route.origin.coordinate), waitSeconds: 0)] + waypoints +
             [TripWaypoint(id: RouteLegChoice.destinationID, name: route.destination.name, point: RoutePoint(route.destination.coordinate), waitSeconds: 0)])
@@ -52,8 +54,14 @@ struct RoutePlacesEditor: View {
                 }
             }
             .navigationDestination(isPresented: $addStop) {
-                RoutePlaceSearchSheet(title: "Add stop") { place in
-                    places.insert(TripWaypoint(name: place.name, point: RoutePoint(place.coordinate)), at: max(1, places.count - 1))
+                RouteStopSearchSheet(route: referenceRoute) { place, alongRoute in
+                    let point = RoutePoint(place.coordinate)
+                    let stops = Array(places.dropFirst().dropLast())
+                    let corridor = RouteSearchCorridor(track: referenceRoute.track)
+                    let positions = stops.compactMap { corridor.index.nearest(to: $0.point)?.metres }
+                    let offset = alongRoute && positions.count == stops.count
+                        ? corridor.insertionIndex(for: point, stopMetres: positions) : stops.count
+                    places.insert(TripWaypoint(name: place.name, point: point), at: offset + 1)
                 }
             }
         }

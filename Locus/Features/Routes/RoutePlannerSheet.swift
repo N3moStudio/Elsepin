@@ -89,11 +89,17 @@ struct RoutePlannerSheet: View {
                 }
             }
             .navigationDestination(item: $searchEndpoint) { endpoint in
-                RoutePlaceSearchSheet(title: endpoint == .origin ? "Starting point" : endpoint == .stop ? "Add stop" : "Destination",
-                                      allowsDeviceOrigin: endpoint == .origin) { place in
-                    if endpoint == .origin { planner.setOrigin(place, mode: displayMode) }
-                    else if endpoint == .stop { planner.addWaypoint(place, mode: displayMode, speedMPH: displaySpeed) }
-                    else { planner.setDestination(place, defaultOrigin: session.defaultRouteOrigin, mode: displayMode) }
+                if endpoint == .stop, let route = planner.selectedRoute {
+                    RouteStopSearchSheet(route: route) { place, alongRoute in
+                        planner.addWaypoint(place, mode: displayMode, speedMPH: displaySpeed, insertAlongRoute: alongRoute)
+                    }
+                } else {
+                    RoutePlaceSearchSheet(title: endpoint == .origin ? "Starting point" : endpoint == .stop ? "Add stop" : "Destination",
+                                          allowsDeviceOrigin: endpoint == .origin) { place in
+                        if endpoint == .origin { planner.setOrigin(place, mode: displayMode) }
+                        else if endpoint == .stop { planner.addWaypoint(place, mode: displayMode, speedMPH: displaySpeed) }
+                        else { planner.setDestination(place, defaultOrigin: session.defaultRouteOrigin, mode: displayMode) }
+                    }
                 }
             }
             .navigationDestination(isPresented: $showPractice) {
@@ -451,10 +457,10 @@ struct RoutePlannerSheet: View {
                             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
                     }.disabled(route == nil)
                 }
-            } header: { Label("Stops & places", systemImage: "mappin.and.ellipse") }
-                .shiftSettingsRows().buttonStyle(.borderless).disabled(planner.isLoading)
-            Section { arrivalPicker } header: { Label("When you arrive", systemImage: "flag.checkered") }
-                .shiftSettingsRows().disabled(planner.isLoading)
+            } header: { Label("Stops & places", systemImage: "mappin.and.ellipse").padding(.leading, 16) }
+                .shiftSettingsRows().modifier(RouteNestedOptions()).buttonStyle(.borderless).disabled(planner.isLoading)
+            Section { arrivalPicker } header: { Label("When you arrive", systemImage: "flag.checkered").padding(.leading, 16) }
+                .shiftSettingsRows().modifier(RouteNestedOptions()).disabled(planner.isLoading)
             Section {
                 Toggle("Smooth route movement", isOn: $planner.draftSmoothMovement)
                 if !planner.usesStoredPath && planningCycling {
@@ -487,8 +493,8 @@ struct RoutePlannerSheet: View {
                             .font(.caption)
                     }
                 }
-            } header: { Label("Movement extras", systemImage: "speedometer") }
-                .shiftSettingsRows().buttonStyle(.borderless).disabled(planner.isLoading)
+            } header: { Label("Movement extras", systemImage: "speedometer").padding(.leading, 16) }
+                .shiftSettingsRows().modifier(RouteNestedOptions()).buttonStyle(.borderless).disabled(planner.isLoading)
         }
     }
 
@@ -647,19 +653,21 @@ struct RoutePlannerSheet: View {
     private var moreOptions: some View {
         Section {
             DisclosureGroup("More options") {
-                Button {
-                    onDraw()
-                    dismiss()
-                } label: { Label("Draw an exact path", systemImage: "pencil.tip") }
-                    .disabled(hasJourney)
-                Button { showImporter = true } label: { Label("Import GPX", systemImage: "square.and.arrow.down") }
-                    .disabled(hasJourney)
-                Button {
-                    guard let route else { return }
-                    exportDocument = GPXRouteDocument(text: GPXCodec.export(route.coordinates, name: route.name))
-                    showExporter = true
-                } label: { Label("Export selected route", systemImage: "square.and.arrow.up") }
-                    .disabled(route == nil)
+                Group {
+                    Button {
+                        onDraw()
+                        dismiss()
+                    } label: { Label("Draw an exact path", systemImage: "pencil.tip") }
+                        .disabled(hasJourney)
+                    Button { showImporter = true } label: { Label("Import GPX", systemImage: "square.and.arrow.down") }
+                        .disabled(hasJourney)
+                    Button {
+                        guard let route else { return }
+                        exportDocument = GPXRouteDocument(text: GPXCodec.export(route.coordinates, name: route.name))
+                        showExporter = true
+                    } label: { Label("Export selected route", systemImage: "square.and.arrow.up") }
+                        .disabled(route == nil)
+                }.padding(.leading, 16).frame(minHeight: 44, alignment: .leading)
             }
         }
     }
@@ -674,5 +682,21 @@ private struct GPXRouteDocument: FileDocument {
     }
     func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
         FileWrapper(regularFileWithContents: Data(text.utf8))
+    }
+}
+
+/// A narrow inset/rail makes disclosed settings read as children, retaining
+/// native row sizing, separators and accessibility instead of shrinking text.
+private struct RouteNestedOptions: ViewModifier {
+    @Environment(\.shiftVisualStyle) private var style
+    func body(content: Content) -> some View {
+        content.listRowInsets(EdgeInsets(top: 10, leading: 32, bottom: 10, trailing: 16))
+            .listRowBackground(
+                HStack(spacing: 0) {
+                    Rectangle().fill(LocusTheme.accent.opacity(0.4)).frame(width: 2)
+                    Color.clear
+                }.padding(.leading, 12)
+                    .background(ShiftPalette.color(style == .porcelain ? .canvas : .surface, style: style))
+            )
     }
 }

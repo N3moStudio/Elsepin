@@ -2,7 +2,28 @@
 
 Updated 30 October 2026. Read AGENTS.md, inspect Git status, preserve newer work.
 
-## Build 63 route/search follow-up — native build passed, phone retest pending
+## Build 64 in progress — route crash evidence and stop discovery
+
+The user confirmed keyboard Search works on build 63; route hold/drag still
+terminates the app. An optional developer log shows successful location writes,
+then a hold-began event immediately before the next process. No completed jump,
+iOS exception stack, or retry attempt is captured. Do not claim a proven crash
+cause or phone fix. Keep the supplied log outside the repository.
+
+Current changes: native MapKit-only projection in route touch callbacks; weak
+map reference and marker invalidation during reconnect/navigation; optional
+hold-ready/visible breadcrumbs in the existing opt-in log. Manual Teleport and
+serialized movement commands are unchanged. RouteStopSearchSheet adds bounded
+MapKit corridor discovery for draft directions routes, plus explicit Everywhere
+search, map/results, categories, favorites/recents and itinerary insertion.
+Active/custom-path pauses remain on the existing path; Hold location and edit
+is required for a destination detour. Advanced/More options are indented.
+
+Build 64 is being validated for private Downloads delivery; no release publication.
+See [changes since the public release](CHANGES-SINCE-2.6.0.md). Preserve all
+appearance, pairing, backup and compatibility decisions below.
+
+## Build 63 — native passed; Search phone-confirmed, route crash persists
 
 [Run 41174566247](https://github.com/N3moStudio/Elsepin/actions/runs/41174566247) passed at
 source `f1ed08d91efbf7bfaf506d88b8fcc5bf358b4dd3`: 431 Swift tests, 14 packaging/icon tests,
@@ -79,7 +100,7 @@ Source and handoff are on private main; no release publication, website deployme
 or Drive upload was requested. Three existing compiler warnings remain recorded below.
 
 ## Current source and boundaries
-Private source: N3moStudio/Elsepin, main. Development version 2.6.1 (62), privately delivered to Downloads on 30 October. Public downloads/help: Elsepin-Releases. Last known public release 2.6.0; 2.6.1 remains a draft with no assets. The user authorized this native build and Downloads delivery, explicitly excluding release publication. No website deployment or Drive upload was requested.
+Private source: N3moStudio/Elsepin, main. Latest verified private delivery is 2.6.1 (63); build 64 changes are under validation. Public downloads/help: Elsepin-Releases. Last known public release 2.6.0; 2.6.1 remains a draft with no assets. The user authorized this native build and Downloads delivery, explicitly excluding release publication. No website deployment or Drive upload was requested.
 Elsepin is the full app. Veypax is separate; do not copy paid gates or branding. Preserve bundle IDs, defaults/Keychain keys, app group, backup formats and manual movement confirmation.
 
 ## Current UI and compatibility

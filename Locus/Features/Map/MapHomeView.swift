@@ -31,7 +31,7 @@ struct MapHomeView: View {
     @State private var snapIndex: (routeID: UUID, index: RouteSnapIndex)?
     @State private var markerScreenPoint: CGPoint?
     @State private var sketchViewport = SketchMapViewport()
-    @State private var markerGrabOffset: CGPoint?
+    @State private var routeTouchMap = RouteTouchMapReference()
     @State private var markerDragging = false
     @State private var mapSize = CGSize.zero
     @State private var undoVisible = false
@@ -74,6 +74,9 @@ struct MapHomeView: View {
         // Route holds already arbitrate with map gestures. Reconfiguring the
         // map's recognizers from inside their .began callback is reentrant.
         pinAdjusting ? [] : [.pan, .zoom, .rotate]
+    }
+    private var canSelectRouteMarker: Bool {
+        session.activeRoute != nil && !planner.isDrawing && session.canEditRouteMovement && !session.status.isDropped
     }
     private var canAdjustPin: Bool {
         session.pin != nil && session.journey == nil && planner.preparedRoute == nil && !planner.isDrawing && !session.isBusy
@@ -143,7 +146,7 @@ struct MapHomeView: View {
         baseMap
             .gesture(pinTapGesture(proxy))
             .gesture(pinAdjustmentGesture(proxy))
-            .gesture(routePressGesture(proxy))
+            .gesture(routePressGesture)
     }
 
     private func homeMap(_ proxy: MapProxy) -> some View {
@@ -169,8 +172,8 @@ struct MapHomeView: View {
     }
 
     private func routeSelectionChanged(_ value: RouteSeek?, proxy: MapProxy) {
-        if value == nil { markerGrabOffset = nil; markerDragging = false }
-        if !markerDragging { updateMarkerProjection(proxy) }
+        if value == nil { routeTouchMap.map = nil; markerDragging = false }
+        updateMarkerProjection(proxy)
     }
 
     private func pinTapGesture(_ proxy: MapProxy) -> MapPinTapGesture {
@@ -186,30 +189,32 @@ struct MapHomeView: View {
         }
     }
 
-    private func routePressGesture(_ proxy: MapProxy) -> RouteMapPressGesture {
-        RouteMapPressGesture(enabled: session.activeRoute != nil && !planner.isDrawing, onTouchStart: {
-            followMovement = false
-        }, canBegin: { coordinate in
-            guard let point = proxy.convert(coordinate, to: .named("routeMap")) else { return false }
-            guard let candidate = markerCandidate(at: point, proxy: proxy) else { return false }
-            return candidate.distance <= 44
-        }, onPress: { coordinate in
-            guard let point = proxy.convert(coordinate, to: .named("routeMap")) else { return }
-            markerDragging = true
-            DeveloperLogStore.shared.record("route_marker_hold_began")
-            placeMarker(at: point, proxy: proxy, requireNearRoute: true)
-        }, onMoved: { coordinate in
-            guard let point = proxy.convert(coordinate, to: .named("routeMap")) else { return }
-            placeMarker(at: point, proxy: proxy, requireNearRoute: false)
-        }, onEnded: { coordinate, cancelled in
-            if !cancelled, let coordinate, let point = proxy.convert(coordinate, to: .named("routeMap")) {
-                placeMarker(at: point, proxy: proxy, requireNearRoute: false)
-            }
-            markerDragging = false
-            refreshMarkerDeadline()
-            DeveloperLogStore.shared.record("route_marker_hold_ended", ["cancelled": String(cancelled),
-                "metres": selection.map { String($0.metres) } ?? "none"])
-        })
+    private var routePressGesture: RouteMapPressGesture {
+        let routeID = session.activeRoute?.id
+        return RouteMapPressGesture(enabled: canSelectRouteMarker,
+            canBegin: { touch in
+                guard canSelectRouteMarker, session.activeRoute?.id == routeID,
+                      let candidate = markerCandidate(touch) else { return false }
+                return candidate.distance <= 44
+            }, onPress: { touch in
+                guard canSelectRouteMarker, session.activeRoute?.id == routeID else { return }
+                routeTouchMap.map = touch.map
+                markerDragging = true
+                followMovement = false
+                DeveloperLogStore.shared.record("route_marker_hold_began")
+                placeMarker(touch, requireNearRoute: true)
+                DeveloperLogStore.shared.record("route_marker_hold_ready", ["selected": String(selection != nil)])
+            }, onMoved: { touch in
+                guard canSelectRouteMarker, session.activeRoute?.id == routeID else { return }
+                placeMarker(touch, requireNearRoute: false)
+            }, onEnded: { touch, cancelled in
+                guard canSelectRouteMarker, session.activeRoute?.id == routeID else { return }
+                if !cancelled, let touch { placeMarker(touch, requireNearRoute: false) }
+                markerDragging = false
+                refreshMarkerDeadline()
+                DeveloperLogStore.shared.record("route_marker_hold_ended", ["cancelled": String(cancelled),
+                    "metres": selection.map { String($0.metres) } ?? "none"])
+            })
     }
 
     private func interactionOverlay(_ proxy: MapProxy) -> some View {
@@ -245,7 +250,7 @@ struct MapHomeView: View {
     @ViewBuilder private func routeMarkerOverlay(_ proxy: MapProxy, size: CGSize) -> some View {
         if selection != nil, let point = markerScreenPoint,
            CGRect(origin: .zero, size: size).insetBy(dx: 14, dy: 14).contains(point) {
-            markerView(at: point, availableSize: size, proxy: proxy)
+            markerView(at: point, availableSize: size)
         }
     }
 
@@ -323,11 +328,11 @@ struct MapHomeView: View {
         .onChange(of: canAdjustPin) { _, allowed in if !allowed { pinAdjusting = false; adjustedPin = nil } }
         .onDisappear {
             pinAdjusting = false; adjustedPin = nil
-            markerDragging = false; markerGrabOffset = nil
+            markerDragging = false; routeTouchMap.map = nil; selection = nil
             session.setMapLocationNeeded(false)
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase != .active { markerDragging = false; markerGrabOffset = nil }
+            if phase != .active { markerDragging = false; routeTouchMap.map = nil; selection = nil }
         }
     }
 
@@ -335,10 +340,13 @@ struct MapHomeView: View {
         lifecycleMap
         .onChange(of: session.activeRoute?.id, initial: true) { _, id in
             selection = nil
-            markerGrabOffset = nil
+            routeTouchMap.map = nil
             markerDragging = false
             snapIndex = session.activeRoute.map { (routeID: $0.id, index: RouteSnapIndex(track: $0.track)) }
             if id != nil { followMovement = true; centerOnLocation() }
+        }
+        .onChange(of: canSelectRouteMarker) { _, allowed in
+            if !allowed { selection = nil; markerDragging = false; routeTouchMap.map = nil }
         }
         .onChange(of: displayedRoute?.id, initial: true) { _, id in
             activePolyline = displayedRoute.map { MKPolyline(coordinates: $0.coordinates, count: $0.coordinates.count) }
@@ -483,41 +491,33 @@ struct MapHomeView: View {
         if markerScreenPoint != point { markerScreenPoint = point }
     }
 
-    private func markerCandidate(at point: CGPoint, proxy: MapProxy) -> RouteScreenSnap? {
-        let visibleBounds = CGRect(origin: .zero, size: mapSize).insetBy(dx: 14, dy: 14)
-        guard point.x.isFinite, point.y.isFinite, visibleBounds.width > 0, visibleBounds.height > 0,
+    private func markerCandidate(_ touch: NativeRouteTouch) -> RouteScreenSnap? {
+        guard let coordinate = touch.coordinate,
               let route = session.activeRoute, let snapIndex, snapIndex.routeID == route.id else { return nil }
-        let touch = CGPoint(x: min(visibleBounds.maxX, max(visibleBounds.minX, point.x)),
-                            y: min(visibleBounds.maxY, max(visibleBounds.minY, point.y)))
-        guard let coordinate = proxy.convert(touch, from: .named("routeMap")) else { return nil }
         let preferred = selection?.metres ?? session.journey?.travelledMetres ?? 0
-        // The index narrows a long path to a few segments. Final snapping uses
-        // actual Map-projected endpoints, including its rotation and safe area.
         let segments = snapIndex.index.candidateSegments(near: RoutePoint(coordinate), preferredDistance: preferred).compactMap { index -> RouteScreenSegment? in
-            guard index > 0, route.track.points.indices.contains(index), route.track.cumulative.indices.contains(index) else { return nil }
-            guard let start = proxy.convert(route.track.points[index - 1].coordinate, to: .named("routeMap")),
-                  let end = proxy.convert(route.track.points[index].coordinate, to: .named("routeMap")) else { return nil }
+            guard index > 0, route.track.points.indices.contains(index), route.track.cumulative.indices.contains(index),
+                  let start = touch.project(route.track.points[index - 1].coordinate),
+                  let end = touch.project(route.track.points[index].coordinate) else { return nil }
             return RouteScreenSegment(start: RouteScreenPoint(x: Double(start.x), y: Double(start.y)),
                                       end: RouteScreenPoint(x: Double(end.x), y: Double(end.y)),
                                       startMetres: route.track.cumulative[index - 1], endMetres: route.track.cumulative[index])
         }
-        return RouteScreenSnap.closest(to: RouteScreenPoint(x: Double(touch.x), y: Double(touch.y)),
+        return RouteScreenSnap.closest(to: RouteScreenPoint(x: Double(touch.point.x), y: Double(touch.point.y)),
                                        segments: segments, preferredDistance: preferred)
     }
 
-    private func placeMarker(at point: CGPoint, proxy: MapProxy, requireNearRoute: Bool) {
-        let visibleBounds = CGRect(origin: .zero, size: mapSize).insetBy(dx: 14, dy: 14)
-        guard let route = session.activeRoute, let closest = markerCandidate(at: point, proxy: proxy),
+    private func placeMarker(_ touch: NativeRouteTouch, requireNearRoute: Bool) {
+        guard let route = session.activeRoute, let closest = markerCandidate(touch),
               (!requireNearRoute || closest.distance <= 44),
-              let projected = proxy.convert(route.track.point(at: closest.metres).coordinate, to: .named("routeMap")),
-              visibleBounds.contains(projected) else { return }
+              let projected = touch.project(route.track.point(at: closest.metres).coordinate),
+              touch.map.bounds.insetBy(dx: 14, dy: 14).contains(projected) else { return }
         let expiry = markerDragging ? selection?.expiresAt ?? Date().addingTimeInterval(30) : Date().addingTimeInterval(30)
-        // One screen-space overlay drives both the circle and its touch target.
-        // SwiftUI Map annotations can lag behind a continuously moving cursor.
+        // This callback changes only a distance cursor. SwiftUI projects it in
+        // onChange/onMapCameraChange, never from the UIKit gesture callback.
         var transaction = Transaction(); transaction.disablesAnimations = true
         withTransaction(transaction) {
             selection = RouteSeek(routeID: route.id, metres: closest.metres, expiresAt: expiry)
-            markerScreenPoint = projected
         }
         followMovement = false
     }
@@ -544,7 +544,7 @@ struct MapHomeView: View {
             }
     }
 
-    private func markerView(at point: CGPoint, availableSize: CGSize, proxy: MapProxy) -> some View {
+    private func markerView(at point: CGPoint, availableSize: CGSize) -> some View {
         let alongside = point.x + 144 <= availableSize.width - 12 ? point.x + 88 : point.x - 88
         let buttonX = min(max(68, alongside), max(68, availableSize.width - 68))
         let buttonY = min(max(28, point.y), max(28, availableSize.height - 28))
@@ -553,24 +553,18 @@ struct MapHomeView: View {
             // This view never moves. It receives touches only inside the marker,
             // so panning elsewhere stays with MapKit and drag coordinates do not
             // depend on the marker's changing annotation/overlay position.
-            RouteMarkerTouchLayer(center: point, onBegan: { touch in
+            RouteMarkerTouchLayer(center: point, mapReference: routeTouchMap, onBegan: { _ in
                 DeveloperLogStore.shared.record("route_marker_drag_began")
-                markerGrabOffset = CGPoint(x: point.x - touch.x, y: point.y - touch.y)
                 markerDragging = true
                 followMovement = false
                 refreshMarkerDeadline()
             }, onMoved: { touch in
-                let offset = markerGrabOffset ?? .zero
-                placeMarker(at: CGPoint(x: touch.x + offset.x, y: touch.y + offset.y), proxy: proxy, requireNearRoute: false)
+                placeMarker(touch, requireNearRoute: false)
             }, onEnded: { touch, cancelled in
-                DeveloperLogStore.shared.record("route_marker_drag_ended", ["cancelled": String(cancelled), "metres": selection.map { String($0.metres) } ?? "none"])
-                if !cancelled {
-                    let offset = markerGrabOffset ?? .zero
-                    placeMarker(at: CGPoint(x: touch.x + offset.x, y: touch.y + offset.y), proxy: proxy, requireNearRoute: false)
-                }
-                markerGrabOffset = nil
+                if !cancelled, let touch { placeMarker(touch, requireNearRoute: false) }
                 markerDragging = false
                 refreshMarkerDeadline()
+                DeveloperLogStore.shared.record("route_marker_drag_ended", ["cancelled": String(cancelled)])
             })
             .frame(width: availableSize.width, height: availableSize.height)
             Button {
@@ -587,11 +581,11 @@ struct MapHomeView: View {
         }
         .frame(width: availableSize.width, height: availableSize.height, alignment: .topLeading)
         .buttonStyle(.plain).foregroundStyle(.primary)
+        .onAppear { DeveloperLogStore.shared.record("route_marker_visible") }
         .onDisappear {
             // A map zoom or presentation change can remove an offscreen touch
             // surface before UIKit sends its terminal gesture event.
             if markerDragging {
-                markerGrabOffset = nil
                 markerDragging = false
                 refreshMarkerDeadline()
             }
@@ -724,9 +718,10 @@ extension Notification.Name {
 /// the gesture's coordinate space, and all touches outside its circle pass to MapKit.
 private struct RouteMarkerTouchLayer: UIViewRepresentable {
     var center: CGPoint
-    var onBegan: (CGPoint) -> Void
-    var onMoved: (CGPoint) -> Void
-    var onEnded: (CGPoint, Bool) -> Void
+    let mapReference: RouteTouchMapReference
+    var onBegan: (NativeRouteTouch) -> Void
+    var onMoved: (NativeRouteTouch) -> Void
+    var onEnded: (NativeRouteTouch?, Bool) -> Void
 
     func makeUIView(context: Context) -> TouchView {
         let view = TouchView()
@@ -734,27 +729,23 @@ private struct RouteMarkerTouchLayer: UIViewRepresentable {
         view.isOpaque = false
         return view
     }
-
     func updateUIView(_ view: TouchView, context: Context) {
         view.markerCenter = center
-        view.onBegan = onBegan
-        view.onMoved = onMoved
-        view.onEnded = onEnded
+        view.mapReference = mapReference
+        view.onBegan = onBegan; view.onMoved = onMoved; view.onEnded = onEnded
     }
-
     static func dismantleUIView(_ view: TouchView, coordinator: ()) {
-        view.onBegan = nil
-        view.onMoved = nil
-        view.onEnded = nil
+        view.onBegan = nil; view.onMoved = nil; view.onEnded = nil
         view.gestureRecognizers?.forEach { view.removeGestureRecognizer($0) }
     }
-
     final class TouchView: UIView {
         var markerCenter = CGPoint.zero
-        var onBegan: ((CGPoint) -> Void)?
-        var onMoved: ((CGPoint) -> Void)?
-        var onEnded: ((CGPoint, Bool) -> Void)?
-        private var multiTouchCancelled = false
+        var mapReference: RouteTouchMapReference?
+        var onBegan: ((NativeRouteTouch) -> Void)?
+        var onMoved: ((NativeRouteTouch) -> Void)?
+        var onEnded: ((NativeRouteTouch?, Bool) -> Void)?
+        private var dragging = false
+        private var grabOffset = CGPoint.zero
 
         override init(frame: CGRect) {
             super.init(frame: frame)
@@ -763,32 +754,34 @@ private struct RouteMarkerTouchLayer: UIViewRepresentable {
             press.allowableMovement = CGFloat.greatestFiniteMagnitude
             press.numberOfTouchesRequired = 1
             press.cancelsTouchesInView = true
-            press.delaysTouchesBegan = false
-            press.delaysTouchesEnded = false
+            press.delaysTouchesBegan = false; press.delaysTouchesEnded = false
             addGestureRecognizer(press)
         }
-
         required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
-
         override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
             bounds.contains(point) && hypot(point.x - markerCenter.x, point.y - markerCenter.y) <= 24
         }
-
         @objc private func handlePress(_ recognizer: UILongPressGestureRecognizer) {
             let point = recognizer.location(in: self)
-            if recognizer.numberOfTouches > 1 {
-                if !multiTouchCancelled { onEnded?(point, true); multiTouchCancelled = true }
-                return
+            if recognizer.state == .began {
+                grabOffset = CGPoint(x: markerCenter.x - point.x, y: markerCenter.y - point.y)
             }
-            if multiTouchCancelled {
-                if recognizer.state == .ended || recognizer.state == .cancelled || recognizer.state == .failed { multiTouchCancelled = false }
+            let touch: NativeRouteTouch?
+            if let map = mapReference?.map, let window, map.window === window {
+                let adjusted = CGPoint(x: point.x + grabOffset.x, y: point.y + grabOffset.y)
+                touch = NativeRouteTouch(map: map, point: convert(adjusted, to: map))
+            } else { touch = nil }
+            guard recognizer.numberOfTouches <= 1, let touch, touch.coordinate != nil else {
+                if dragging { dragging = false; onEnded?(nil, true) }
                 return
             }
             switch recognizer.state {
-            case .began: onBegan?(point)
-            case .changed: onMoved?(point)
-            case .ended: onEnded?(point, false)
-            case .cancelled, .failed: onEnded?(point, true)
+            case .began: dragging = true; onBegan?(touch)
+            case .changed: if dragging { onMoved?(touch) }
+            case .ended, .cancelled, .failed:
+                let wasDragging = dragging
+                dragging = false
+                if wasDragging { onEnded?(touch, recognizer.state != .ended) }
             default: break
             }
         }
@@ -858,14 +851,13 @@ private struct MapPinTapGesture: UIGestureRecognizerRepresentable {
 /// a hold away from the route fails and leaves the map's gestures alone.
 private struct RouteMapPressGesture: UIGestureRecognizerRepresentable {
     var enabled: Bool
-    var onTouchStart: () -> Void
-    var canBegin: (CLLocationCoordinate2D) -> Bool
-    var onPress: (CLLocationCoordinate2D) -> Void
-    var onMoved: (CLLocationCoordinate2D) -> Void
-    var onEnded: (CLLocationCoordinate2D?, Bool) -> Void
+    var canBegin: (NativeRouteTouch) -> Bool
+    var onPress: (NativeRouteTouch) -> Void
+    var onMoved: (NativeRouteTouch) -> Void
+    var onEnded: (NativeRouteTouch?, Bool) -> Void
 
     func makeCoordinator(converter: CoordinateSpaceConverter) -> Coordinator {
-        Coordinator(onTouchStart: onTouchStart, canBegin: canBegin)
+        Coordinator(canBegin: canBegin)
     }
     func makeUIGestureRecognizer(context: Context) -> RoutePressRecognizer {
         let recognizer = RoutePressRecognizer()
@@ -880,13 +872,12 @@ private struct RouteMapPressGesture: UIGestureRecognizerRepresentable {
         return recognizer
     }
     func updateUIGestureRecognizer(_ recognizer: RoutePressRecognizer, context: Context) {
-        context.coordinator.onTouchStart = onTouchStart
         context.coordinator.canBegin = canBegin
         // Never disable this recognizer in response to its own .began event.
         if recognizer.isEnabled != enabled { recognizer.isEnabled = enabled }
     }
     func handleUIGestureRecognizerAction(_ recognizer: RoutePressRecognizer, context: Context) {
-        let coordinate = recognizer.mapCoordinate
+        let coordinate = recognizer.routeTouch
         if recognizer.numberOfTouches > 1 {
             if context.coordinator.dragging { context.coordinator.dragging = false; onEnded(nil, true) }
             return
@@ -906,18 +897,21 @@ private struct RouteMapPressGesture: UIGestureRecognizerRepresentable {
         }
     }
     final class Coordinator: NSObject, UIGestureRecognizerDelegate {
-        var onTouchStart: () -> Void
-        var canBegin: (CLLocationCoordinate2D) -> Bool
+        var canBegin: (NativeRouteTouch) -> Bool
         var dragging = false
-        init(onTouchStart: @escaping () -> Void, canBegin: @escaping (CLLocationCoordinate2D) -> Bool) {
-            self.onTouchStart = onTouchStart; self.canBegin = canBegin
-        }
+        init(canBegin: @escaping (NativeRouteTouch) -> Bool) { self.canBegin = canBegin }
         func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
-            onTouchStart(); return true
+            var ancestor = touch.view
+            while let view = ancestor {
+                if view is UIControl { return false }
+                if view is MKMapView { break }
+                ancestor = view.superview
+            }
+            return true
         }
         func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
             guard gestureRecognizer.numberOfTouches == 1,
-                  let coordinate = (gestureRecognizer as? RoutePressRecognizer)?.mapCoordinate else { return false }
+                  let coordinate = (gestureRecognizer as? RoutePressRecognizer)?.routeTouch else { return false }
             return canBegin(coordinate)
         }
         func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool {
@@ -931,17 +925,13 @@ private struct RouteMapPressGesture: UIGestureRecognizerRepresentable {
     /// a SwiftUI event converter in a UIKit delegate that outlives that event.
     final class RoutePressRecognizer: UILongPressGestureRecognizer {
         private weak var sourceMap: MKMapView?
-        private var lastCoordinate: CLLocationCoordinate2D?
-        var mapCoordinate: CLLocationCoordinate2D? {
+        private var lastPoint: CGPoint?
+        var routeTouch: NativeRouteTouch? {
             guard let map = sourceMap, map.window != nil else { return nil }
-            if numberOfTouches > 0 {
-                let point = location(in: map)
-                guard point.x.isFinite, point.y.isFinite else { return nil }
-                let coordinate = map.convert(point, toCoordinateFrom: map)
-                guard CLLocationCoordinate2DIsValid(coordinate) else { return nil }
-                lastCoordinate = coordinate
-            }
-            return lastCoordinate
+            if numberOfTouches > 0 { lastPoint = location(in: map) }
+            guard let point = lastPoint else { return nil }
+            let touch = NativeRouteTouch(map: map, point: point)
+            return touch.coordinate == nil ? nil : touch
         }
         override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
             if sourceMap == nil, let touch = touches.first {
@@ -956,7 +946,7 @@ private struct RouteMapPressGesture: UIGestureRecognizerRepresentable {
         override func reset() {
             super.reset()
             sourceMap = nil
-            lastCoordinate = nil
+            lastPoint = nil
         }
     }
 }

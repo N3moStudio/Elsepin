@@ -77,3 +77,20 @@ Settings search layout: `Locus/Features/Settings/SettingsView.swift` owns the in
 
 ## Settings polish and JSON helper (build 61)
 `SettingsView.settingsIdentity` is the single Appearance entry: retain its larger identity card and slogan while other settings stay compact, per the user's comparison choice. `destination(for:)` retains search navigation. `AppearanceSettingsView` places surfaces before themes. `LibraryBackupView` owns the JSON link's sheet state and blocks it while a picker, export or analysis is active. `BackupJSONBrowser` wraps Safari and dismisses through its coordinator; never add script/clipboard bridges or auto-upload backup data. Preserve the file picker's existing access-lease lifecycle in `LibraryBackupInput`.
+
+## Route interaction and stop discovery (build 64)
+- `MapHomeView.swift` owns the distance marker and explicit Teleport button.
+  `NativeRouteTouch.swift` keeps UIKit touch projection inside the native map;
+  do not capture MapProxy or CoordinateSpaceConverter in those UIKit callbacks.
+  SwiftUI projects the selected distance only from its view/camera observers.
+- `Shared/RouteGeometry.swift` owns bounded indexed and screen-space snapping;
+  `Tests/RouteMarkerTests.swift` covers corners, overlap, date line and long paths.
+- `RouteStopSearchSheet.swift` owns draft-stop discovery and cancellation. Its
+  private MainActor model discards stale responses and limits each submission
+  to four requests. Do not turn this into per-keystroke or background polling.
+- `Shared/RouteSearchCorridor.swift` owns geometry/ranking/insertion policy;
+  `Tests/RouteSearchCorridorTests.swift` covers it without provider accounts.
+- `RoutePlanner.addWaypoint(insertAlongRoute:)` preserves existing stop order
+  and section choices. All additions rebuild a preview, never an active journey.
+- `RoutePlannerSheet.RouteNestedOptions` indents child settings using the existing
+  theme palette. Preserve large accessibility text and 44-point actions.
