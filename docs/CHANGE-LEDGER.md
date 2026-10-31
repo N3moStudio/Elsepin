@@ -29,7 +29,9 @@ See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all re
   theme-colored rail. Keep native controls, accessibility and all existing options.
 - Five portable corridor tests cover bent routes, invalid coordinates, bounded
   regions, long routes, date-line geometry, stop insertion and deduplication.
-  Native validation and phone acceptance are recorded separately below.
+  Native validation passed: 565 tests, app/extension compilation and verified
+  Downloads delivery in run 41176847512. Three existing warnings remain;
+  phone acceptance is pending. Release remains unpublished.
 
 ## Route/search follow-up: 2.6.1 (63) — 30 October 2026
 

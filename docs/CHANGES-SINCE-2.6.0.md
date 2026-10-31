@@ -66,6 +66,8 @@ that the public release includes it. See [changelog](../CHANGELOG.md) and
   a device check; native compilation alone does not validate every Island size.
 
 ## Maintenance and verification
+- Update the website catalog source to eight themes and rounded previews.
+  This source change is not a deployment.
 - Add concise project instructions, code ownership/navigation, UI-preservation
   guidance and handoff documents. Preserve complete skills and necessary tests.
 - Add backup/appearance, pairing-code, timing/pacing and route-search regression

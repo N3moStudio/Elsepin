@@ -4,7 +4,23 @@ Updated **30 October 2026**, America/Los_Angeles. Read the [full changelog](../C
 for feature details. This page separates compilation, test artifacts and published
 releases so a successful check is not mistaken for an available download.
 
-## Latest private test build: 2.6.1 (63) — 30 October 2026
+## Latest private test build: 2.6.1 (64) — 30 October 2026
+
+[Native run 41176847512](https://github.com/N3moStudio/Elsepin/actions/runs/41176847512) passed at source
+`39e232a971dc15e77b936a50f6321651ab17b900`: **565 tests** (436 Swift, 14 packaging/icon,
+19 Companion, 96 cloud), app/extension compilation, ad-hoc signature and IPA
+validation. Both bundles are 2.6.1 (64), built with SDK 27.1; thirteen icons,
+required resources, compatibility IDs, ZIP CRC and GitHub SHA-256 were checked.
+Three existing trust/delegate warnings remain; no new warnings.
+
+Verified Downloads artifact: `Elsepin 2.6.1 build 64.ipa` (18,399,184 bytes).
+SHA-256: `d02d11e10d6e02838d00e5dc7ba8d20d3c7d9a9be977bd7d6828733bc8abaaa7`.
+Complete logs/receipt: `.build/artifacts/41176847512/`.
+The release remains an unpublished draft with zero assets; Drive is unchanged.
+Phone hold/drag/jump/undo, recovery/retry, live search coverage, layout and provider
+speed still need acceptance. Native compilation is not a phone-crash reproduction.
+
+## Earlier private test build: 2.6.1 (63) — 30 October 2026
 
 [Run 41174566247](https://github.com/N3moStudio/Elsepin/actions/runs/41174566247) passed at
 source `f1ed08d91efbf7bfaf506d88b8fcc5bf358b4dd3`: 431 Swift tests, 14 packaging/icon tests,

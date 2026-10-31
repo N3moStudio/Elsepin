@@ -2,7 +2,22 @@
 
 Updated 30 October 2026. Read AGENTS.md, inspect Git status, preserve newer work.
 
-## Build 64 in progress — route crash evidence and stop discovery
+## Build 64 delivered — native passed, phone acceptance pending
+
+[Native run 41176847512](https://github.com/N3moStudio/Elsepin/actions/runs/41176847512) passed at source
+`39e232a971dc15e77b936a50f6321651ab17b900`: **565 tests** (436 Swift, 14 packaging/icon,
+19 Companion, 96 cloud), app/extension compilation, ad-hoc signature and IPA
+validation. Both bundles are 2.6.1 (64), built with SDK 27.1; thirteen icons,
+required resources, compatibility IDs, ZIP CRC and GitHub SHA-256 were checked.
+Three existing trust/delegate warnings remain; no new warnings.
+
+Verified Downloads artifact: `Elsepin 2.6.1 build 64.ipa` (18,399,184 bytes).
+SHA-256: `d02d11e10d6e02838d00e5dc7ba8d20d3c7d9a9be977bd7d6828733bc8abaaa7`.
+Complete logs/receipt: `.build/artifacts/41176847512/`.
+The release remains an unpublished draft with zero assets; Drive is unchanged.
+Phone hold/drag/jump/undo, recovery/retry, live search coverage, layout and provider
+speed still need acceptance. Native compilation is not a phone-crash reproduction.
+
 
 The user confirmed keyboard Search works on build 63; route hold/drag still
 terminates the app. An optional developer log shows successful location writes,
@@ -19,7 +34,7 @@ search, map/results, categories, favorites/recents and itinerary insertion.
 Active/custom-path pauses remain on the existing path; Hold location and edit
 is required for a destination detour. Advanced/More options are indented.
 
-Build 64 is being validated for private Downloads delivery; no release publication.
+Build 64 was privately delivered to Downloads; no release publication.
 See [changes since the public release](CHANGES-SINCE-2.6.0.md). Preserve all
 appearance, pairing, backup and compatibility decisions below.
 
@@ -100,7 +115,7 @@ Source and handoff are on private main; no release publication, website deployme
 or Drive upload was requested. Three existing compiler warnings remain recorded below.
 
 ## Current source and boundaries
-Private source: N3moStudio/Elsepin, main. Latest verified private delivery is 2.6.1 (63); build 64 changes are under validation. Public downloads/help: Elsepin-Releases. Last known public release 2.6.0; 2.6.1 remains a draft with no assets. The user authorized this native build and Downloads delivery, explicitly excluding release publication. No website deployment or Drive upload was requested.
+Private source: N3moStudio/Elsepin, main. Latest verified private delivery is 2.6.1 (64), delivered to Downloads on 30 October. Public downloads/help: Elsepin-Releases. Last known public release 2.6.0; 2.6.1 remains a draft with no assets. The user authorized this native build and Downloads delivery, explicitly excluding release publication. No website deployment or Drive upload was requested.
 Elsepin is the full app. Veypax is separate; do not copy paid gates or branding. Preserve bundle IDs, defaults/Keychain keys, app group, backup formats and manual movement confirmation.
 
 ## Current UI and compatibility
@@ -118,7 +133,23 @@ Complete original logs, diagnostics and receipt: .build/artifacts/41103527856/. 
 29 October: full 414 portable Swift tests and 14 Python tests passed for the surface migration/search-spacing change. Logs: .build/settings-surface-swift.log and .build/settings-surface-python.log. No newer shared-model changes in this polish pass.
 Build 61 has now passed native compilation; the earlier syntax-only entries above record preceding checkpoints. Use the acceptance checklist in TESTING.md. Future builds must regenerate project.yml with XcodeGen as the packager already does.
 
-## Latest delivered IPA — build 63
+## Latest delivered IPA — build 64
+
+[Native run 41176847512](https://github.com/N3moStudio/Elsepin/actions/runs/41176847512) passed at source
+`39e232a971dc15e77b936a50f6321651ab17b900`: **565 tests** (436 Swift, 14 packaging/icon,
+19 Companion, 96 cloud), app/extension compilation, ad-hoc signature and IPA
+validation. Both bundles are 2.6.1 (64), built with SDK 27.1; thirteen icons,
+required resources, compatibility IDs, ZIP CRC and GitHub SHA-256 were checked.
+Three existing trust/delegate warnings remain; no new warnings.
+
+Verified Downloads artifact: `Elsepin 2.6.1 build 64.ipa` (18,399,184 bytes).
+SHA-256: `d02d11e10d6e02838d00e5dc7ba8d20d3c7d9a9be977bd7d6828733bc8abaaa7`.
+Complete logs/receipt: `.build/artifacts/41176847512/`.
+The release remains an unpublished draft with zero assets; Drive is unchanged.
+Phone hold/drag/jump/undo, recovery/retry, live search coverage, layout and provider
+speed still need acceptance. Native compilation is not a phone-crash reproduction.
+
+## Earlier delivered IPA — build 63
 
 [Run 41174566247](https://github.com/N3moStudio/Elsepin/actions/runs/41174566247) passed at
 source `f1ed08d91efbf7bfaf506d88b8fcc5bf358b4dd3`: 431 Swift tests, 14 packaging/icon tests,
@@ -157,3 +188,13 @@ PairOnDeviceService now starts setup presentation while foregrounded and publish
 The comparison decision is compact overall with the original larger identity card; the eight theme rows/swatches and thirteen icon choices remain intact. The card-only correction passed Swift syntax parsing; device layout remains pending.
 APP-MAP.md locates UI/migration entry points; BACKUPS.md describes import rules; CHANGE-LEDGER.md records evidence; docs/releases/2.6.1-DRAFT.md contains release text. CHAT-WORKFLOW.md covers sparse optional delegation.
 Deleted arena branch remains deleted; recovery history is .build/elsepin-arena-3430259.bundle. Its reviewed appearance changes were subsequently explicitly authorized and reapplied. Website catalog source has eight themes but has not been redeployed in these follow-ups.
+
+## Next phone checks for build 64
+1. Hold the route, drag across a corner, lift, Teleport, Undo; then background
+   during a hold and retry. Confirm no move happens before Teleport and Stop works.
+2. Reopen after an interrupted connection, reconnect/recover, then hold again.
+   Keep the optional log enabled for this test; exact cause remains unconfirmed.
+3. Draft route → Add stop → search Coffee or a full address; try map pins,
+   Along route/Everywhere, cancel/back, offline/retry and adding a second stop.
+   Also test Places & stops → Add stop after Hold location and edit.
+4. Expand Advanced/More options on a small screen and at accessibility text sizes.
