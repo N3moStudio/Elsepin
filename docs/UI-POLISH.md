@@ -80,8 +80,8 @@ The step numbers are instructions, not a fabricated progress/completion meter.
 | Optional provider status can add multiple multiline blocks | Compact provider rows retain separate status and report age | Keeps Find My/Life360 evidence without implying an update command verified another app |
 | Normal text hierarchy can crowd at accessibility sizes | Omit the optional route-name line at accessibility sizes; keep status and route progress | Gives the essential information space without globally reducing accessibility text |
 
-This is source-level layout work; native/physical-device screenshots are still
-needed for all variants. Pairing code, system Island background, privacy and
+Native compilation passed in run 41174566247. Physical-device screenshots
+are still needed for all variants; compilation does not prove layout fits. Pairing code, system Island background, privacy and
 stale-state behavior are preserved. No decorative activity animation was added.
 
 57 focused Swift tests passed: pairing activity, route planning, appearance and

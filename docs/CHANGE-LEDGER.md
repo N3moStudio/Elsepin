@@ -7,6 +7,23 @@ See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all re
 
 ## Route/search follow-up: 2.6.1 (63) — 30 October 2026
 
+[Run 41174566247](https://github.com/N3moStudio/Elsepin/actions/runs/41174566247) passed at
+source `f1ed08d91efbf7bfaf506d88b8fcc5bf358b4dd3`: 431 Swift tests, 14 packaging/icon tests,
+19 Companion tests and 96 cloud-helper tests (560 total), native app/extension
+compilation, signing and package checks. Both bundles are 2.6.1 (63), SDK 27.1.
+Thirteen icons, compatibility identities, resources, ZIP integrity and GitHub's
+SHA-256 were checked. Three existing certificate/delegate warnings remain;
+no new warnings. The two earlier native attempts failed on Swift expression
+complexity and produced no IPA; their complete logs are preserved.
+
+Downloads: `C:/Users/naith/Downloads/Elsepin 2.6.1 build 63.ipa`
+(18,306,911 bytes), SHA-256 `a544b5f7060d5c23b3099861dd880cc25af8a9537a9cff59228fe3c43b96dae5`.
+Complete logs and receipt: `.build/artifacts/41174566247/`.
+The actual phone crashes, Live Activity layout and Life360 MPH still require
+device/provider retesting. Release remains an unpublished draft with zero assets.
+The earlier Drive copy is unchanged.
+
+
 Owners: RoutePlaceSearchSheet (general results/selection and request lifecycle),
 MapHomeView (native hold coordinates, matching index, interruption),
 RouteTiming + RouteBuilder + SpoofSession (cached moving-time estimates),

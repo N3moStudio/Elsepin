@@ -23,7 +23,9 @@ is the official release. Earlier Shift entries retain their original names and r
 - Fit route name, remaining distance, ETA and progress into a shorter activity.
   Keep update status, stale/error warnings and optional Find My/Life360 checks;
   bound timer width and remove redundant command-age text.
-- Nine new timing/pacing regression tests cover this work. Native build and phone retests
+- Nine new timing/pacing regression tests cover this work. Final native run
+  `41174566247` passed all 560 tests plus compilation/package validation and the
+  verified IPA is in Downloads. Three existing warnings remain. Phone retests
   are pending. These are fixes/hardening for reported full app exits; no crash
   report was available, so the exact termination causes are not confirmed.
   The Irvine trip's exact MapKit results and real travel time are unverified.

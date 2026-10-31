@@ -4,7 +4,29 @@ Updated **30 October 2026**, America/Los_Angeles. Read the [full changelog](../C
 for feature details. This page separates compilation, test artifacts and published
 releases so a successful check is not mistaken for an available download.
 
-## Latest private test build: 2.6.1 (62) — 30 October 2026
+## Latest private test build: 2.6.1 (63) — 30 October 2026
+
+[Run 41174566247](https://github.com/N3moStudio/Elsepin/actions/runs/41174566247) passed at
+source `f1ed08d91efbf7bfaf506d88b8fcc5bf358b4dd3`: 431 Swift tests, 14 packaging/icon tests,
+19 Companion tests and 96 cloud-helper tests (560 total), native app/extension
+compilation, signing and package checks. Both bundles are 2.6.1 (63), SDK 27.1.
+Thirteen icons, compatibility identities, resources, ZIP integrity and GitHub's
+SHA-256 were checked. Three existing certificate/delegate warnings remain;
+no new warnings. The two earlier native attempts failed on Swift expression
+complexity and produced no IPA; their complete logs are preserved.
+
+Downloads: `C:/Users/naith/Downloads/Elsepin 2.6.1 build 63.ipa`
+(18,306,911 bytes), SHA-256 `a544b5f7060d5c23b3099861dd880cc25af8a9537a9cff59228fe3c43b96dae5`.
+Complete logs and receipt: `.build/artifacts/41174566247/`.
+The actual phone crashes, Live Activity layout and Life360 MPH still require
+device/provider retesting. Release remains an unpublished draft with zero assets.
+The earlier Drive copy is unchanged.
+
+Failed native attempts: `41173992580` (557 tests passed) and `41174349587`
+(560 tests passed). Splitting the map modifier chain resolved the compiler
+limit in the final run; these failures were not device-crash reproductions.
+
+## Earlier private test build: 2.6.1 (62) — 30 October 2026
 
 [Run 41126221099](https://github.com/N3moStudio/Elsepin/actions/runs/41126221099) passed
 at source `a213d8b37a87759b0db719a9caa2ba571427330e`. This adds the three-step pairing

@@ -2,7 +2,24 @@
 
 Updated 30 October 2026. Read AGENTS.md, inspect Git status, preserve newer work.
 
-## Build 63 route/search follow-up — validation in progress
+## Build 63 route/search follow-up — native build passed, phone retest pending
+
+[Run 41174566247](https://github.com/N3moStudio/Elsepin/actions/runs/41174566247) passed at
+source `f1ed08d91efbf7bfaf506d88b8fcc5bf358b4dd3`: 431 Swift tests, 14 packaging/icon tests,
+19 Companion tests and 96 cloud-helper tests (560 total), native app/extension
+compilation, signing and package checks. Both bundles are 2.6.1 (63), SDK 27.1.
+Thirteen icons, compatibility identities, resources, ZIP integrity and GitHub's
+SHA-256 were checked. Three existing certificate/delegate warnings remain;
+no new warnings. The two earlier native attempts failed on Swift expression
+complexity and produced no IPA; their complete logs are preserved.
+
+Downloads: `C:/Users/naith/Downloads/Elsepin 2.6.1 build 63.ipa`
+(18,306,911 bytes), SHA-256 `a544b5f7060d5c23b3099861dd880cc25af8a9537a9cff59228fe3c43b96dae5`.
+Complete logs and receipt: `.build/artifacts/41174566247/`.
+The actual phone crashes, Live Activity layout and Life360 MPH still require
+device/provider retesting. Release remains an unpublished draft with zero assets.
+The earlier Drive copy is unchanged.
+
 
 User reports full exits to Home Screen on route hold/jump and keyboard Search
 in installed build 62. No iOS analytics crash entry is available. Do not claim
@@ -40,7 +57,7 @@ from target speed. Sources: [Life360 speed accuracy](https://support.life360.com
 First native attempt 41173992580 passed 557 tests but failed with a Swift
 type-check complexity error in the map's search-dismissal closure. Full original
 logs: `.build/artifacts/41173992580/workflow-logs.zip`. The closure is now a
-separate method. No IPA was produced by that attempt; rerun needed for the new source.
+separate method. No IPA was produced by that attempt; the successful final run is recorded above.
 Attempt 41174349587 passed the expanded 560 tests, but the same map-view compiler
 limit moved to a neighboring closure. The entire map modifier chain is now split
 at opaque canvas/lifecycle/route/timer/presentation boundaries, retaining one
@@ -80,7 +97,25 @@ Complete original logs, diagnostics and receipt: .build/artifacts/41103527856/. 
 29 October: full 414 portable Swift tests and 14 Python tests passed for the surface migration/search-spacing change. Logs: .build/settings-surface-swift.log and .build/settings-surface-python.log. No newer shared-model changes in this polish pass.
 Build 61 has now passed native compilation; the earlier syntax-only entries above record preceding checkpoints. Use the acceptance checklist in TESTING.md. Future builds must regenerate project.yml with XcodeGen as the packager already does.
 
-## Latest delivered IPA — build 62
+## Latest delivered IPA — build 63
+
+[Run 41174566247](https://github.com/N3moStudio/Elsepin/actions/runs/41174566247) passed at
+source `f1ed08d91efbf7bfaf506d88b8fcc5bf358b4dd3`: 431 Swift tests, 14 packaging/icon tests,
+19 Companion tests and 96 cloud-helper tests (560 total), native app/extension
+compilation, signing and package checks. Both bundles are 2.6.1 (63), SDK 27.1.
+Thirteen icons, compatibility identities, resources, ZIP integrity and GitHub's
+SHA-256 were checked. Three existing certificate/delegate warnings remain;
+no new warnings. The two earlier native attempts failed on Swift expression
+complexity and produced no IPA; their complete logs are preserved.
+
+Downloads: `C:/Users/naith/Downloads/Elsepin 2.6.1 build 63.ipa`
+(18,306,911 bytes), SHA-256 `a544b5f7060d5c23b3099861dd880cc25af8a9537a9cff59228fe3c43b96dae5`.
+Complete logs and receipt: `.build/artifacts/41174566247/`.
+The actual phone crashes, Live Activity layout and Life360 MPH still require
+device/provider retesting. Release remains an unpublished draft with zero assets.
+The earlier Drive copy is unchanged.
+
+## Earlier delivered IPA — build 62
 Native run: https://github.com/N3moStudio/Elsepin/actions/runs/41126221099. Source: a213d8b37a87759b0db719a9caa2ba571427330e. Artifact: 13010842478. Both bundles: 2.6.1 (62), SDK 27.1. File: C:/Users/naith/Downloads/Elsepin 2.6.1 build 62.ipa (18,260,198 bytes).
 SHA-256: 4d3ccac5a529b957a3ab2eb945747e2eae65d31b9c3837e6a7b8840d6f491d05.
 Includes three connected pairing steps with no Pairing help, themed pairing surfaces/actions and all five visible draft route modes, plus everything in build 61. Retain the extension when sideload signing. Release is still an unpublished draft with no assets. Drive remains build 60.
