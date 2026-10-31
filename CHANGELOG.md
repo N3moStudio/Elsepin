@@ -16,15 +16,22 @@ is the official release. Earlier Shift entries retain their original names and r
 - Calculate simulated route time with the playback acceleration/corner rules
   when Smooth movement is enabled, including section speeds and stop waits.
   Cache estimates; show Apple Maps' separate travel estimate where available.
+- Pace route updates from successful confirmations as well as dispatch time.
+  Account conservatively for recent write latency and prevent a slow update
+  followed by an immediate catch-up burst. Reset timing after jumps/resumes.
+  This improves coordinate timing; it cannot set or guarantee Life360's MPH.
 - Fit route name, remaining distance, ETA and progress into a shorter activity.
   Keep update status, stale/error warnings and optional Find My/Life360 checks;
   bound timer width and remove redundant command-age text.
-- Six new timing regression tests pass locally. Native build and phone retests
+- Nine new timing/pacing regression tests cover this work. Native build and phone retests
   are pending. These are fixes/hardening for reported full app exits; no crash
   report was available, so the exact termination causes are not confirmed.
   The Irvine trip's exact MapKit results and real travel time are unverified.
 - Preserve appearance defaults, pairing PIN handling, identifiers, backup formats
   and explicit confirmation before a route jump. No public release.
+- Native attempt `41173992580` passed 557 tests but failed on a Swift map-view
+  type-check complexity error. Extracted search-dismissal handling into its
+  own method; the subsequent build must validate that correction and pacing.
 
 ## 2.6.1 (62) — private UI test build — 30 October 2026
 

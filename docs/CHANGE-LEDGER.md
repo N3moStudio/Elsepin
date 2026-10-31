@@ -16,6 +16,12 @@ pairing-code lifecycle change. General search never sends a movement command.
 Timing tests cover units, playback comparison, waits/seeks, sections, long
 straight paths and cache invalidation. No crash report is available; phone
 termination and layout acceptance remain unverified. See CURRENT-WORK for status.
+Follow-up: `Shared/TripFeatures.swift` and `PrecisionControlsTests.swift` add
+confirmation-aware update pacing, retain suspension/jump resets and test short
+latency, slow-to-fast response transitions and reset behavior. No remote speed
+field is injected or Life360 reading guaranteed. Native attempt 41173992580
+failed after 557 passing tests on map-view type-check complexity; its raw logs
+are retained and the closure was extracted before retry.
 
 ## Private UI IPA: 2.6.1 (62) — 30 October 2026
 

@@ -763,6 +763,7 @@ final class SpoofSession: ObservableObject {
                 if result == .busy { continue }
                 guard result == .sent, !Task.isCancelled, ticket == epoch, workerID == routeWorkerID else { return }
                 let confirmedAt = ProcessInfo.processInfo.systemUptime
+                clock.confirm(now: confirmedAt)
                 samples.append(metres: target - current.travelledMetres, seconds: confirmedAt - lastMovementConfirmation)
                 lastMovementConfirmation = confirmedAt
                 measuredRouteSpeed = routePaused ? 0 : samples.metresPerSecond

@@ -370,25 +370,26 @@ struct MapHomeView: View {
         .sheet(isPresented: $showPathEditor) {
             PathEditorSheet(title: "Edit drawing", points: drawing.points) { edited in drawing.replacePoints(edited); return nil }
         }
-        .sheet(isPresented: $showSearch, onDismiss: {
-            if let place = pendingPin {
-                planner.discardPreparedRoute()
-                session.selectPin(place.coordinate, name: place.name)
-                previewPlace(place)
-                pendingPin = nil
-            } else if let trip = pendingSavedTrip {
-                pendingSavedTrip = nil
-                if session.journey == nil, !session.isBusy, let current = library.trips.first(where: { $0.id == trip.id }) {
-                    planner.useSaved(current)
-                }
-            } else if let destination = pendingDestination {
-                planner.plan(to: destination, defaultOrigin: session.defaultRouteOrigin, mode: session.travelMode)
-                pendingDestination = nil
-            }
-        }) {
+        .sheet(isPresented: $showSearch, onDismiss: finishPlaceSearch) {
             RoutePlaceSearchSheet(title: "Where to?", onPreviewTeleport: { place in
                 pendingPin = place
             }, onChooseTrip: { trip in pendingSavedTrip = trip }) { place in pendingDestination = place }
+        }
+    }
+
+    private func finishPlaceSearch() {
+        if let place = pendingPin {
+            planner.discardPreparedRoute()
+            session.selectPin(place.coordinate, name: place.name)
+            previewPlace(place)
+            pendingPin = nil
+        } else if let trip = pendingSavedTrip {
+            pendingSavedTrip = nil
+            guard session.journey == nil, !session.isBusy else { return }
+            if let current = library.trips.first(where: { $0.id == trip.id }) { planner.useSaved(current) }
+        } else if let destination = pendingDestination {
+            planner.plan(to: destination, defaultOrigin: session.defaultRouteOrigin, mode: session.travelMode)
+            pendingDestination = nil
         }
     }
 

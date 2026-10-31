@@ -28,6 +28,20 @@ the touch; E-bike 10 mph with Smooth on/off and section speeds; Island/Lock Scre
 with long place names, accessibility text, both providers and stale states.
 Release remains unpublished. Earlier build receipts below describe older code.
 
+Speed follow-up: `RoutePlaybackClock` now uses successful-confirmation spacing
+and a conservative recent latency estimate. This avoids immediately dispatching
+catch-up movement after a slow write; jumps/resumes still reset the clock. The
+native `location_simulation_set` API accepts only latitude/longitude, not speed.
+Life360 independently samples GPS/motion and can miss points; do not promise its
+MPH matches a configured value. Existing measured-speed UI remains separate
+from target speed. Sources: [Life360 speed accuracy](https://support.life360.com/hc/en-us/articles/23053597039511-Driving-Speed-Accuracy),
+[movement sampling](https://support.life360.com/hc/en-us/articles/23053466420887-Movement-Accuracy).
+
+First native attempt 41173992580 passed 557 tests but failed with a Swift
+type-check complexity error in the map's search-dismissal closure. Full original
+logs: `.build/artifacts/41173992580/workflow-logs.zip`. The closure is now a
+separate method. No IPA was produced by that attempt; rerun needed for the new source.
+
 ## Build 62 UI follow-up — native build passed, device checks pending
 
 Video-inspired UI pass: pairing sheet now uses the selected theme, three connected

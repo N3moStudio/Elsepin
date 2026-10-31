@@ -157,14 +157,33 @@ struct RoutePlaybackClock {
     static let interval = 0.5
     static let maximumGap = 1.5
     private(set) var lastDispatch: Double
+    private var lastConfirmation: Double?
+    private var latencies: [Double] = []
+    // Use a conservative recent estimate, not a slow/outlier response. The
+    // native API accepts coordinates only; delivery timing determines motion.
+    private var expectedLatency: Double { min(0.25, latencies.min() ?? 0) }
 
     init(now: Double) { lastDispatch = now }
-    mutating func reset(now: Double) { lastDispatch = now }
-    func delay(now: Double) -> Double { max(0, Self.interval - max(0, now - lastDispatch)) }
+    mutating func reset(now: Double) {
+        lastDispatch = now; lastConfirmation = nil; latencies.removeAll(keepingCapacity: true)
+    }
+    func delay(now: Double) -> Double {
+        let nextDispatch = lastDispatch + Self.interval
+        let paced = lastConfirmation.map { $0 + Self.interval - expectedLatency } ?? nextDispatch
+        return max(0, max(nextDispatch, paced) - now)
+    }
     mutating func advance(now: Double) -> Double {
-        let elapsed = now - lastDispatch
+        let gap = now - lastDispatch
+        let elapsed = lastConfirmation.map { now - $0 + expectedLatency } ?? gap
         lastDispatch = now
+        if gap > Self.maximumGap { return Self.interval }
         return Self.travelTime(for: elapsed)
+    }
+    mutating func confirm(now: Double) {
+        guard now.isFinite, now >= lastDispatch else { return }
+        lastConfirmation = now
+        latencies.append(now - lastDispatch)
+        if latencies.count > 5 { latencies.removeFirst() }
     }
     static func travelTime(for elapsed: Double) -> Double {
         guard elapsed.isFinite, elapsed > 0 else { return 0 }

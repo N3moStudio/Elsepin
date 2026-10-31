@@ -2,6 +2,45 @@ import XCTest
 @testable import SessionPresentation
 
 final class PrecisionControlsTests: XCTestCase {
+    func testConfirmedCadenceMaintainsTenMPHWithConsistentWriteLatency() {
+        for latency in [0.01, 0.05, 0.2] {
+            var clock = RoutePlaybackClock(now: 0), now = 0.0, metres = 0.0
+            let speed = SpeedConversion.metresPerSecond(mph: 10)
+            for _ in 0..<120 {
+                now += clock.delay(now: now)
+                metres += speed * clock.advance(now: now)
+                now += latency
+                clock.confirm(now: now)
+            }
+            XCTAssertEqual(metres, speed * 60, accuracy: 0.001)
+            XCTAssertEqual(SpeedConversion.mph(metresPerSecond: metres / now), 10, accuracy: 0.04)
+        }
+    }
+
+    func testSlowThenFastWriteCannotSendImmediateCatchUpBurst() {
+        var clock = RoutePlaybackClock(now: 0)
+        _ = clock.advance(now: 0.5); clock.confirm(now: 0.55)
+        _ = clock.advance(now: 1); clock.confirm(now: 2.2)
+        let wait = clock.delay(now: 2.2)
+        XCTAssertEqual(wait, 0.45, accuracy: 0.00001)
+        let movementSeconds = clock.advance(now: 2.2 + wait)
+        XCTAssertEqual(movementSeconds, 0.5, accuracy: 0.00001)
+        // A fast response after that slow one now spans 0.46 seconds, rather
+        // than delivering 1.2 seconds of movement in 0.01 seconds.
+        let observedMPH = 10 * movementSeconds / (wait + 0.01)
+        XCTAssertLessThan(observedMPH, 11)
+    }
+
+    func testResumeAndJumpResetPriorConfirmationTiming() {
+        var clock = RoutePlaybackClock(now: 0)
+        _ = clock.advance(now: 0.5); clock.confirm(now: 0.7)
+        clock.reset(now: 100)
+        XCTAssertEqual(clock.delay(now: 100), 0.5)
+        XCTAssertEqual(clock.advance(now: 100.5), 0.5)
+        clock.confirm(now: .nan)
+        XCTAssertEqual(clock.delay(now: 100.5), 0.5)
+    }
+
     func testWriteLatencyUsesRemainingTickTimeInsteadOfAnotherFullDelay() {
         var clock = RoutePlaybackClock(now: 0)
         XCTAssertEqual(clock.delay(now: 0), 0.5)
