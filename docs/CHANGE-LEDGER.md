@@ -5,6 +5,21 @@ is the last recorded public release. Earlier entries retain their original valid
 
 See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all recorded 2.5.x/2.6.0 native runs.
 
+## 2.6.1 (65) — native warning cleanup — 31 October 2026
+
+- Replace deprecated certificate access in the Windows companion and self-hosted
+  cloud helper delegates with `SecTrustCopyCertificateChain(...).first`. Retain
+  leaf SHA-256 pinning, host checks, rejected redirects and managed-HTTPS system
+  trust handling. No broader trust exception or credential change.
+- Mark the MainActor-created location manager's legacy delegate conformance with
+  checked `@preconcurrency`. Core Location delivers on its creation run loop;
+  preserve synchronous fresh-fix handling, cancellation and foreground-only checks.
+- Increment both target build numbers to 65 so native validation is distinguishable
+  from the user's ongoing build 64 route-crash test. UI and route code are unchanged.
+- Native validation is in progress. Keep the release unpublished and the existing
+  build 64 Downloads IPA intact. The normal manual workflow creates a private
+  artifact; this task does not require another Downloads/Drive delivery.
+
 ## 2.6.1 (64) — route interaction and stop discovery — 30 October 2026
 
 - Replace route-marker touch callbacks' SwiftUI map conversions with native

@@ -165,9 +165,11 @@ private final class PinnedCompanionDelegate: NSObject, URLSessionDelegate, URLSe
         guard challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
               challenge.protectionSpace.host == URL(string: link.endpoint)?.host,
               let trust = challenge.protectionSpace.serverTrust,
-              let certificate = SecTrustGetCertificateAtIndex(trust, 0) else {
+              let certificates = SecTrustCopyCertificateChain(trust) as? [SecCertificate],
+              let certificate = certificates.first else {
             completionHandler(.cancelAuthenticationChallenge, nil); return
         }
+        // Pin the leaf (first certificate), not a root/intermediate in the chain.
         let data = SecCertificateCopyData(certificate) as Data
         let digest = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
         guard digest == link.certificateSHA256.lowercased() else { reject(); completionHandler(.cancelAuthenticationChallenge, nil); return }

@@ -94,3 +94,13 @@ Settings search layout: `Locus/Features/Settings/SettingsView.swift` owns the in
   and section choices. All additions rebuild a preview, never an active journey.
 - `RoutePlannerSheet.RouteNestedOptions` indents child settings using the existing
   theme palette. Preserve large accessibility text and 44-point actions.
+
+## Native trust/delegate maintenance (build 65)
+- `CompanionClient.PinnedCompanionDelegate` and `RemoteFindMyController.RemoteFindMyTrust`
+  pin the first certificate from `SecTrustCopyCertificateChain`, not an intermediate.
+  Preserve host checks and redirect rejection. Managed HTTPS remains system-validated.
+- `LocationVerificationController` creates its manager on MainActor. Its checked
+  `@preconcurrency` conformance relies on Core Location's creation-run-loop delivery;
+  do not move manager creation off that actor or remove the runtime isolation check.
+- Sources: [Apple Security trust header](https://github.com/apple-oss-distributions/Security/blob/main/trust/headers/SecTrust.h),
+  [Core Location callback delivery](https://developer.apple.com/documentation/corelocation/cllocationmanager).

@@ -389,7 +389,11 @@ private final class RemoteFindMyTrust: NSObject, URLSessionDelegate, URLSessionT
             // Render renews its certificates. iOS validates the full chain and hostname.
             completionHandler(.performDefaultHandling, nil); return
         }
-        guard let trust = challenge.protectionSpace.serverTrust, let cert = SecTrustGetCertificateAtIndex(trust, 0),
+        // Keep leaf-certificate pinning for self-hosted helpers. Managed HTTPS
+        // above still uses the system's complete chain and hostname validation.
+        guard let trust = challenge.protectionSpace.serverTrust,
+              let certificates = SecTrustCopyCertificateChain(trust) as? [SecCertificate],
+              let cert = certificates.first,
               SHA256.hash(data: SecCertificateCopyData(cert) as Data).map({ String(format: "%02x", $0) }).joined() == link.certificateSHA256.lowercased() else {
             completionHandler(.cancelAuthenticationChallenge, nil); return
         }

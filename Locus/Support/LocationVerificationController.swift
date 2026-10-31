@@ -3,11 +3,13 @@ import CoreLocation
 import Foundation
 
 @MainActor
-final class LocationVerificationController: NSObject, ObservableObject, CLLocationManagerDelegate {
+final class LocationVerificationController: NSObject, ObservableObject, @preconcurrency CLLocationManagerDelegate {
     @Published private(set) var report: LocationReport?
     @Published private(set) var requestedAt: Date?
     @Published private(set) var message = "Tap Check iPhone location for a fresh reading."
     private(set) var history: [SentLocationSample] = []
+    // Core Location delivers on the run loop where this MainActor-owned manager
+    // is created. Checked preconcurrency preserves synchronous fresh-fix handling.
     private let manager = CLLocationManager()
     private var timeout: Task<Void, Never>?
     private var acceptingFixes = false
