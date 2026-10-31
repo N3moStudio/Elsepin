@@ -5,6 +5,18 @@ is the last recorded public release. Earlier entries retain their original valid
 
 See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all recorded 2.5.x/2.6.0 native runs.
 
+## Route/search follow-up: 2.6.1 (63) — 30 October 2026
+
+Owners: RoutePlaceSearchSheet (general results/selection and request lifecycle),
+MapHomeView (native hold coordinates, matching index, interruption),
+RouteTiming + RouteBuilder + SpoofSession (cached moving-time estimates),
+RoutePlannerSheet (simulated versus Apple time), LocusLiveActivity (bounded rows).
+Compatibility: no data format, engine protocol, bundle/group/default key or
+pairing-code lifecycle change. General search never sends a movement command.
+Timing tests cover units, playback comparison, waits/seeks, sections, long
+straight paths and cache invalidation. No crash report is available; phone
+termination and layout acceptance remain unverified. See CURRENT-WORK for status.
+
 ## Private UI IPA: 2.6.1 (62) — 30 October 2026
 
 User authorized a private native build and Downloads delivery, excluding release

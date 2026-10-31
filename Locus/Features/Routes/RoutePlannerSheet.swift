@@ -512,7 +512,7 @@ struct RoutePlannerSheet: View {
                             .foregroundStyle(LocusTheme.accent)
                         VStack(alignment: .leading, spacing: 4) {
                             Text(option.name).font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
-                            Text("\(JourneyText.distance(option.distance)) · \(JourneyText.duration(option.estimate(speed: SpeedConversion.metresPerSecond(mph: displaySpeed)))) simulated")
+                            Text("\(JourneyText.distance(option.distance)) · \(JourneyText.duration(option.estimate(mode: displayMode, speed: SpeedConversion.metresPerSecond(mph: displaySpeed), smooth: displaySmooth))) simulated")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                         Spacer(minLength: 0)
@@ -609,13 +609,21 @@ struct RoutePlannerSheet: View {
                 }.frame(maxWidth: .infinity, alignment: .leading)
                 Divider().frame(height: 42)
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("Estimated time").font(.caption).foregroundStyle(.secondary)
-                    Text(JourneyText.duration(route.estimate(speed: SpeedConversion.metresPerSecond(mph: displaySpeed)))).font(.title3.weight(.semibold))
+                    Text("Elsepin time").font(.caption).foregroundStyle(.secondary)
+                    Text(JourneyText.duration(route.estimate(mode: displayMode, speed: SpeedConversion.metresPerSecond(mph: displaySpeed), smooth: displaySmooth))).font(.title3.weight(.semibold))
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }.padding(.vertical, 5)
             let waiting = route.stops.reduce(0) { $0 + $1.waitSeconds }
-            let moving = max(0, route.estimate(speed: SpeedConversion.metresPerSecond(mph: displaySpeed)) - waiting)
+            let moving = route.movingEstimate(mode: displayMode, speed: SpeedConversion.metresPerSecond(mph: displaySpeed), smooth: displaySmooth)
             Text("Travel \(JourneyText.duration(moving)) · Stops \(StopDuration.formatted(waiting))")
+                .font(.caption).foregroundStyle(.secondary)
+            if let appleTime = route.appleTravelTime, let network = route.source.pathNetwork {
+                Text("Apple Maps: \(JourneyText.duration(appleTime)) · \(network.title)")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            Text(route.travelSections.isEmpty
+                 ? "Elsepin uses \(preferences.speedUnit.formatted(mph: displaySpeed))\(displaySmooth ? ", including corner slowing" : ""). Real travel can take longer."
+                 : "Elsepin uses each section's speed and stop time. Real travel can take longer.")
                 .font(.caption).foregroundStyle(.secondary)
             Button {
                 tripName = library.trips.first(where: { $0.id == (hasJourney ? session.activeSavedTripID : planner.editingTripID) })?.name ?? route.name

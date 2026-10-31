@@ -5,6 +5,27 @@ is the official release. Earlier Shift entries retain their original names and r
 
 [App introduction](README.md) · [Build history](docs/BUILD-HISTORY.md) · [Detailed Change Ledger](docs/CHANGE-LEDGER.md)
 
+## 2.6.1 (63) — route/search follow-up — 30 October 2026
+
+- Keyboard Search and the general-search button now show matching places with
+  addresses. They do not silently choose the first result or open its action
+  dialog. Preserve autocomplete, favorites, cancellation and manual movement confirmation.
+- Harden route holds against stale route indexes and event-converter lifetime;
+  read the native map's touch coordinates and avoid reconfiguring its gestures
+  during a hold. Clear dragging state after backgrounding or leaving the map.
+- Calculate simulated route time with the playback acceleration/corner rules
+  when Smooth movement is enabled, including section speeds and stop waits.
+  Cache estimates; show Apple Maps' separate travel estimate where available.
+- Fit route name, remaining distance, ETA and progress into a shorter activity.
+  Keep update status, stale/error warnings and optional Find My/Life360 checks;
+  bound timer width and remove redundant command-age text.
+- Six new timing regression tests pass locally. Native build and phone retests
+  are pending. These are fixes/hardening for reported full app exits; no crash
+  report was available, so the exact termination causes are not confirmed.
+  The Irvine trip's exact MapKit results and real travel time are unverified.
+- Preserve appearance defaults, pairing PIN handling, identifiers, backup formats
+  and explicit confirmation before a route jump. No public release.
+
 ## 2.6.1 (62) — private UI test build — 30 October 2026
 
 Delivered privately to Downloads. [Native run 41126221099](https://github.com/N3moStudio/Elsepin/actions/runs/41126221099)

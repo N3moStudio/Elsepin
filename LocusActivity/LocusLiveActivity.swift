@@ -27,6 +27,7 @@ struct LocusLiveActivity: Widget {
                     } else if let last = context.state.lastConfirmedAt, context.state.islandShowsTimer != false {
                         Text(last, style: .timer)
                             .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                            .frame(width: 54, alignment: .trailing).lineLimit(1)
                             .accessibilityLabel("Time since the last location update was sent")
                             .padding(.trailing, 6)
                     } else {
@@ -40,8 +41,7 @@ struct LocusLiveActivity: Widget {
                     } else {
                         ActivityDetails(state: context.state, phase: phase, place: context.state.islandPlace,
                                     journey: context.state.visibleJourney(onIsland: true, at: Date(), systemIsStale: context.isStale),
-                                    showCommandTime: false,
-                                    systemIsStale: context.isStale, compactServiceRows: true)
+                                    systemIsStale: context.isStale)
                         .padding(.horizontal, 14).padding(.top, 4).padding(.bottom, 6)
                     }
                 }
@@ -84,7 +84,7 @@ private struct ActivityLockScreen: View {
     let context: ActivityViewContext<LocusActivityAttributes>
     var body: some View {
         let phase = context.state.presentedPhase(at: Date(), systemIsStale: context.isStale)
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 7) {
             HStack {
                 ShiftWidgetBrand(design: ShiftIconDesign(rawValue: context.state.iconDesign ?? "")).foregroundStyle(phase.tint(style: ShiftVisualStyle(storedValue: context.state.visualStyle)))
                 Image(systemName: context.state.pairing == nil ? phase.symbol : "key.fill").font(.caption).foregroundStyle(phase.tint(style: ShiftVisualStyle(storedValue: context.state.visualStyle)))
@@ -96,6 +96,7 @@ private struct ActivityLockScreen: View {
                 if let last = context.state.lastConfirmedAt {
                     Text(last, style: .timer)
                         .font(.caption.monospacedDigit()).foregroundStyle(.white.opacity(0.7))
+                        .frame(width: 54, alignment: .trailing).lineLimit(1)
                         .accessibilityLabel("Time since the last location update was sent")
                 }
             }
@@ -107,7 +108,7 @@ private struct ActivityLockScreen: View {
                             systemIsStale: context.isStale)
             }
         }
-        .padding(18)
+        .padding(14)
         .foregroundStyle(.white)
     }
 }
@@ -141,52 +142,50 @@ private struct ActivityDetails: View {
     let phase: SessionPhase
     let place: String?
     let journey: JourneyActivity?
-    var showCommandTime = true
     var systemIsStale = false
-    var compactServiceRows = false
+    @Environment(\.dynamicTypeSize) private var textSize
     var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            Text(phase.title).font(.headline).foregroundStyle(phase.tint(style: ShiftVisualStyle(storedValue: state.visualStyle)))
+        VStack(alignment: .leading, spacing: 4) {
+            if let journey {
+                // Route information gets the available space; connection state
+                // stays visible without repeating a headline and two timestamps.
+                if !textSize.isAccessibilitySize {
+                    Text(place ?? journey.state.title).font(.subheadline.weight(.semibold))
+                        .lineLimit(1).privacySensitive()
+                }
+                HStack(spacing: 8) {
+                    Text(journey.state == .moving ? "\(JourneyText.distance(journey.remainingMetres)) left" : journey.state.title)
+                        .lineLimit(1)
+                    Spacer(minLength: 4)
+                    if let arrival = journey.estimatedArrival, journey.state == .moving {
+                        (Text("ETA ") + Text(arrival, style: .time)).lineLimit(1).layoutPriority(1)
+                    }
+                }.font(.caption.monospacedDigit())
+                ProgressView(value: journey.progress).tint(phase.tint(style: ShiftVisualStyle(storedValue: state.visualStyle)))
+                    .accessibilityLabel(journey.state.title)
+            }
+            HStack(spacing: 6) {
+                Label(phase == .active ? "Update sent" : phase.title, systemImage: phase.symbol)
+                    .foregroundStyle(phase.tint(style: ShiftVisualStyle(storedValue: state.visualStyle)))
+                    .lineLimit(1).layoutPriority(1)
+                if state.remoteFindMy == nil && state.remoteLife360 == nil && phase == .active {
+                    Text("Apps unchecked").foregroundStyle(.secondary).lineLimit(1)
+                }
+            }.font(.caption2)
             if let remote = state.remoteFindMy {
-                FindMyActivityStatus(remote: remote, systemIsStale: systemIsStale, inlineAge: compactServiceRows)
+                FindMyActivityStatus(remote: remote, systemIsStale: systemIsStale, inlineAge: true)
             }
             if let remote = state.remoteLife360 {
-                FindMyActivityStatus(remote: remote, systemIsStale: systemIsStale, life360: true, inlineAge: compactServiceRows)
-            }
-            if state.remoteFindMy == nil && state.remoteLife360 == nil && phase == .active {
-                Text("Check other apps separately.")
-                    .font(.caption2).foregroundStyle(.secondary)
-            }
-            if let journey {
-                HStack {
-                    Text(journey.state.title)
-                    Spacer()
-                    if let arrival = journey.estimatedArrival, journey.state == .moving {
-                        Text("ETA")
-                        Text(arrival, style: .time)
-                    }
-                }
-                .font(.caption)
-                ProgressView(value: journey.progress).tint(phase.tint(style: ShiftVisualStyle(storedValue: state.visualStyle)))
-                if journey.state != .arrived {
-                    Text("\(JourneyText.distance(journey.remainingMetres)) remaining").font(.caption2)
-                }
+                FindMyActivityStatus(remote: remote, systemIsStale: systemIsStale, life360: true, inlineAge: true)
             }
             if phase == .unverified {
-                Text("Open Elsepin to check. Simulation may still remain.").font(.caption)
+                Text("Open Elsepin to check. Simulation may remain.").font(.caption2).lineLimit(2)
             } else if phase == .disconnected {
-                Text("Update failed; the old location may remain. Open Elsepin.").font(.caption)
-            } else if let place {
+                Text("Update failed. The old location may remain.").font(.caption2).lineLimit(2)
+            } else if journey == nil, let place {
                 Text(place).font(.caption).lineLimit(1).privacySensitive()
-            } else if phase != .active {
-                Text(state.explanation).font(.caption)
-            }
-            if let last = state.lastConfirmedAt, showCommandTime {
-                HStack(spacing: 4) {
-                    Text("Command sent")
-                    Text(last, style: .relative)
-                }
-                .font(.caption2).foregroundStyle(.secondary)
+            } else if journey == nil, phase != .active {
+                Text(state.explanation).font(.caption2).lineLimit(2)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -262,10 +261,12 @@ private struct FindMyActivityStatus: View {
             HStack(spacing: 6) {
                 Label("\(life360 ? "Life360" : "Find My"): \(shortStatus)", systemImage: symbol)
                     .foregroundStyle(tint)
+                    .lineLimit(1).layoutPriority(1)
                     .accessibilityLabel(remote.title(at: Date(), systemIsStale: systemIsStale, life360: life360))
                 Spacer(minLength: 0)
                 if let date = remote.reportedAt {
                     Text(date, style: .relative).foregroundStyle(.secondary)
+                        .lineLimit(1)
                         .accessibilityLabel(Text("Location report age: ") + Text(date, style: .relative))
                 }
             }.font(.caption2)

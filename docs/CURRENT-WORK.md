@@ -2,6 +2,32 @@
 
 Updated 30 October 2026. Read AGENTS.md, inspect Git status, preserve newer work.
 
+## Build 63 route/search follow-up — validation in progress
+
+User reports full exits to Home Screen on route hold/jump and keyboard Search
+in installed build 62. No iOS analytics crash entry is available. Do not claim
+these termination causes are proven or device-fixed from compilation alone.
+
+General search now keeps results in the picker; autocomplete selection remains.
+The route hold uses native map coordinates rather than a retained SwiftUI event
+converter; route index identity/range guards protect route replacement. Drag
+state resets on background/disappearance. Existing seek command serialization,
+manual Teleport confirmation and Stop behavior remain unchanged.
+
+`Shared/RouteTiming.swift` shares playback's motion rules with estimates, caches
+per route/settings and keeps waits separate for seek/partial-stop correctness.
+The planner distinguishes simulated Elsepin time from Apple Maps' estimate.
+At 10 mph, 6.6667 miles takes 40 minutes before waits/slowdowns. The user's
+Republican Party of Orange County → 3901 Parkview Lane, Irvine example has not
+been reproduced against live MapKit results; do not force an arbitrary 40-minute ETA.
+
+Activity layout is shorter and bounded by line/row priority; stale/error/provider
+status and pairing-code privacy remain. Phone checks: keyboard Search for a
+business/category/address, edit/cancel/retry; hold/drag/jump/undo/Stop and interrupt
+the touch; E-bike 10 mph with Smooth on/off and section speeds; Island/Lock Screen
+with long place names, accessibility text, both providers and stale states.
+Release remains unpublished. Earlier build receipts below describe older code.
+
 ## Build 62 UI follow-up — native build passed, device checks pending
 
 Video-inspired UI pass: pairing sheet now uses the selected theme, three connected

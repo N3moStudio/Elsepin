@@ -354,9 +354,8 @@ final class SpoofSession: ObservableObject {
     var journeyRemainingSeconds: TimeInterval? {
         guard let journey, let route = activeRoute, effectivePhase == .active,
               journey.state == .moving || journey.state == .waiting else { return nil }
-        let moving = routeSectionSettingsEnabled
-            ? RouteTravelSection.remainingSeconds(route.travelSections, from: journey.travelledMetres, overrides: sectionSpeedOverrides)
-            : journey.remainingMetres / cruiseSpeed(for: travelMode)
+        let moving = route.movingEstimate(mode: travelMode, speed: cruiseSpeed(for: travelMode),
+                                         smooth: smoothMovement, from: journey.travelledMetres)
         return moving + stopProgress.remainingWait(in: route.stops)
     }
 

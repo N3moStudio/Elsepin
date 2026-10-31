@@ -21,6 +21,9 @@ struct RoutePlaceSearchSheet: View {
     @State private var showPlaceActions = false
     @State private var showDeviceLocation = false
     @State private var pendingDeviceOrigin: RoutePlace?
+    @State private var searchResults: [PlaceSearchResult] = []
+    @State private var submittedQuery: String?
+    @FocusState private var searchFocused: Bool
 
     init(title: String, onPreviewTeleport: ((RoutePlace) -> Void)? = nil, allowsDeviceOrigin: Bool = false,
          onChooseTrip: ((SavedTrip) -> Void)? = nil, onChoose: @escaping (RoutePlace) -> Void) {
@@ -71,40 +74,39 @@ struct RoutePlaceSearchSheet: View {
                     }
                 } else {
                     savedMatches
-                    ForEach(completer.results, id: \.self) { completion in
-                        Button {
-                            resolve(MKLocalSearch.Request(completion: completion))
-                        } label: {
-                            HStack(spacing: 14) {
-                                ShiftRowIcon(symbol: "mappin.and.ellipse")
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(completion.title).font(.body.weight(.medium)).foregroundStyle(.primary)
-                                    Text(completion.subtitle).font(.caption).foregroundStyle(.secondary)
+                    if submittedQuery != nil {
+                        Section("Search results") {
+                            ForEach(searchResults) { result in
+                                Button { choose(result.place) } label: {
+                                    placeRow(result.place.name, subtitle: result.address)
                                 }
-                            }.frame(maxWidth: .infinity, minHeight: 52, alignment: .leading).contentShape(Rectangle())
+                            }
+                        }
+                    } else {
+                        ForEach(completer.results, id: \.self) { completion in
+                            Button {
+                                resolve(MKLocalSearch.Request(completion: completion), chooseSingleResult: true)
+                            } label: {
+                                placeRow(completion.title, subtitle: completion.subtitle)
+                            }
                         }
                     }
-                    Button("Search for “\(query)”") {
-                        let request = MKLocalSearch.Request()
-                        request.naturalLanguageQuery = query
-                        resolve(request)
-                    }
+                    Button("Search for “\(query)”", action: searchAll)
+                        .disabled(isResolving || query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
             }
             .searchable(text: $query, prompt: "Saved name, address, or place")
+            .searchFocused($searchFocused)
             .onChange(of: query) { _, value in
                 cancelSearch()
+                searchResults = []
+                submittedQuery = nil
                 selectedPlace = nil
                 showPlaceActions = false
                 completer.query = value
                 error = nil
             }
-            .onSubmit(of: .search) {
-                guard !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-                let request = MKLocalSearch.Request()
-                request.naturalLanguageQuery = query
-                resolve(request)
-            }
+            .onSubmit(of: .search, searchAll)
             .shiftScreen().loggedNavigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { cancelSearch(); dismiss() } } }
@@ -128,6 +130,32 @@ struct RoutePlaceSearchSheet: View {
             }
             .onDisappear { cancelSearch() }
         }
+    }
+
+    private func placeRow(_ name: String, subtitle: String) -> some View {
+        HStack(spacing: 14) {
+            ShiftRowIcon(symbol: "mappin.and.ellipse")
+            VStack(alignment: .leading, spacing: 4) {
+                Text(name).font(.body.weight(.medium)).foregroundStyle(.primary)
+                if !subtitle.isEmpty { Text(subtitle).font(.caption).foregroundStyle(.secondary) }
+            }
+        }.frame(maxWidth: .infinity, minHeight: 52, alignment: .leading).contentShape(Rectangle())
+    }
+
+    private func searchAll() {
+        let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        // Keyboard Search and the list button share one path. A general query
+        // never opens a dialog or picks the first business/address implicitly.
+        searchFocused = false
+        let request = MKLocalSearch.Request()
+        request.naturalLanguageQuery = text
+        request.resultTypes = [.address, .pointOfInterest]
+        if let center = session.pin ?? session.defaultRouteOrigin?.coordinate ?? session.realCoordinate,
+           CLLocationCoordinate2DIsValid(center) {
+            request.region = MKCoordinateRegion(center: center, latitudinalMeters: 50_000, longitudinalMeters: 50_000)
+        }
+        resolve(request, chooseSingleResult: false)
     }
 
     @ViewBuilder private var savedMatches: some View {
@@ -165,6 +193,7 @@ struct RoutePlaceSearchSheet: View {
 
     private func choose(_ place: RoutePlace) {
         cancelSearch()
+        searchFocused = false
         if onPreviewTeleport != nil {
             selectedPlace = place
             showPlaceActions = true
@@ -187,7 +216,7 @@ struct RoutePlaceSearchSheet: View {
         isResolving = false
     }
 
-    private func resolve(_ request: MKLocalSearch.Request) {
+    private func resolve(_ request: MKLocalSearch.Request, chooseSingleResult: Bool) {
         cancelSearch()
         let generation = searchGeneration
         let fallbackName = query
@@ -195,25 +224,48 @@ struct RoutePlaceSearchSheet: View {
         activeSearch = search
         isResolving = true
         error = nil
+        DeveloperLogStore.shared.record("place_search_started", ["kind": chooseSingleResult ? "suggestion" : "general"])
         searchTask = Task { @MainActor in
             do {
                 let response = try await search.start()
                 guard !Task.isCancelled, generation == searchGeneration else { return }
                 isResolving = false
                 activeSearch = nil
-                guard let item = response.mapItems.first else { error = "No matching place found. Try a more specific address."; searchTask = nil; return }
-                let coordinate = item.placemark.coordinate
-                let saved = session.favorites.first { RoutePoint($0.coordinate).distance(to: RoutePoint(coordinate)) <= 5 && !PlaceLabel.isCoordinate($0.name) }
-                choose(RoutePlace(name: saved?.name ?? item.name ?? fallbackName, coordinate: coordinate))
+                // Clear the completed task before user selection can cancel it.
+                searchTask = nil
+                let matches = response.mapItems.compactMap { item -> PlaceSearchResult? in
+                    let coordinate = item.placemark.coordinate
+                    guard CLLocationCoordinate2DIsValid(coordinate) else { return nil }
+                    let saved = session.favorites.first { RoutePoint($0.coordinate).distance(to: RoutePoint(coordinate)) <= 5 && !PlaceLabel.isCoordinate($0.name) }
+                    let street = [item.placemark.subThoroughfare, item.placemark.thoroughfare].compactMap { $0 }.joined(separator: " ")
+                    let address = [street, item.placemark.locality, item.placemark.administrativeArea]
+                        .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: ", ")
+                    return PlaceSearchResult(place: RoutePlace(name: saved?.name ?? item.name ?? fallbackName, coordinate: coordinate), address: address)
+                }
+                DeveloperLogStore.shared.record("place_search_finished", ["results": String(matches.count)])
+                guard !matches.isEmpty else {
+                    searchResults = []; submittedQuery = fallbackName
+                    error = "No matching places found. Try adding a city or a more specific address."
+                    return
+                }
+                if chooseSingleResult, matches.count == 1, let result = matches.first { choose(result.place) }
+                else { searchResults = matches; submittedQuery = fallbackName }
             } catch {
                 guard !Task.isCancelled, generation == searchGeneration else { return }
                 isResolving = false
                 activeSearch = nil
                 searchTask = nil
                 self.error = error.localizedDescription
+                DeveloperLogStore.shared.record("place_search_failed", ["domain": (error as NSError).domain, "code": String((error as NSError).code)])
             }
         }
     }
+}
+
+private struct PlaceSearchResult: Identifiable {
+    let id = UUID()
+    let place: RoutePlace
+    let address: String
 }
 
 private struct DeviceOriginSheet: View {

@@ -72,6 +72,18 @@ The step numbers are instructions, not a fabricated progress/completion meter.
 
 ## Validation and next device check
 
+### Build 63 activity follow-up
+
+| Before | After | What this changes |
+| --- | --- | --- |
+| Large status headline, explanatory line, journey state, progress, distance, route name and repeated age | Route/name and distance/ETA lead; short update-status row; bounded timer and one-line labels | Reduces the stacked height visible in the user's clipped Island screenshot |
+| Optional provider status can add multiple multiline blocks | Compact provider rows retain separate status and report age | Keeps Find My/Life360 evidence without implying an update command verified another app |
+| Normal text hierarchy can crowd at accessibility sizes | Omit the optional route-name line at accessibility sizes; keep status and route progress | Gives the essential information space without globally reducing accessibility text |
+
+This is source-level layout work; native/physical-device screenshots are still
+needed for all variants. Pairing code, system Island background, privacy and
+stale-state behavior are preserved. No decorative activity animation was added.
+
 57 focused Swift tests passed: pairing activity, route planning, appearance and
 backup compatibility. Both changed SwiftUI files passed Swift syntax parsing
 on WSL. This does not type-check Apple SDK calls or validate native layout.

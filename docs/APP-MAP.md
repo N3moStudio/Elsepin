@@ -5,12 +5,14 @@ pairing guide (`PairOnDeviceView.swift`) and visible draft mode grid
 (`RoutePlannerSheet.swift`). Build 62 passed native validation; device UI checks remain pending.
 
 Maintained alongside the [Change Ledger](CHANGE-LEDGER.md). Source paths
-are relative to the repository. Current source is unreleased 2.6.1 (62); see [current work](CURRENT-WORK.md) for build evidence and publication boundaries. Historical entries below retain their original validation context.
+are relative to the repository. Current source is unreleased 2.6.1 (63); see [current work](CURRENT-WORK.md) for build evidence and publication boundaries. Historical entries below retain their original validation context.
 This continues the original source/branding catalog without treating historical
 Locus identifiers as safe search-and-replace targets.
 
 | Area | Main owners | Responsibilities |
 | --- | --- | --- |
+| Search / route crash follow-up (63) | `RoutePlaceSearchSheet.swift`, `MapHomeView.swift` | General search results stay in the picker; cancellation generations reject stale results. Native route-hold coordinates, matching route/index guards, interrupted-touch cleanup. Device crash cause/retest pending. |
+| Simulated route estimates (63) | `Shared/RouteTiming.swift`, `RouteBuilder.swift`, `SpoofSession.swift`, `RoutePlannerSheet.swift` | Shared motion rules, cached profiles, section speeds, independent remaining stop waits; keep simulated and Apple travel estimates distinct. Tests: `Tests/RouteTimingTests.swift`. |
 | Pairing Live Activity (build 61, native build passed; device acceptance pending) | `Locus/Engine/PairOnDeviceService.swift`, `SessionActivityController.swift`; `Shared/PairingActivity.swift`, `SessionPresentation.swift`; `LocusActivity/LocusLiveActivity.swift` | Foreground activity creation, native PIN callback, one setup/session writer, stale/code privacy, lifecycle cleanup. Preserve per-attempt callback ownership and serial update ordering; do not log/export codes or create a second Island. Tests: `Tests/PairingActivityTests.swift`. |
 | Reset / local wipe (unreleased) | `Shared/AppResetRules.swift`, `Locus/Support/AppResetController.swift`, `Locus/Features/Settings/AppResetSection.swift` | Settings-only defaults; full local wipe or preserve pairing/setup; destructive review, app-lock authentication, idle/native-worker guards, failure reporting; [scope and tests](RESET-AND-RECENTLY-DELETED.md) |
 | Recently Deleted selection (unreleased) | `Shared/DeletedLibraryItem.swift`, `Locus/Support/RecentlyDeletedStore.swift`, `Locus/Features/Settings/RecentlyDeletedView.swift` | Select/all/none, mixed type confirmation, stale selection guard and atomic permanent deletion |

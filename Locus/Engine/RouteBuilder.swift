@@ -27,14 +27,18 @@ struct PlannedRoute: Identifiable {
     var stops: [RouteStop] = []
     var storedMode: TravelMode? = nil
     var travelSections: [RouteTravelSection] = []
+    let timingCache = RouteTimingCache()
 
     func supports(_ mode: TravelMode) -> Bool {
         if !travelSections.isEmpty { return RouteTravelSection.valid(travelSections, length: track.length) }
         return source.supports(mode) || storedMode == mode
     }
-    func estimate(speed: Double) -> Double {
-        let moving = travelSections.isEmpty ? distance / max(0.1, speed) : RouteTravelSection.remainingSeconds(travelSections, from: 0)
-        return moving + stops.reduce(0) { $0 + $1.waitSeconds }
+    func movingEstimate(mode: TravelMode, speed: Double, smooth: Bool, from metres: Double = 0) -> Double {
+        timingCache.profile(routeID: id, track: track, mode: mode, speed: speed,
+                            smooth: smooth, stops: stops, sections: travelSections).remaining(from: metres)
+    }
+    func estimate(mode: TravelMode, speed: Double, smooth: Bool) -> Double {
+        movingEstimate(mode: mode, speed: speed, smooth: smooth) + stops.reduce(0) { $0 + $1.waitSeconds }
     }
 }
 
