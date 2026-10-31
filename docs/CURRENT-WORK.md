@@ -41,6 +41,10 @@ First native attempt 41173992580 passed 557 tests but failed with a Swift
 type-check complexity error in the map's search-dismissal closure. Full original
 logs: `.build/artifacts/41173992580/workflow-logs.zip`. The closure is now a
 separate method. No IPA was produced by that attempt; rerun needed for the new source.
+Attempt 41174349587 passed the expanded 560 tests, but the same map-view compiler
+limit moved to a neighboring closure. The entire map modifier chain is now split
+at opaque canvas/lifecycle/route/timer/presentation boundaries, retaining one
+State owner and modifier order. Full logs for both failed attempts are preserved.
 
 ## Build 62 UI follow-up — native build passed, device checks pending
 

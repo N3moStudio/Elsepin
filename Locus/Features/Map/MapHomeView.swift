@@ -249,7 +249,7 @@ struct MapHomeView: View {
         }
     }
 
-    var body: some View {
+    private var mapCanvas: some View {
         ZStack(alignment: .top) {
             MapReader { proxy in
                 homeMap(proxy)
@@ -297,6 +297,13 @@ struct MapHomeView: View {
             }
         }
         .animation(drawingAnimation, value: planner.isDrawing)
+    }
+
+    // Opaque boundaries keep the SwiftUI type checker from solving the map,
+    // gestures, lifecycle, timers and sheets as one enormous expression.
+    // All @State stays in MapHomeView; extracting these does not reset it.
+    private var lifecycleMap: some View {
+        mapCanvas
         .loggedAlert("Save place", isPresented: Binding(get: { favoritePin != nil }, set: { if !$0 { favoritePin = nil } })) {
             TextField("Place name", text: $favoriteName)
             Button("Cancel", role: .cancel) { favoritePin = nil }
@@ -322,6 +329,10 @@ struct MapHomeView: View {
         .onChange(of: scenePhase) { _, phase in
             if phase != .active { markerDragging = false; markerGrabOffset = nil }
         }
+    }
+
+    private var observedRouteMap: some View {
+        lifecycleMap
         .onChange(of: session.activeRoute?.id, initial: true) { _, id in
             selection = nil
             markerGrabOffset = nil
@@ -343,6 +354,10 @@ struct MapHomeView: View {
         }
         .onChange(of: position.positionedByUser) { _, isUser in if isUser { followMovement = false } }
         .onChange(of: drawTool) { _, _ in drawing.endStroke() }
+    }
+
+    private var timedMap: some View {
+        observedRouteMap
         .task(id: selection?.expiresAt) {
             guard let current = selection else { return }
             let delay = max(0, current.expiresAt.timeIntervalSinceNow)
@@ -357,6 +372,10 @@ struct MapHomeView: View {
             do { try await Task.sleep(nanoseconds: UInt64(min(delay, RouteJumpUndo.duration) * 1_000_000_000)) } catch { return }
             if session.jumpUndo?.expiresAt == undo.expiresAt { undoVisible = false }
         }
+    }
+
+    var body: some View {
+        timedMap
         .onReceive(NotificationCenter.default.publisher(for: .locusDrawRoute)) { _ in beginDrawing() }
         .onChange(of: incomingSearch, initial: true) { _, requested in
             guard requested else { return }
