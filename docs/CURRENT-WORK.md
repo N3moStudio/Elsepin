@@ -4,6 +4,21 @@ Updated 31 October 2026. Read AGENTS.md, inspect Git status, preserve newer work
 
 ## 2.6.1 (65) — native warning cleanup — 31 October 2026
 
+[Native run 41213887689](https://github.com/N3moStudio/Elsepin/actions/runs/41213887689) passed at
+`ed1c03d85e4606cded44b842836d7fea513edc53`: **565 tests**, native app/extension compilation,
+ad-hoc signature and IPA validation, with **zero compiler warnings/errors**.
+The complete retained log contains no warning/error diagnostics. Both bundles
+are 2.6.1 (65), SDK 27.1; thirteen icons, resources, compatibility identities,
+ZIP integrity and the GitHub artifact hash were verified.
+
+The private workflow artifact is 18,399,647 bytes, SHA-256
+`2ba76ddb2e031dba53b9d2ca733b6b7687370e6ea6bad8c1c0c0a1052e809b4a`. Logs/receipt: `.build/artifacts/41213887689/`.
+This validation did not replace the build 64 IPA in Downloads or upload to Drive.
+Route/UI code is identical to build 64, which the user is still testing. Real
+helper connections and the route-crash outcome remain device acceptance checks.
+The release remains an unpublished draft with zero assets; public 2.6.0 is unchanged.
+
+
 - Replace deprecated certificate access in the Windows companion and self-hosted
   cloud helper delegates with `SecTrustCopyCertificateChain(...).first`. Retain
   leaf SHA-256 pinning, host checks, rejected redirects and managed-HTTPS system
@@ -13,9 +28,10 @@ Updated 31 October 2026. Read AGENTS.md, inspect Git status, preserve newer work
   preserve synchronous fresh-fix handling, cancellation and foreground-only checks.
 - Increment both target build numbers to 65 so native validation is distinguishable
   from the user's ongoing build 64 route-crash test. UI and route code are unchanged.
-- Native validation is in progress. Keep the release unpublished and the existing
-  build 64 Downloads IPA intact. The normal manual workflow creates a private
-  artifact; this task does not require another Downloads/Drive delivery.
+- Native run 41213887689 passed 565 tests and app/extension compilation with
+  zero compiler warnings/errors. The private IPA artifact passed integrity,
+  identity, icon/resource and hash checks. Build 64 in Downloads is unchanged;
+  no new Downloads/Drive delivery or release publication. Device checks remain pending.
 
 ## Build 64 delivered — native passed, phone acceptance pending
 

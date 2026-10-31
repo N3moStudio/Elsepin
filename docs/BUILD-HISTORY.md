@@ -1,8 +1,24 @@
 # Elsepin build history
 
-Updated **30 October 2026**, America/Los_Angeles. Read the [full changelog](../CHANGELOG.md)
+Updated **31 October 2026**, America/Los_Angeles. Read the [full changelog](../CHANGELOG.md)
 for feature details. This page separates compilation, test artifacts and published
 releases so a successful check is not mistaken for an available download.
+
+## Latest native validation: 2.6.1 (65) — 31 October 2026
+
+[Native run 41213887689](https://github.com/N3moStudio/Elsepin/actions/runs/41213887689) passed at
+`ed1c03d85e4606cded44b842836d7fea513edc53`: **565 tests**, native app/extension compilation,
+ad-hoc signature and IPA validation, with **zero compiler warnings/errors**.
+The complete retained log contains no warning/error diagnostics. Both bundles
+are 2.6.1 (65), SDK 27.1; thirteen icons, resources, compatibility identities,
+ZIP integrity and the GitHub artifact hash were verified.
+
+The private workflow artifact is 18,399,647 bytes, SHA-256
+`2ba76ddb2e031dba53b9d2ca733b6b7687370e6ea6bad8c1c0c0a1052e809b4a`. Logs/receipt: `.build/artifacts/41213887689/`.
+This validation did not replace the build 64 IPA in Downloads or upload to Drive.
+Route/UI code is identical to build 64, which the user is still testing. Real
+helper connections and the route-crash outcome remain device acceptance checks.
+The release remains an unpublished draft with zero assets; public 2.6.0 is unchanged.
 
 ## Latest private test build: 2.6.1 (64) — 30 October 2026
 

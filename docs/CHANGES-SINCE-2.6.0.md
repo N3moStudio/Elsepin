@@ -2,8 +2,8 @@
 
 Comparison baseline: public **2.6.0 (59)**, published 27 October 2026,
 source `304756f035172d6e8e3406a451ee57c25cd07951`, native run `40460137350`.
-Verified against the published release metadata and source diff on 30 October.
-The work below is **unreleased 2.6.1**, private builds 60–64; not an announcement
+Verified against the published release metadata and source diff on 31 October.
+The work below is **unreleased 2.6.1**, private builds 60–65; not an announcement
 that the public release includes it. See [changelog](../CHANGELOG.md) and
 [build history](BUILD-HISTORY.md) for individual build evidence.
 
@@ -74,8 +74,10 @@ that the public release includes it. See [changelog](../CHANGELOG.md) and
   coverage. Retain complete native build logs and artifact receipts privately.
 - Split the map view into compiler-friendly boundaries after two failed build
   attempts; retain one state owner. Build 63 subsequently compiled successfully.
-- Keep releases unpublished during these tests. Three existing native compiler
-  warnings are recorded separately, not concealed as a warning-free result.
+- Build 65 removes all three native warnings: modern certificate-chain access
+  preserves leaf pins; checked location-delegate isolation preserves main-loop
+  callbacks. Its native build passed 565 tests with zero compiler warnings/errors.
+  Retain the earlier build logs as historical evidence. No public release.
 
 ## Already present in 2.6.0 — not new in this update
 Elsepin branding, Prism Jumpgate, thirteen icons, redesigned Settings, manual

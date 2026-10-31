@@ -1,6 +1,6 @@
 # Elsepin changelog
 
-Updated through **30 October 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
+Updated through **31 October 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
 is the official release. Earlier Shift entries retain their original names and release status.
 
 [App introduction](README.md) · [Build history](docs/BUILD-HISTORY.md) · [Detailed Change Ledger](docs/CHANGE-LEDGER.md)
@@ -16,9 +16,10 @@ is the official release. Earlier Shift entries retain their original names and r
   preserve synchronous fresh-fix handling, cancellation and foreground-only checks.
 - Increment both target build numbers to 65 so native validation is distinguishable
   from the user's ongoing build 64 route-crash test. UI and route code are unchanged.
-- Native validation is in progress. Keep the release unpublished and the existing
-  build 64 Downloads IPA intact. The normal manual workflow creates a private
-  artifact; this task does not require another Downloads/Drive delivery.
+- Native run 41213887689 passed 565 tests and app/extension compilation with
+  zero compiler warnings/errors. The private IPA artifact passed integrity,
+  identity, icon/resource and hash checks. Build 64 in Downloads is unchanged;
+  no new Downloads/Drive delivery or release publication. Device checks remain pending.
 
 ## 2.6.1 (64) — route interaction and stop discovery — 30 October 2026
 
