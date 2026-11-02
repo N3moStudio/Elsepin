@@ -109,3 +109,12 @@ Settings search layout: `Locus/Features/Settings/SettingsView.swift` owns the in
   do not move manager creation off that actor or remove the runtime isolation check.
 - Sources: [Apple Security trust header](https://github.com/apple-oss-distributions/Security/blob/main/trust/headers/SecTrust.h),
   [Core Location callback delivery](https://developer.apple.com/documentation/corelocation/cllocationmanager).
+
+## Native request progress (build 67)
+
+`Locus/Support/ElsepinProgressLabel.swift` owns the small native progress label.
+`Shared/ProgressMotion.swift` / `Tests/ProgressMotionTests.swift` cover motion gates.
+Callers: `RoutePlaceSearchSheet`, `RouteStopSearchSheet`, `RemoteFindMyView`.
+Read [NATIVE-PROGRESS.md](NATIVE-PROGRESS.md) before changing the dependency or
+motion lifecycle. Request ownership, cancellation and result/error paths stay in
+the existing callers; the visual must never trigger work or delay completion.

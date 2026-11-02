@@ -39,7 +39,7 @@ struct RoutePlaceSearchSheet: View {
             List {
                 if isResolving {
                     HStack {
-                        ProgressView("Finding place…")
+                        ElsepinProgressLabel("Finding place…", lowPower: session.lowPower)
                         Spacer()
                         Button("Cancel search") { cancelSearch() }.buttonStyle(.borderless)
                     }

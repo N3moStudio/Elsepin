@@ -5,6 +5,21 @@ is the last recorded public release. Earlier entries retain their original valid
 
 See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all recorded 2.5.x/2.6.0 native runs.
 
+## 2.6.1 (67) — native request progress — unpublished
+
+- Add native 20-point Thinking Orbs beside existing place search, route-stop search
+  and explicit cloud Test connection labels. Indicators follow existing requests;
+  cancellation, errors, results and manual movement controls are unchanged.
+- Keep progress static for Reduce Motion, Low Power Mode, inactive scenes and
+  disappeared views. Labels remain readable and announced once by VoiceOver;
+  existing typography, themes and accessibility text sizing are retained.
+- Pin the reviewed MIT-licensed ThinkingOrbsKit revision to the app target only;
+  retain its notice. No web bridge, AI service, new permissions or polling.
+- Include the separately reviewed removal of 264 unused production Swift lines.
+  Existing tests were retained; four motion-policy regression tests were added.
+- Native verification and private IPA delivery are pending the build below.
+  No public release or website deployment is authorized by this work.
+
 ## Local dead-code cleanup — 2 November 2026
 
 Base `60f084e`; no commit or upload. [Review and rollback](CLEANUP-AND-ORBS-REVIEW.md)

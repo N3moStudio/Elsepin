@@ -1,4 +1,10 @@
-# Local cleanup and native orb review
+# Cleanup and native orb review
+
+Historical cleanup evidence below records the first local pass. Later on 2 November,
+the user explicitly approved installation, native orbs and a private push/build.
+The cleanup is committed separately as `8b8cb07`; see [current integration and
+verification](NATIVE-PROGRESS.md). Earlier pending statements below describe the
+decision at that earlier point, not the current approval state.
 
 2 November 2026. Base: `60f084ee829a218e57e9dbf3325b0f34f92e80ed` on private
 Elsepin `main`. Working tree was clean before editing. Repository access succeeded;

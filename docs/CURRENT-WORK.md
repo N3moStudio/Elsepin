@@ -2,19 +2,27 @@
 
 Updated 2 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
 
-## Local cleanup and orb assessment — 2 November 2026
+## 2.6.1 (67) — native request progress — unpublished
 
-Working tree started clean at `60f084e`. Local-only deletion of confirmed unused
-views/wrappers/helpers removes 264 production Swift lines and eight project lines;
-no test lines changed. 443 Swift tests and 16 packaging tests pass, alongside identity,
-appearance/helper checks and Swift 5 syntax parsing. No push/commit/native Xcode build,
-IPA, release or deployment this pass. Build 66 and its Downloads test pack are intact.
+- Add native 20-point Thinking Orbs beside existing place search, route-stop search
+  and explicit cloud Test connection labels. Indicators follow existing requests;
+  cancellation, errors, results and manual movement controls are unchanged.
+- Keep progress static for Reduce Motion, Low Power Mode, inactive scenes and
+  disappeared views. Labels remain readable and announced once by VoiceOver;
+  existing typography, themes and accessibility text sizing are retained.
+- Pin the reviewed MIT-licensed ThinkingOrbsKit revision to the app target only;
+  retain its notice. No web bridge, AI service, new permissions or polling.
+- Include the separately reviewed removal of 264 unused production Swift lines.
+  Existing tests were retained; four motion-policy regression tests were added.
+- Native verification and private IPA delivery are pending the build below.
+  No public release or website deployment is authorized by this work.
 
-See [cleanup evidence and rollback](CLEANUP-AND-ORBS-REVIEW.md) before continuing.
-Ponytail/Addy instruction-only installation and ThinkingOrbsKit integration remain
-pending exact approval forwarded from the coordinating chat. Do not infer approval
-from this handoff. Graphify and OmniRoute are not installed; no hooks, keys or model
-routing changed. Proposed orbs are limited to explicit search/connection progress.
+Approved on 2 November: instruction-only Ponytail and four selected Addy skills,
+native ThinkingOrbsKit, scoped private source push and existing IPA workflow.
+Installed manuals/reference files remain unchanged; no hooks, AGENTS rewrite,
+provider routing, credentials or deployment changes. Cleanup commit: `8b8cb07`.
+See [orb integration and device checks](NATIVE-PROGRESS.md) and
+[cleanup evidence](CLEANUP-AND-ORBS-REVIEW.md). Preserve build 66 and its test pack.
 
 ## 2.6.1 (66) — incident export and experimental helper audit
 

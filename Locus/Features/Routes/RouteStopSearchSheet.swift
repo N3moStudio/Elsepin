@@ -57,7 +57,7 @@ struct RouteStopSearchSheet: View {
             if model.isSearching {
                 Section {
                     HStack {
-                        ProgressView("Searching places…")
+                        ElsepinProgressLabel("Searching places…", lowPower: session.lowPower)
                         Spacer()
                         Button("Cancel") { model.cancel() }.buttonStyle(.borderless)
                     }.frame(minHeight: 44)

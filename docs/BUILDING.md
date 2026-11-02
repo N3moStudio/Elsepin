@@ -79,7 +79,7 @@ IPA validator checks the compiled bundle IDs and URL scheme.
 
 ## Official versus prerelease builds
 
-The current source is Elsepin 2.6.1 (66), privately built for testing. Creating an IPA
+The current source is Elsepin 2.6.1 (67), privately built for testing. Creating an IPA
 artifact does not publish a release or declare it stable. Verify both target
 versions and the resolved `ShiftReleaseChannel` metadata before distribution;
 that internal compatibility key intentionally retains its old name.
@@ -87,3 +87,7 @@ that internal compatibility key intentionally retains its old name.
 Collect small fixes on `main`. Start a distributable build when one is needed;
 do not create a prerelease for every small fix. Publishing an official release
 is a separate action, after device acceptance, in `Elsepin-Releases`.
+
+ThinkingOrbsKit is pinned in `project.yml` and linked only to the app target.
+Xcode resolves it during the existing native build; the portable Swift package
+does not import SwiftUI or this dependency. No new CI hook or external service.

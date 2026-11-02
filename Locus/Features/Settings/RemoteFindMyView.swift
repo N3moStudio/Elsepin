@@ -55,8 +55,13 @@ struct RemoteFindMyView: View {
                     Link(destination: website) { Label("Open helper / sign in", systemImage: "safari").frame(minHeight: 44) }
                 }
                 if remote.paired {
-                    Button(remote.testingConnection ? "Connecting…" : "Test connection") { Task { await remote.testConnection() } }
-                        .frame(minHeight: 44).disabled(remote.testingConnection)
+                    Button { Task { await remote.testConnection() } } label: {
+                        if remote.testingConnection {
+                            ElsepinProgressLabel("Connecting…", state: .connecting, lowPower: session.lowPower)
+                        } else {
+                            Text("Test connection")
+                        }
+                    }.frame(minHeight: 44).disabled(remote.testingConnection)
                     if let message = remote.connectionMessage { Text(message).font(.subheadline).foregroundStyle(.secondary) }
                 }
                 Link(destination: CloudHelp.guide) { Label("Setup guide on GitHub", systemImage: "book.closed").frame(minHeight: 44) }

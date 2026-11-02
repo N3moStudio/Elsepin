@@ -100,3 +100,10 @@ route mode's existing behavior. The delivered build 61 predates this pass.
 No IPA, push, deployment or release was made during the initial polish pass.
 The user subsequently requested build 62 in Downloads; its native evidence
 is recorded in CURRENT-WORK and BUILD-HISTORY. Publication remains excluded.
+
+## Approved build 67 progress exception
+
+The user approved native ThinkingOrbsKit at three existing request-progress labels.
+See [scope, motion gates and device acceptance](NATIVE-PROGRESS.md). This supersedes
+the earlier blanket preference for native spinners at those labels only; all other
+UI constraints and useful existing feedback remain.
