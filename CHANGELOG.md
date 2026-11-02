@@ -18,8 +18,11 @@ is the official release. Earlier Shift entries retain their original names and r
 - Package the Python runtime pin and correct setup instructions in the exported helpers.
   Add an experimental/download audit and a complete ordered owner test walkthrough.
 - Portable validation: 443 Swift tests, 104 cloud, 19 companion and 16 packaging/icon
-  checks. Both helpers also pass tests from freshly extracted ZIPs. Native build pending;
-  real provider login, push delivery and phone gestures require owner acceptance.
+  checks (582 total). Native run `41396515177` passed compilation, signing and
+  packaging with zero compiler warnings/errors. Both helpers also pass tests from
+  freshly extracted ZIPs. Build 66 is hash-verified in Downloads with the 216-step
+  checklist and test pack; real provider login, push delivery and phone gestures
+  require owner acceptance.
 - No public release, helper deployment or website update.
 
 ## 2.6.1 (65) — native warning cleanup — 31 October 2026

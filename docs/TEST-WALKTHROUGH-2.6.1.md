@@ -161,14 +161,14 @@ Write `PASS`, `FAIL`, or `BLOCKED` beside each step. `BLOCKED` means a prerequis
 121. Inspect South loop: Walk 3 mph, smooth off, waits 15 seconds and 90 seconds. Inspect North loop: Run 6 mph, smooth on, waits 30 seconds and two hours. These are synthetic Central Park paths, not verified road directions.
 122. Rename South loop locally and import the original file again. Your edited existing item should be kept, without creating a second copy of the same identity.
 123. Choose **Shift-Settings-Test.json**. Confirm settings initially remain unchecked and values that differ appear before Already the same. Select only the Walk preset and speed units, then confirm. Expect 4 mph while unrelated settings stay unchanged.
-124. Reopen review and select all remaining settings. Confirm against the separate **IMPORT-TEST-CHECKLIST.md** in this test pack; it lists the legacy fixture values. The old Appearance field is accepted for compatibility but does not create a selectable color-mode change; compact/rounded typography remains fixed. This is not every device-only preference.
-125. Choose **Shift-Everything-Test.json**, review it, and cancel. Then choose **Shift-Import-Test.json**, the older combined fixture, and inspect the preview. Expect older supported formats to be accepted without changing pairing/helper secrets.
+124. Reopen review and select all remaining settings. Confirm against the separate **IMPORT-TEST-VALUES-2.6.1.md** in this test pack; it lists the legacy fixture values. The old Appearance field is accepted for compatibility but does not create a selectable color-mode change; compact/rounded typography remains fixed. This is not every device-only preference.
+125. Choose **Shift-Everything-Test.json**, review it, and cancel. Then inspect **Shift-Import-Test.json**, the older combined fixture. Finally import **Elsepin-Legacy-Appearance-Test.json**, selecting only Theme and Surfaces: expect Bloom/Solid; old font/size values must not change compact/rounded text. Pairing/helper secrets must remain untouched.
 126. Copy complete JSON text from a test fixture and use **Paste backup text**. Confirm it reaches the same selective review. Cancel without applying it.
 127. Open the **json.site** link. It should open an in-app Safari sheet. Use only a synthetic test fixture there, copy its JSON, tap Done, then Paste in Elsepin. No file should be automatically uploaded or imported. Cancel the review.
 128. Try incomplete text such as `{`, then a URL instead of JSON. Expect a useful error; an earlier valid preview should not be silently replaced with broken data.
 129. Cancel Files selection, reopen it, choose a file downloaded locally, and repeat once from your Files cloud provider if available. A provider may need to download the file first; the app should recover from a canceled read.
 130. Start a held session. Review a library-only backup; applying new library entries should be allowed without changing movement. Try applying changed settings: the app must require stopping, or let you uncheck settings. Cancel, then Stop.
-131. Test an imported area conflicting with an existing outline, using a duplicate test fixture with a new ID if supplied. Expect an overlap explanation and the ability to deselect it; do not hand-edit your only real backup. Mark BLOCKED if no conflict fixture is available.
+131. Choose **Elsepin-Area-Conflict-Test.json** after importing the North area in step 119. Its different ID has the same outline. Expect an overlap explanation and the ability to deselect it; no duplicate overlapping area should be saved.
 132. Restore desired settings from `Build66-before-import.json` using only selected settings. Reopen the app and verify persistence. Keep all backups until the whole test is complete.
 
 ## 12. Live Activities, notifications, and widgets
@@ -281,7 +281,7 @@ These are included so reset behavior has a test path. Do **not** run them on you
 ## Evidence and references
 
 - The current build and audit receipts are in [CURRENT-WORK](CURRENT-WORK.md) and [EXPERIMENTAL-AUDIT](EXPERIMENTAL-AUDIT.md). This checklist is a test plan, not a claim that its phone steps passed.
-- [Cloud setup](CLOUD-GUIDE.md), [backup rules](BACKUPS.md), and [legacy fixture values](IMPORT-TEST-CHECKLIST.md).
+- [Cloud setup](CLOUD-GUIDE.md), [backup rules](BACKUPS.md), and [legacy fixture values](IMPORT-TEST-VALUES-2.6.1.md).
 - [Public downloads](https://github.com/N3moStudio/Elsepin-Releases/releases/latest). The published 2.6.0 IPA contains helper exports; this private build's fixes are not public until approved.
 - [Render Free limits](https://render.com/docs/free): sleep, ephemeral storage, quotas and restarts matter; choose hosting based on the reliability you need.
 - [Apple Web Push](https://webkit.org/blog/13878/web-push-for-web-apps-on-ios-and-ipados/): Home Screen web app notifications require user permission; paid Apple Developer membership is not required for this Web Push path.

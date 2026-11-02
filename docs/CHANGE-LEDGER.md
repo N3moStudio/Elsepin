@@ -15,7 +15,13 @@ See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all re
 - Anonymous public IPA access and both embedded helper packages verified. Public
   docs/assets intentionally untouched; People remains unavailable.
 - 443 Swift, 104 cloud, 19 companion and 16 packaging/icon tests passed locally;
-  freshly extracted helper ZIPs independently pass. Native validation pending.
+  freshly extracted helper ZIPs independently pass. Native run `41396515177`
+  passed all 582 tests, app/extension compilation and packaging with zero compiler
+  warnings/errors. Source `7bdf1a5f8051ccc94d38420fb45ee3d24236c6d9`.
+- Downloads IPA: 18,444,793 bytes; SHA-256
+  `aadde4ce1d7277d4ca182a8d2c8bbd2fb6b03dac63528f19ae08ec7c7d1ebc22`.
+  Original logs/receipt retained in `.build/artifacts/41396515177/`; earlier IPAs retained.
+  Delivered offline 216-step checklist, expected import values, six fixtures and both helpers.
 - Ordered owner walkthrough and experimental audit are linked in CURRENT-WORK.
   No public release or deployment. Physical-phone/provider acceptance still required.
 

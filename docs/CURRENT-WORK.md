@@ -6,8 +6,28 @@ Updated 1 November 2026. Read AGENTS.md, inspect Git status, preserve newer work
 
 User authorized implementing the two diagnostic improvements and auditing experimental
 connections/downloads, followed by a complete sequential test guide. Keep publication
-blocked until user approval. Private build pending. Build 65 was subsequently copied
-and hash-verified in Downloads; do not overwrite old test IPAs.
+blocked until user approval. Build 66 passed native validation and was hash-verified
+in Downloads. Preserve the older test IPAs.
+
+[Native run 41396515177](https://github.com/N3moStudio/Elsepin/actions/runs/41396515177)
+passed at source `7bdf1a5f8051ccc94d38420fb45ee3d24236c6d9`: **582 tests**
+(443 Swift, 104 cloud, 19 Companion, 16 packaging/icon), native Release arm64 app
+and extension compilation, ad-hoc signing and package validation. The complete
+retained logs contain **zero compiler warnings/errors**. Both bundles are
+2.6.1 (66), SDK 27.1; thirteen icons, resources and compatibility IDs were checked.
+
+Downloads: `Elsepin 2.6.1 build 66.ipa`, 18,444,793 bytes, SHA-256
+`aadde4ce1d7277d4ca182a8d2c8bbd2fb6b03dac63528f19ae08ec7c7d1ebc22`.
+The copied file matches GitHub's artifact digest; ZIP integrity passed. Complete
+logs and receipt: `.build/artifacts/41396515177/`. Earlier test IPAs are retained.
+
+The 216-step [owner walkthrough](TEST-WALKTHROUGH-2.6.1.md), test fixtures and both
+helper ZIPs are also in Downloads as `Elsepin build 66 - Test Guide`. Open
+`START-HERE.html` for an offline checklist with saved results and notes.
+Real provider sign-in, phone crashes/gestures, push receipt and battery behavior
+remain unverified. Public 2.6.0, its assets and the website are unchanged;
+2.6.1 remains an unpublished draft with zero assets. No Drive upload this turn.
+
 
 - `Shared/DeveloperIncident.swift`, `DeveloperLogStore.exportIncident` and the existing
   `SessionTimelineView` provide bounded ten-minute incident exports with explicit gaps.
@@ -17,7 +37,7 @@ and hash-verified in Downloads; do not overwrite old test IPAs.
 - [Ordered test walkthrough](TEST-WALKTHROUGH-2.6.1.md) covers installation through
   setup, gestures, interruption/retry, backups, UI, widgets, cloud and cleanup.
 - 443 Swift tests passed; helper reviewer verified 104 cloud, 19 companion, 16
-  packaging/icon tests, plus independent tests of both extracted ZIPs. Native pending.
+  packaging/icon tests, plus independent tests of both extracted ZIPs. Native build 66 passed.
 - Real phone/provider acceptance remains unknown. Find My People is unavailable.
   Public release stays 2.6.0; its helper ZIPs and public guides lack build 66 changes.
 

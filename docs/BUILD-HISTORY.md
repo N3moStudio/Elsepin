@@ -1,10 +1,31 @@
 # Elsepin build history
 
-Updated **31 October 2026**, America/Los_Angeles. Read the [full changelog](../CHANGELOG.md)
+Updated **1 November 2026**, America/Los_Angeles. Read the [full changelog](../CHANGELOG.md)
 for feature details. This page separates compilation, test artifacts and published
 releases so a successful check is not mistaken for an available download.
 
-## Latest native validation: 2.6.1 (65) — 31 October 2026
+## Latest native validation and private delivery: 2.6.1 (66) — 1 November 2026
+
+[Native run 41396515177](https://github.com/N3moStudio/Elsepin/actions/runs/41396515177)
+passed at source `7bdf1a5f8051ccc94d38420fb45ee3d24236c6d9`: **582 tests**
+(443 Swift, 104 cloud, 19 Companion, 16 packaging/icon), native Release arm64 app
+and extension compilation, ad-hoc signing and package validation. The complete
+retained logs contain **zero compiler warnings/errors**. Both bundles are
+2.6.1 (66), SDK 27.1; thirteen icons, resources and compatibility IDs were checked.
+
+Downloads: `Elsepin 2.6.1 build 66.ipa`, 18,444,793 bytes, SHA-256
+`aadde4ce1d7277d4ca182a8d2c8bbd2fb6b03dac63528f19ae08ec7c7d1ebc22`.
+The copied file matches GitHub's artifact digest; ZIP integrity passed. Complete
+logs and receipt: `.build/artifacts/41396515177/`. Earlier test IPAs are retained.
+
+The 216-step [owner walkthrough](TEST-WALKTHROUGH-2.6.1.md), test fixtures and both
+helper ZIPs are also in Downloads as `Elsepin build 66 - Test Guide`. Open
+`START-HERE.html` for an offline checklist with saved results and notes.
+Real provider sign-in, phone crashes/gestures, push receipt and battery behavior
+remain unverified. Public 2.6.0, its assets and the website are unchanged;
+2.6.1 remains an unpublished draft with zero assets. No Drive upload this turn.
+
+## Earlier native validation: 2.6.1 (65) — 31 October 2026
 
 [Native run 41213887689](https://github.com/N3moStudio/Elsepin/actions/runs/41213887689) passed at
 `ed1c03d85e4606cded44b842836d7fea513edc53`: **565 tests**, native app/extension compilation,
@@ -20,7 +41,7 @@ Route/UI code is identical to build 64, which the user is still testing. Real
 helper connections and the route-crash outcome remain device acceptance checks.
 The release remains an unpublished draft with zero assets; public 2.6.0 is unchanged.
 
-## Latest private test build: 2.6.1 (64) — 30 October 2026
+## Earlier private test build: 2.6.1 (64) — 30 October 2026
 
 [Native run 41176847512](https://github.com/N3moStudio/Elsepin/actions/runs/41176847512) passed at source
 `39e232a971dc15e77b936a50f6321651ab17b900`: **565 tests** (436 Swift, 14 packaging/icon,

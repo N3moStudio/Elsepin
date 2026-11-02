@@ -5,7 +5,7 @@ pairing guide (`PairOnDeviceView.swift`) and visible draft mode grid
 (`RoutePlannerSheet.swift`). Build 62 passed native validation; device UI checks remain pending.
 
 Maintained alongside the [Change Ledger](CHANGE-LEDGER.md). Source paths
-are relative to the repository. Current source is unreleased 2.6.1 (63); see [current work](CURRENT-WORK.md) for build evidence and publication boundaries. Historical entries below retain their original validation context.
+are relative to the repository. Current source is unreleased 2.6.1 (66); see [current work](CURRENT-WORK.md) for build evidence and publication boundaries. Historical entries below retain their original validation context.
 Build 66 incident export and helper audit are mapped below; current evidence is in CURRENT-WORK.md.
 This continues the original source/branding catalog without treating historical
 Locus identifiers as safe search-and-replace targets.

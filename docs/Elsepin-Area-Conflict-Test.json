@@ -1,0 +1,35 @@
+{
+  "format": "Shift library",
+  "version": 2,
+  "createdAt": 814622400.0,
+  "categories": [
+    "places",
+    "trips"
+  ],
+  "places": [],
+  "trips": [],
+  "areas": [
+    {
+      "id": "A7250639-BE76-4FF0-8FA8-712EF357783D",
+      "name": "CONFLICT TEST - Overlaps North area",
+      "points": [
+        {
+          "latitude": 40.7731,
+          "longitude": -73.9731
+        },
+        {
+          "latitude": 40.7741,
+          "longitude": -73.9731
+        },
+        {
+          "latitude": 40.7741,
+          "longitude": -73.9721
+        },
+        {
+          "latitude": 40.7731,
+          "longitude": -73.9721
+        }
+      ]
+    }
+  ]
+}

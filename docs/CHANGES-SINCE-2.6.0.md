@@ -3,7 +3,7 @@
 Comparison baseline: public **2.6.0 (59)**, published 27 October 2026,
 source `304756f035172d6e8e3406a451ee57c25cd07951`, native run `40460137350`.
 Verified against the published release metadata and source diff on 31 October.
-The work below is **unreleased 2.6.1**, private builds 60–65; not an announcement
+The work below is **unreleased 2.6.1**, private builds 60–66; not an announcement
 that the public release includes it. See [changelog](../CHANGELOG.md) and
 [build history](BUILD-HISTORY.md) for individual build evidence.
 
@@ -78,6 +78,20 @@ that the public release includes it. See [changelog](../CHANGELOG.md) and
   preserves leaf pins; checked location-delegate isolation preserves main-loop
   callbacks. Its native build passed 565 tests with zero compiler warnings/errors.
   Retain the earlier build logs as historical evidence. No public release.
+
+## Diagnostics and experimental helper fixes (build 66)
+- Export a bounded incident around a marked problem from Session timeline, including
+  attached notes and explicit missing/truncated-data metadata. Full export remains.
+- Correlate route holds/drags, manual jumps, Undo and retry with queued/accepted/failed
+  writes. These breadcrumbs observe the existing movement flow; they do not move you.
+- Share provider polling between Nearby and spoof-checks while preserving original
+  report timestamps. Nearby-only sign-in failures now update readiness; transient
+  failures retain the session and retry after cooldown. Providers remain independent.
+- Include the Python runtime pin in helper exports and correct standalone setup docs.
+- Add a 216-step owner acceptance walkthrough, import fixtures and an experimental
+  availability audit. Public helper files/docs remain unchanged until publication.
+- Native build 66 passed 582 tests, signing and packaging with zero compiler warnings
+  or errors. Real account login, web push delivery and phone acceptance remain pending.
 
 ## Already present in 2.6.0 — not new in this update
 Elsepin branding, Prism Jumpgate, thirteen icons, redesigned Settings, manual
