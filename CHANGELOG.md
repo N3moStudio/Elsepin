@@ -5,6 +5,16 @@ is the official release. Earlier Shift entries retain their original names and r
 
 [App introduction](README.md) · [Build history](docs/BUILD-HISTORY.md) · [Detailed Change Ledger](docs/CHANGE-LEDGER.md)
 
+## Local cleanup after build 66 — 2 November 2026 — not built or published
+
+- Remove unreachable old pin/easter-egg views, unused Settings components, a redundant
+  named-area screen wrapper and unused getters/helpers. Current UI, data formats,
+  movement confirmation, security, accessibility and OS support are unchanged.
+- Remove 264 production Swift lines plus eight stale project references; no tests removed.
+- 443 Swift and 16 packaging tests pass; identity, appearance, helper archives and changed
+  source syntax checks pass. Native Xcode validation is pending permitted source upload.
+- Preserve build 66 artifacts. New skills/orb dependency remain uninstalled pending approval.
+
 ## 2.6.1 (66) — incident export and experimental helper fixes — unpublished
 
 - Export retained events around a marked problem from the existing Session timeline:

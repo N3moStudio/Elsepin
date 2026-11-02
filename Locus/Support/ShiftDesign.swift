@@ -163,44 +163,6 @@ struct ShiftSettingsPressStyle: ButtonStyle {
     }
 }
 
-struct ShiftSettingsLink<Destination: View>: View {
-    let title: String
-    let symbol: String
-    var color: Color = LocusTheme.accent
-    @ViewBuilder var destination: () -> Destination
-    var body: some View {
-        NavigationLink { destination() } label: {
-            HStack(spacing: 13) {
-                ShiftSettingsIcon(symbol: symbol, color: color)
-                Text(title).font(.body.weight(.medium)).foregroundStyle(.primary)
-                    .fixedSize(horizontal: false, vertical: true)
-                Spacer(minLength: 6)
-                Image(systemName: "chevron.right").font(.caption.weight(.semibold))
-                    .foregroundStyle(.tertiary).accessibilityHidden(true)
-            }
-            .padding(.horizontal, 16).padding(.vertical, 11)
-            .frame(maxWidth: .infinity, minHeight: 60, alignment: .leading)
-            .contentShape(Rectangle())
-        }.buttonStyle(ShiftSettingsPressStyle())
-    }
-}
-
-struct ShiftSettingsDivider: View {
-    var body: some View { Divider().overlay(Color.primary.opacity(0.03)).padding(.leading, 67).padding(.trailing, 16) }
-}
-
-struct ShiftSettingsGroup<Content: View>: View {
-    let title: String
-    @ViewBuilder var content: () -> Content
-    var body: some View {
-        VStack(alignment: .leading, spacing: 9) {
-            Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
-                .padding(.leading, 16).accessibilityAddTraits(.isHeader)
-            ShiftSettingsCard { VStack(spacing: 0) { content() } }
-        }
-    }
-}
-
 struct ShiftAcknowledgmentsView: View {
     private var notices: String {
         guard let url = Bundle.main.url(forResource: "OpenSourceNotices", withExtension: "txt"),

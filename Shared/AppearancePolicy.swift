@@ -52,5 +52,4 @@ extension ShiftVisualStyle {
         case .glacier: return "system"
         }
     }
-    var defaultMaterial: AppearanceMaterial { .solid }
 }

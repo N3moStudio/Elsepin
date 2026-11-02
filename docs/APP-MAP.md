@@ -1,5 +1,7 @@
 # Elsepin app map
 
+Local cleanup removes unreachable wrappers only; see [review and pending orb plan](CLEANUP-AND-ORBS-REVIEW.md).
+
 Latest local presentation pass: [UI polish notes](UI-POLISH.md) maps the three-step
 pairing guide (`PairOnDeviceView.swift`) and visible draft mode grid
 (`RoutePlannerSheet.swift`). Build 62 passed native validation; device UI checks remain pending.

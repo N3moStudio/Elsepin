@@ -2,7 +2,6 @@ import Foundation
 
 enum SetupStage: Int, CaseIterable {
     case wifi, vpn, pairing, connection, ready
-    static var welcome: SetupStage { .wifi }
 }
 
 /// Fixed messages keep native pairing errors, file paths, and credentials out

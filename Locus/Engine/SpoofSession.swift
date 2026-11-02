@@ -1517,10 +1517,6 @@ final class SpoofSession: ObservableObject {
         return true
     }
 
-    private static func coordinateLabel(_ coordinate: CLLocationCoordinate2D) -> String {
-        String(format: "%.5f, %.5f", coordinate.latitude, coordinate.longitude)
-    }
-
     private static func isGenericFavoriteName(_ name: String) -> Bool {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty || ["Favorite", "Saved place", "Dropped pin", "Selected place"].contains(trimmed) { return true }

@@ -19,7 +19,6 @@
 		0D7E985D8A0DA9DBE48C5B5A /* LocusActivity.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 524089103C557940B61B26E2 /* LocusActivity.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		1406A639F1123470ED211365 /* SessionPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A158B3051B3538FA4EA96AC /* SessionPresentation.swift */; };
 		14C4350C1EAE94A55D5F068F /* ReliabilityRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43445E7F8D796A93E5ADAB7A /* ReliabilityRecorder.swift */; };
-		1A9609434342E76342B42B54 /* LocusEasterEggView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 361C48381EA09BB299BD110E /* LocusEasterEggView.swift */; };
 		1BAB0E5E93B3D8E1E18F1BB5 /* RecentlyDeletedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B252B95495AFCE887718D30 /* RecentlyDeletedView.swift */; };
 		1C6F28ACEE784EFFBC658667 /* TripRecovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 127B67E23500BDAB4F7FD1E6 /* TripRecovery.swift */; };
 		1C92AD5A5709778B982A4043 /* DrawnPathEdit.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2636E9664FC07393C807835 /* DrawnPathEdit.swift */; };
@@ -143,7 +142,6 @@
 		C5583445C0C1EE0E16D5D62B /* PrivacySettingsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED8180F7B25FE93375F67675 /* PrivacySettingsSection.swift */; };
 		C56A1B32D54A05D72CD0F399 /* LocusLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86C72FDA51C1CDF75424003B /* LocusLiveActivity.swift */; };
 		C5B176B29163E524B776757A /* BackgroundKeepAlive.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5415BEF759B8C8AF04096B3E /* BackgroundKeepAlive.swift */; };
-		C8CC0EF3E134ADF2BE9F995F /* MapDropPin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 797AA07D5CE5A7FD9D385F5F /* MapDropPin.swift */; };
 		C8FAE1F7E9754DA5FBCB9875 /* AppResetRules.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4186C2C038F48872CE9F18AC /* AppResetRules.swift */; };
 		CB6D796581DF0C8BFEDEBD8D /* RouteLifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BF205A9DD2450E36A40A6B0 /* RouteLifecycle.swift */; };
 		CC123836D602137CA97D210E /* RemoteFindMyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79FCCBEAAA58F9D9C8789650 /* RemoteFindMyView.swift */; };
@@ -240,7 +238,6 @@
 		3091E2487B50AA19913444D0 /* OpenSourceNotices.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = OpenSourceNotices.txt; sourceTree = "<group>"; };
 		353B28A57311709589886541 /* TripEditHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripEditHistoryView.swift; sourceTree = "<group>"; };
 		3595D09295BBC9B41EA63C47 /* SessionActivityController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionActivityController.swift; sourceTree = "<group>"; };
-		361C48381EA09BB299BD110E /* LocusEasterEggView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocusEasterEggView.swift; sourceTree = "<group>"; };
 		377FB9983B927B5898D09160 /* LocationEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationEngine.swift; sourceTree = "<group>"; };
 		3B51D4F370EFC220A54A082F /* Locus.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Locus.entitlements; sourceTree = "<group>"; };
 		3BD94D8F8EA6E858B7F1C9FF /* DeletedLibraryItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeletedLibraryItem.swift; sourceTree = "<group>"; };
@@ -280,7 +277,6 @@
 		70AF65B15CA38A33654832F2 /* RouteGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteGeometry.swift; sourceTree = "<group>"; };
 		70D366F8BE0AE3454F01106B /* MapPanProjection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapPanProjection.swift; sourceTree = "<group>"; };
 		7977CA785FF0B09F4F88DE7D /* PairingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairingStore.swift; sourceTree = "<group>"; };
-		797AA07D5CE5A7FD9D385F5F /* MapDropPin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapDropPin.swift; sourceTree = "<group>"; };
 		799094E9B1F051BEAD82D2C1 /* SavedPlace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedPlace.swift; sourceTree = "<group>"; };
 		79FCCBEAAA58F9D9C8789650 /* RemoteFindMyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteFindMyView.swift; sourceTree = "<group>"; };
 		7B1A67AF180FD68CD8108DC9 /* UsualSpeedsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsualSpeedsSettingsView.swift; sourceTree = "<group>"; };
@@ -362,7 +358,6 @@
 				C0C7AE5685A5B9AFC967943E /* FindMyChecksView.swift */,
 				947CC969C23E547912106D44 /* HomeWidgetsSettingsView.swift */,
 				4F96A1E3D11AA07C1FEBA19B /* LibraryBackupView.swift */,
-				361C48381EA09BB299BD110E /* LocusEasterEggView.swift */,
 				182A67940FAF35E1D246B8F5 /* NamedAreasView.swift */,
 				BE84038C9223A84BAFFAE233 /* PairOnDeviceView.swift */,
 				ED8180F7B25FE93375F67675 /* PrivacySettingsSection.swift */,
@@ -408,7 +403,6 @@
 		2C7F6D726AC574C9600B5F9A /* Map */ = {
 			isa = PBXGroup;
 			children = (
-				797AA07D5CE5A7FD9D385F5F /* MapDropPin.swift */,
 				F714A23C4C718E67E978565F /* MapHomeView.swift */,
 				A14B292089EE8477E309C49B /* MapPinAdjustment.swift */,
 				FF1AF0F32E88B4227CA45694 /* RootView.swift */,
@@ -783,8 +777,6 @@
 				D5163A324DC7D4DE24789358 /* LocationVerificationController.swift in Sources */,
 				680B3D533AB91FDE6062EF11 /* LocusActivityAttributes.swift in Sources */,
 				976D8B4B49C6B6588EA59B2F /* LocusApp.swift in Sources */,
-				1A9609434342E76342B42B54 /* LocusEasterEggView.swift in Sources */,
-				C8CC0EF3E134ADF2BE9F995F /* MapDropPin.swift in Sources */,
 				D5613248D3DDD96C0D62BF7F /* MapHomeView.swift in Sources */,
 				0143B2D35D24714001ACC7DD /* MapPanProjection.swift in Sources */,
 				A985794530D021807424304C /* MapPinAdjustment.swift in Sources */,

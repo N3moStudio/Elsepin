@@ -5,6 +5,13 @@ is the last recorded public release. Earlier entries retain their original valid
 
 See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all recorded 2.5.x/2.6.0 native runs.
 
+## Local dead-code cleanup — 2 November 2026
+
+Base `60f084e`; no commit or upload. [Review and rollback](CLEANUP-AND-ORBS-REVIEW.md)
+records reference evidence, 264 production Swift lines removed (zero test changes),
+443+16 passing checks, native-build limitation and unchanged build 66 checksum.
+No runtime feature or deployment change; optional tool/dependency approvals remain pending.
+
 ## 2.6.1 (66) — incident diagnostics and experimental audit — 1 November 2026
 
 - Added bounded incident export around explicit problem markers; the full JSONL export,

@@ -1,6 +1,20 @@
 # Elsepin current handoff
 
-Updated 1 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
+Updated 2 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
+
+## Local cleanup and orb assessment — 2 November 2026
+
+Working tree started clean at `60f084e`. Local-only deletion of confirmed unused
+views/wrappers/helpers removes 264 production Swift lines and eight project lines;
+no test lines changed. 443 Swift tests and 16 packaging tests pass, alongside identity,
+appearance/helper checks and Swift 5 syntax parsing. No push/commit/native Xcode build,
+IPA, release or deployment this pass. Build 66 and its Downloads test pack are intact.
+
+See [cleanup evidence and rollback](CLEANUP-AND-ORBS-REVIEW.md) before continuing.
+Ponytail/Addy instruction-only installation and ThinkingOrbsKit integration remain
+pending exact approval forwarded from the coordinating chat. Do not infer approval
+from this handoff. Graphify and OmniRoute are not installed; no hooks, keys or model
+routing changed. Proposed orbs are limited to explicit search/connection progress.
 
 ## 2.6.1 (66) — incident export and experimental helper audit
 

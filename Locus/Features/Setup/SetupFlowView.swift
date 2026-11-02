@@ -249,8 +249,6 @@ enum SetupGate {
     static let deferredKey = "locus.setupDeferred"
 
     static var isComplete: Bool { UserDefaults.standard.bool(forKey: defaultsKey) }
-    static var isInProgress: Bool { UserDefaults.standard.bool(forKey: inProgressKey) }
-    static var isDeferred: Bool { UserDefaults.standard.bool(forKey: deferredKey) }
 
     static func markInProgress() { UserDefaults.standard.set(true, forKey: inProgressKey) }
     static func markComplete() {

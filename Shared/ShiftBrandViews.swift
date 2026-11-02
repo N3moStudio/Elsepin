@@ -78,7 +78,6 @@ enum ShiftPalette {
     static let good = adaptive(0x237447, 0x83D7A2)
     static let warning = adaptive(0x8D5100, 0xF5C36B)
     static let danger = adaptive(0xB52243, 0xFF9AAD)
-    static let activityBackground = color(.canvas, dark: true)
     static func color(_ ink: ShiftVisualStyle.Ink, style: ShiftVisualStyle? = nil, dark: Bool? = nil) -> Color {
         Color(uiColor: UIColor { traits in
             let selected = style ?? ShiftVisualStyle(storedValue: traits[ShiftStyleTrait.self])

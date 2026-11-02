@@ -1,23 +1,6 @@
 import MapKit
 import SwiftUI
 
-struct NamedAreasView: View {
-    @EnvironmentObject private var session: SpoofSession
-    @State private var editor: NamedAreaDraft?
-    var body: some View {
-        List { NamedAreasSection(onEdit: open) }.shiftScreen().loggedNavigationTitle("Named areas")
-            .navigationBarTitleDisplayMode(.inline)
-            .fullScreenCover(item: $editor) { draft in
-                NamedAreaEditor(draft: draft) { area in
-                    session.replaceNamedAreas(session.namedAreas.filter { $0.id != area.id } + [area])
-                }
-            }
-    }
-    private func open(_ area: NamedArea?) {
-        editor = NamedAreaDraft(area: area, center: session.pin ?? session.simulated ?? session.realCoordinate)
-    }
-}
-
 struct NamedAreasSection: View {
     var search = ""
     var onEdit: (NamedArea?) -> Void
