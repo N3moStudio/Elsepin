@@ -47,20 +47,13 @@ class NearbyRuntime:
     async def report(self, rule):
         owner = self.apple if rule["provider"] == "findmy-device" else self.life
         generation = owner.generation
-        async with owner.lock:
-            if self.stopped or owner.busy or not self.known(rule):
-                return {"state": "unavailable"}
-            try:
-                if owner is self.apple:
-                    report = (await owner.call("fetch")).json()
-                else:
-                    circle, member = json.loads(rule["target"])
-                    report = (await owner.call("fetch_member", circle, member)).json()
-            except Exception:
-                return {"state": "unavailable"}
-            if self.stopped or generation != owner.generation or not self.known(rule):
-                return {"state": "unavailable"}
-            return report
+        if self.stopped or owner.busy or not self.known(rule):
+            return {"state": "unavailable"}
+        member = json.loads(rule["target"]) if owner is self.life else None
+        report = await owner.read_report(member)
+        if self.stopped or generation != owner.generation or not self.known(rule):
+            return {"state": "unavailable"}
+        return report or {"state": "unavailable"}
 
     async def send(self, body, identifier, endpoint=None):
         sent = False

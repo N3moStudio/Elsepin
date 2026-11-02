@@ -71,7 +71,7 @@ final class SpoofSession: ObservableObject {
     }
     @Published private(set) var stopProgress = RouteStopProgress()
     @Published private(set) var jumpUndo: RouteJumpUndo?
-    private var pendingSeek: (selection: AcceptedRouteSeek, wasPaused: Bool, restore: RouteJumpUndo?)? {
+    private var pendingSeek: (selection: AcceptedRouteSeek, wasPaused: Bool, restore: RouteJumpUndo?, trace: RouteDiagnosticAttempt)? {
         didSet { routeControls.signal() }
     }
     private var waitRevision = 0
@@ -370,10 +370,15 @@ final class SpoofSession: ObservableObject {
     }
     var canUndoJump: Bool { jumpUndo?.isValid(routeID: activeRoute?.id, now: Date()) == true && canEditRouteMovement && isSpoofing }
     func undoRouteJump(pairing: PairingStore) {
+        let trace = RouteDiagnosticAttempt(kind: .undo, routeID: activeRoute?.id)
+        trace.record("requested")
         guard canUndoJump, let undo = jumpUndo, let plan = activeRoute, pairing.hasPairingFile,
               let accepted = AcceptedRouteSeek(RouteSeek(routeID: undo.routeID, metres: undo.metres, expiresAt: undo.expiresAt),
-                                               routeID: plan.id, now: Date()) else { return }
-        pendingSeek = (accepted, undo.wasPaused, undo)
+                                               routeID: plan.id, now: Date()) else {
+            trace.record("rejected", ["reason": "undo_unavailable_expired_or_connection_not_ready"]); return
+        }
+        pendingSeek = (accepted, undo.wasPaused, undo, trace)
+        trace.record("queued", ["epoch": String(epoch)])
         routeJumping = true
         journey?.state = .seeking
         routeActive = true
@@ -418,9 +423,12 @@ final class SpoofSession: ObservableObject {
     }
 
     func retry(pairing: PairingStore) {
+        let trace = RouteDiagnosticAttempt(kind: .retry, routeID: activeRoute?.id)
+        trace.record("requested", ["reopened": String(reopenedWithoutConnection)])
         DeveloperLogStore.shared.record("retry_tapped", ["reopened": String(reopenedWithoutConnection)])
         if let plan = activeRoute, let progress = journey {
             guard pairing.hasPairingFile, !isBusy, !stopInFlight else {
+                trace.record("rejected", ["reason": "pairing_missing_or_command_pending"])
                 lastError = "Check pairing and wait for the pending command before retrying."
                 return
             }
@@ -433,14 +441,17 @@ final class SpoofSession: ObservableObject {
             routePaused = true
             journey?.state = .paused
             startRoutePlayback(plan, pairing: pairing, ticket: epoch, initialWrite: true,
-                               initialMetres: progress.travelledMetres)
+                               initialMetres: progress.travelledMetres, initialTrace: trace)
+            trace.record("queued", ["epoch": String(epoch), "travel": "paused"])
             return
         }
         guard let coordinate = simulated ?? pin else {
+            trace.record("rejected", ["reason": "no_retained_location"])
             lastError = "The previous connection ended when Elsepin closed. When Wi-Fi is available, connect LocalDevVPN and use Try clearing location. Until then, Elsepin cannot confirm or change the previous location."
             return
         }
-        teleport(to: coordinate, pairing: pairing)
+        let accepted = teleport(to: coordinate, pairing: pairing)
+        trace.record(accepted ? "handed_to_teleport" : "rejected", ["reason": "no_active_route"])
     }
 
     func stop(pairing: PairingStore) {
@@ -604,13 +615,17 @@ final class SpoofSession: ObservableObject {
     }
 
     private func startRoutePlayback(_ plan: PlannedRoute, pairing: PairingStore, ticket: Int,
-                                    initialWrite: Bool, initialMetres: Double = 0) {
+                                    initialWrite: Bool, initialMetres: Double = 0,
+                                    initialTrace: RouteDiagnosticAttempt? = nil) {
         let motion = RouteMotion(track: plan.track)
         let workerID = UUID()
         routeWorkerID = workerID
         routeTask = Task { @MainActor [weak self] in
             guard let self else { return }
             var needsInitialWrite = initialWrite
+            defer {
+                if needsInitialWrite { initialTrace?.record("worker_ended_before_confirmation") }
+            }
             var clock = RoutePlaybackClock(now: ProcessInfo.processInfo.systemUptime)
             var lastMovementConfirmation = ProcessInfo.processInfo.systemUptime
             var samples = RouteSpeedSamples()
@@ -631,6 +646,7 @@ final class SpoofSession: ObservableObject {
                     self.routePaused = false
                     self.routeStopping = false
                     self.routeJumping = false
+                    self.pendingSeek?.trace.record("worker_ended_before_completion")
                     self.pendingSeek = nil
                     self.motionSpeed = 0
                     self.routeTask = nil
@@ -654,10 +670,11 @@ final class SpoofSession: ObservableObject {
                     continue
                 }
                 if needsInitialWrite {
-                    let result = await sendRoutePoint(at: initialMetres, plan: plan, pairing: pairing, ticket: ticket)
+                    let result = await sendRoutePoint(at: initialMetres, plan: plan, pairing: pairing, ticket: ticket, trace: initialTrace)
                     if result == .busy { continue }
                     guard result == .sent, !Task.isCancelled, ticket == epoch, workerID == routeWorkerID else { return }
                     needsInitialWrite = false
+                    initialTrace?.record("completed", ["result": "location_command_accepted", "travel": routePaused ? "paused" : "moving"])
                     resetMovementClock()
                     pushNamedRecent(name: plan.destination.name, coordinate: plan.destination.coordinate)
                     continue
@@ -671,11 +688,13 @@ final class SpoofSession: ObservableObject {
                     continue
                 }
                 if let seek = pendingSeek {
-                    guard seek.selection.belongs(to: activeRoute?.id) else { return }
+                    guard seek.selection.belongs(to: activeRoute?.id) else {
+                        seek.trace.record("rejected", ["reason": "route_changed"]); return
+                    }
                     let target = min(plan.track.length, max(0, seek.selection.metres))
                     let previousPosition = journey?.travelledMetres ?? 0
                     let previousStops = stopProgress
-                    let result = await sendRoutePoint(at: target, plan: plan, pairing: pairing, ticket: ticket)
+                    let result = await sendRoutePoint(at: target, plan: plan, pairing: pairing, ticket: ticket, trace: seek.trace)
                     if result == .busy { continue }
                     guard result == .sent, !Task.isCancelled, ticket == epoch, workerID == routeWorkerID else { return }
                     journey?.confirmPosition(target)
@@ -696,6 +715,8 @@ final class SpoofSession: ObservableObject {
                     routePaused = seek.wasPaused
                     journey?.state = RouteRefreshPolicy.stateAfterPause(paused: routePaused, writeInFlight: false,
                                                                        waitingAtStop: stopProgress.currentID != nil)
+                    seek.trace.record("completed", ["result": "location_command_accepted", "metres": String(target),
+                                                    "travel": routePaused ? "paused" : "moving"])
                     publishActivity(force: true)
                     continue
                 }
@@ -776,10 +797,11 @@ final class SpoofSession: ObservableObject {
         }
     }
 
-    private func sendRoutePoint(at metres: Double, plan: PlannedRoute, pairing: PairingStore, ticket: Int) async -> CommandResult {
+    private func sendRoutePoint(at metres: Double, plan: PlannedRoute, pairing: PairingStore, ticket: Int,
+                                trace: RouteDiagnosticAttempt? = nil) async -> CommandResult {
         pendingRouteTarget = metres
         defer { pendingRouteTarget = nil }
-        return await apply(plan.track.point(at: metres).coordinate, pairing: pairing, markRecent: false, ticket: ticket)
+        return await apply(plan.track.point(at: metres).coordinate, pairing: pairing, markRecent: false, ticket: ticket, trace: trace)
     }
 
     var canAddRouteStop: Bool {
@@ -866,18 +888,23 @@ final class SpoofSession: ObservableObject {
     }
 
     @discardableResult
-    func seekRoute(_ selection: RouteSeek, pairing: PairingStore) -> Bool {
+    func seekRoute(_ selection: RouteSeek, pairing: PairingStore, trace suppliedTrace: RouteDiagnosticAttempt? = nil) -> Bool {
+        let trace = suppliedTrace ?? RouteDiagnosticAttempt(kind: .marker, routeID: selection.routeID)
+        trace.record("requested", ["metres": String(selection.metres), "epoch": String(epoch)])
         DeveloperLogStore.shared.record("route_jump_tapped", ["route": selection.routeID.uuidString, "metres": String(selection.metres)])
         guard let plan = activeRoute,
               let accepted = AcceptedRouteSeek(selection, routeID: plan.id, now: Date()) else {
+            trace.record("rejected", ["reason": "marker_expired_invalid_or_route_changed"])
             lastError = "This route marker expired. Hold the route again to choose a point."
             return false
         }
         guard canEditRouteMovement, isSpoofing, pairing.hasPairingFile else {
+            trace.record("rejected", ["reason": !pairing.hasPairingFile ? "pairing_missing" : (!isSpoofing ? "connection_not_active" : "command_pending")])
             lastError = isSpoofing ? "Wait for the pending route command to finish." : "Reconnect before teleporting along this route."
             return false
         }
-        pendingSeek = (accepted, routePaused, nil)
+        pendingSeek = (accepted, routePaused, nil, trace)
+        trace.record("queued", ["epoch": String(epoch)])
         routeJumping = true
         journey?.state = .seeking
         routeActive = true
@@ -987,6 +1014,7 @@ final class SpoofSession: ObservableObject {
     private func cancelRoute(clearJourney: Bool = true) {
         cancelReroute()
         routeWorkerID = UUID()
+        pendingSeek?.trace.record("cancelled_or_replaced")
         pendingSeek = nil
         routeJumping = false
         jumpUndo = nil
@@ -1034,8 +1062,10 @@ final class SpoofSession: ObservableObject {
     private enum CommandResult: Equatable { case sent, busy, invalidated, failed }
 
     private func apply(_ coordinate: CLLocationCoordinate2D, pairing: PairingStore, markRecent: Bool, ticket: Int,
-                       confirmedName: SessionSpotName? = nil) async -> CommandResult {
-        guard ticket == epoch, sessionRequested, !stopInFlight, !Task.isCancelled else { return .invalidated }
+                       confirmedName: SessionSpotName? = nil, trace: RouteDiagnosticAttempt? = nil) async -> CommandResult {
+        guard ticket == epoch, sessionRequested, !stopInFlight, !Task.isCancelled else {
+            trace?.record("invalidated_before_write"); return .invalidated
+        }
         guard !sendInFlight else { return .busy }
         let writeID = UUID()
         activeWriteID = writeID
@@ -1054,6 +1084,7 @@ final class SpoofSession: ObservableObject {
         startMonitor(pairing: pairing)
         verification.sending()
         let commandStart = Date()
+        trace?.record("write_requested", ["write": writeID.uuidString, "epoch": String(ticket)])
         DeveloperLogStore.shared.record("location_write_requested", ["id": writeID.uuidString,
             "latitude": String(coordinate.latitude), "longitude": String(coordinate.longitude), "epoch": String(ticket)])
         let result = await LocationEngine.set(latitude: coordinate.latitude, longitude: coordinate.longitude,
@@ -1065,6 +1096,8 @@ final class SpoofSession: ObservableObject {
         case .failure(let error): details["result"] = "failed"; details["stage"] = String(describing: error)
         }
         DeveloperLogStore.shared.record("location_write_result", details)
+        trace?.record("write_result", ["write": writeID.uuidString, "result": details["result"] ?? "unknown",
+                                      "current_operation": details["current_operation"] ?? "unknown"])
         guard ticket == epoch, sessionRequested else { return .invalidated }
         if isBusy { isBusy = false }
         switch result {

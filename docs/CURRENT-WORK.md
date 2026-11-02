@@ -1,6 +1,25 @@
 # Elsepin current handoff
 
-Updated 31 October 2026. Read AGENTS.md, inspect Git status, preserve newer work.
+Updated 1 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
+
+## 2.6.1 (66) — incident export and experimental helper audit
+
+User authorized implementing the two diagnostic improvements and auditing experimental
+connections/downloads, followed by a complete sequential test guide. Keep publication
+blocked until user approval. Private build pending. Build 65 was subsequently copied
+and hash-verified in Downloads; do not overwrite old test IPAs.
+
+- `Shared/DeveloperIncident.swift`, `DeveloperLogStore.exportIncident` and the existing
+  `SessionTimelineView` provide bounded ten-minute incident exports with explicit gaps.
+  `RouteDiagnosticAttempt` links discrete map/engine events without driving state.
+- Shared provider cache/readiness fixes and corrected source-only helper exports;
+  see [audit](EXPERIMENTAL-AUDIT.md) for public anonymous availability and limitations.
+- [Ordered test walkthrough](TEST-WALKTHROUGH-2.6.1.md) covers installation through
+  setup, gestures, interruption/retry, backups, UI, widgets, cloud and cleanup.
+- 443 Swift tests passed; helper reviewer verified 104 cloud, 19 companion, 16
+  packaging/icon tests, plus independent tests of both extracted ZIPs. Native pending.
+- Real phone/provider acceptance remains unknown. Find My People is unavailable.
+  Public release stays 2.6.0; its helper ZIPs and public guides lack build 66 changes.
 
 ## 2.6.1 (65) — native warning cleanup — 31 October 2026
 

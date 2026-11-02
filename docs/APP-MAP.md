@@ -6,11 +6,14 @@ pairing guide (`PairOnDeviceView.swift`) and visible draft mode grid
 
 Maintained alongside the [Change Ledger](CHANGE-LEDGER.md). Source paths
 are relative to the repository. Current source is unreleased 2.6.1 (63); see [current work](CURRENT-WORK.md) for build evidence and publication boundaries. Historical entries below retain their original validation context.
+Build 66 incident export and helper audit are mapped below; current evidence is in CURRENT-WORK.md.
 This continues the original source/branding catalog without treating historical
 Locus identifiers as safe search-and-replace targets.
 
 | Area | Main owners | Responsibilities |
 | --- | --- | --- |
+| Incident diagnostics (66) | `Shared/DeveloperIncident.swift`, `DeveloperLogStore.swift`, `SessionTimeline.swift`; `SessionTimelineView.swift`; `Tests/DeveloperIncidentTests.swift` | Bounded off-main JSONL slice around retained marker; preserve full log and notes, report truncation/gaps, expire with original batch. RouteDiagnosticAttempt IDs only observe map/engine transitions; never gate movement. Do not log per-frame drag coordinates or credentials. |
+| Combined Nearby/check polling (66) | `CloudFindMy/render_server.py` (`Owner.read_report`), `nearby_web.py`, `test_polling.py` | One short-lived per-target cooldown cache; preserve original timestamps and observer identity. Distinguish permanent auth failures from transient unavailable; one provider failure must not sign out the other. |
 | Search / route crash follow-up (63) | `RoutePlaceSearchSheet.swift`, `MapHomeView.swift` | General search results stay in the picker; cancellation generations reject stale results. Native route-hold coordinates, matching route/index guards, interrupted-touch cleanup. Device crash cause/retest pending. |
 | Simulated route estimates (63) | `Shared/RouteTiming.swift`, `RouteBuilder.swift`, `SpoofSession.swift`, `RoutePlannerSheet.swift` | Shared motion rules, cached profiles, section speeds, independent remaining stop waits; keep simulated and Apple travel estimates distinct. Tests: `Tests/RouteTimingTests.swift`. |
 | Route update cadence (63) | `Shared/TripFeatures.swift` → `RoutePlaybackClock`, `SpoofSession.startRoutePlayback`; `Tests/PrecisionControlsTests.swift` | Successful-confirmation spacing and conservative native-write latency estimate; no burst catch-up after a slow response, reset after seek/resume. Preserve monotonic clock and maximum suspension gap; no direct control of third-party MPH. |

@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct ProblemMoment: Identifiable {
     let id = UUID()
@@ -34,7 +35,7 @@ struct ProblemMomentSheet: View {
                     } else if error == nil { ProgressView("Saving this moment…") }
                     if let error { Text(error).foregroundStyle(LocusTheme.statusWarn) }
                 } footer: {
-                    Text("This marks the time in your local developer log. Nothing is sent automatically. Export the log from Settings → Export or import when you're ready to share it.")
+                    Text("This marks the time in your local developer log. Nothing is sent automatically. Export the log from Settings → Diagnostics when you're ready to share it.")
                 }.shiftSettingsRows()
                 if marked {
                     Section {
@@ -73,10 +74,18 @@ struct ProblemMomentSheet: View {
 struct SessionTimelineView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var snapshot: DeveloperLogStore.TimelineSnapshot?
+    @State private var selectedIncident: SessionTimelineEntry?
+    @State private var confirmExport = false
+    @State private var preparing = false
+    @State private var exporting = false
+    @State private var document = DeveloperLogDocument()
+    @State private var exportMessage: String?
     var body: some View {
         List {
             Section {
                 ProblemMomentButton()
+                if preparing { ProgressView("Preparing incident log…") }
+                if let exportMessage { Text(exportMessage).font(.footnote).foregroundStyle(.secondary) }
                 if let snapshot {
                     if !snapshot.recording { Text("Recording is off. Existing moments stay until this batch resets.").foregroundStyle(LocusTheme.statusWarn) }
                     if snapshot.incomplete { Text("Some events may be missing because the log is full or storage was unavailable.").foregroundStyle(LocusTheme.statusWarn) }
@@ -99,6 +108,14 @@ struct SessionTimelineView: View {
                                     .font(.caption).foregroundStyle(.secondary)
                             }
                             if !entry.detail.isEmpty { Text(entry.detail).font(.footnote).foregroundStyle(.secondary) }
+                            if entry.kind == "problem_moment", entry.marker != nil {
+                                Button {
+                                    selectedIncident = entry; confirmExport = true
+                                } label: {
+                                    Label("Export around this moment", systemImage: "square.and.arrow.up")
+                                        .frame(minHeight: 44)
+                                }.buttonStyle(.borderless).disabled(preparing || exporting)
+                            }
                         }.padding(.vertical, 3)
                     }
                     if snapshot.trimmed { Text("Showing the latest 1,000 highlights. Earlier detail may still be in this batch’s developer export.").font(.footnote).foregroundStyle(.secondary) }
@@ -106,6 +123,29 @@ struct SessionTimelineView: View {
             } else { ProgressView("Loading timeline…") }
         }
         .shiftSettingsScreen().loggedNavigationTitle("Session timeline").navigationBarTitleDisplayMode(.inline)
+        .loggedConfirmationDialog("Export this incident?", isPresented: $confirmExport, titleVisibility: .visible) {
+            Button("Prepare incident log") {
+                guard let marker = selectedIncident?.marker else { return }
+                preparing = true
+                Task {
+                    do {
+                        document = DeveloperLogDocument(data: try await DeveloperLogStore.shared.exportIncident(marker: marker))
+                        exporting = true
+                    } catch { exportMessage = error.localizedDescription }
+                    preparing = false
+                }
+            }
+        } message: {
+            Text("Includes exact locations and notes from up to five minutes before and after this moment. Only events already recorded are included. Nothing is uploaded automatically.")
+        }
+        .fileExporter(isPresented: $exporting, document: document, contentType: .plainText,
+                      defaultFilename: "Elsepin-incident-\(selectedIncident?.marker ?? "log").jsonl") { result in
+            switch result {
+            case .success: exportMessage = "Incident exported. Review its locations and notes before sharing."
+            case .failure: exportMessage = "Export was cancelled or couldn't finish. The original log is still available."
+            }
+            document = DeveloperLogDocument()
+        }
         .refreshable { snapshot = await DeveloperLogStore.shared.timeline() }
         .task(id: scenePhase) {
             guard scenePhase == .active else { return }

@@ -74,7 +74,7 @@ class Limit:
 
 class Owner:
     """All UI/store state belongs to the event loop; Apple work is serialized."""
-    def __init__(self, connector, store, provider="findmy-device"):
+    def __init__(self, connector, store, provider="findmy-device", *, interval=60, clock=time.monotonic):
         self.connector, self.store = connector, store
         self.provider = provider
         self.name = "Apple" if provider == "findmy-device" else "Life360"
@@ -83,6 +83,8 @@ class Owner:
         self.job = None
         self.lock = asyncio.Lock()
         self.generation = 0
+        self.interval, self.clock = interval, clock
+        self.reports = {}
         self.store.auth_state = "sign-in"
 
     @property
@@ -93,6 +95,7 @@ class Owner:
         if self.busy:
             raise web.HTTPConflict(text="A step is already running. Wait for it to finish.")
         self.generation += 1
+        self.reports.clear()
         self.store.report = None
         self.store.auth_state = "sign-in"
         # Discard uploaded history as soon as Apple identity is changed or disconnected.
@@ -132,24 +135,58 @@ class Owner:
                 with suppress(Exception):
                     await self.call("close")
 
-    async def fetch(self, sid):
+    def expire_reports(self):
+        # Share only a short-lived report, never a location history. The existing
+        # service poller expires these even when neither consumer is active.
+        now = self.clock()
+        self.reports = {key: value for key, value in self.reports.items()
+                        if now - value[0] < self.interval}
+
+    async def read_report(self, member=None):
+        """One serialized, rate-limited read per target for checks and Nearby."""
         generation = self.generation
         async with self.lock:
             if self.busy or self.stage != "ready" or generation != self.generation:
-                return
+                return None
+            action, args = "fetch", ()
+            if member is not None:
+                circle, identifier = member
+                if (self.provider != "life360" or circle != self.connector.circle_id
+                        or identifier not in {key for key, _ in self.connector.choices}):
+                    return None
+                if identifier != self.connector.member_id:
+                    action, args = "fetch_member", (circle, identifier)
+            key = (action, *args)
+            self.expire_reports()
+            if key in self.reports:
+                return dict(self.reports[key][1])
             try:
-                report = (await self.call("fetch")).json()
+                report = (await self.call(action, *args)).json()
             except Exception as error:
                 report = missing(self.provider, self.target, failure_state(error)).json()
             if generation != self.generation:
-                return
-            self.store.publish(sid, report)
-            if self.store.auth_state:
+                return None
+            if report["state"] in ("sign-in", "blocked"):
+                # A Nearby-only read must update the same readiness shown by
+                # the website and phone. Transient errors keep the login intact.
+                self.store.report = None
+                self.store.auth_state = report["state"]
+                self.reports.clear()
                 self.stage = "sign-in"
                 self.devices, self.target = [], ""
                 self.message = f"{self.name} sign-in needs attention. Check the official app, then reconnect below."
                 with suppress(Exception):
                     await self.call("close")
+            else:
+                # Include temporary failures in the cooldown. Do not re-date a
+                # cached provider report or let repeated UI checks retry faster.
+                self.reports[key] = (self.clock(), report)
+            return dict(report) if generation == self.generation else None
+
+    async def fetch(self, sid):
+        report = await self.read_report()
+        if report is not None:
+            self.store.publish(sid, report)
 
 
 def form(action, fields, label, csrf="", secondary=False):
@@ -236,9 +273,9 @@ STYLE = (Path(__file__).parent / "static/style.css").read_text(encoding="utf-8")
 
 def make_render_app(config, connector=None, store=None, interval=60, refresh_wait=4, life_connector=None, life_store=None, nearby_path=None):
     store = store or Store()
-    owner = Owner(connector or WebApple(), store)
+    owner = Owner(connector or WebApple(), store, interval=interval)
     life_store = life_store or Store(clock=store.clock)
-    life = Owner(life_connector or WebLife360(), life_store, "life360")
+    life = Owner(life_connector or WebLife360(), life_store, "life360", interval=interval)
     sessions = {}
     key_limit, apple_limit, check_limit = Limit(10, 60), Limit(6, 300), Limit(1, 1)
     life_limit = Limit(6, 300)
@@ -478,6 +515,8 @@ def make_render_app(config, connector=None, store=None, interval=60, refresh_wai
 
     async def poll():
         while True:
+            owner.expire_reports()
+            life.expire_reports()
             refresh_due()
             life_due()
             await asyncio.sleep(1)

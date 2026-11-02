@@ -221,6 +221,43 @@ final class DeveloperLogStore: @unchecked Sendable {
         }
     }
 
+    /// A snapshot around an explicit marker. Does not change recording,
+    /// retention, or the complete export; future events are never invented.
+    func exportIncident(marker: String) async throws -> Data {
+        try await withCheckedThrowingContinuation { continuation in
+            queue.async {
+                do {
+                    try self.prepare(at: self.now())
+                    guard let moment = self.timelineArchive?.entries.first(where: {
+                        $0.kind == "problem_moment" && $0.marker == marker
+                    }) else { throw IncidentExportError.expired }
+                    try self.flushPending()
+                    try self.handle?.synchronize()
+                    let slice = try DeveloperIncident.read(from: self.logURL, around: moment.firstAt, marker: marker)
+                    let header = DeveloperLogEvent(time: self.now(), process: self.process, event: "incident_export_information", details: [
+                        "format": "Elsepin incident log v1; original JSONL events",
+                        "version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown",
+                        "build": Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "unknown",
+                        "marker": marker,
+                        "requested_start": moment.firstAt.addingTimeInterval(-DeveloperIncident.radius).ISO8601Format(),
+                        "requested_end": moment.firstAt.addingTimeInterval(DeveloperIncident.radius).ISO8601Format(),
+                        "batch_start": self.window?.startedAt.ISO8601Format() ?? "unknown",
+                        "captured_until": self.now().ISO8601Format(),
+                        "events": String(slice.events),
+                        "truncated": String(slice.truncated),
+                        "malformed_lines_skipped": String(slice.malformedLines),
+                        "storage_error_observed": String(self.storageError),
+                        "capacity_reached": String(self.capacityReached),
+                        "privacy": "Includes exact locations and optional notes. Shared only by your export; not a backup.",
+                        "limits": "Up to five minutes before and after the marked time, plus its later notes. Only retained events already recorded at export are included; recording gaps and previous process exits remain unknown. Capped at 8 MiB of events; use the full export if truncated. Not an iOS crash report."
+                    ])
+                    var data = try self.encoder.encode(header); data.append(0x0A); data.append(slice.data)
+                    continuation.resume(returning: data)
+                } catch { continuation.resume(throwing: error) }
+            }
+        }
+    }
+
     private func prepare(at now: Date) throws {
         let files = FileManager.default
         if !folderPrepared {

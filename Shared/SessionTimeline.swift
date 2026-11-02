@@ -80,6 +80,18 @@ struct SessionTimelineArchive: Codable, Sendable {
         case "problem_moment":
             title = "Something went wrong"
             detail = "Moment marked for the developer log."
+        case "route_interaction":
+            guard let stage = d["stage"], ["requested", "completed", "rejected", "cancelled_or_replaced"].contains(stage) else { return false }
+            let action = d["action"] == "retry" ? "Route retry" : (d["action"] == "undo" ? "Route jump undo" : "Route jump")
+            switch stage {
+            case "completed": title = "\(action) confirmed"
+            case "rejected": title = "\(action) couldn't start"
+            case "cancelled_or_replaced": title = "\(action) interrupted"
+            default: title = "\(action) requested"
+            }
+            detail = "Attempt \(d["attempt"] ?? "unknown"). " + (stage == "completed"
+                ? "The location command was accepted; other apps haven't been checked."
+                : "See this attempt's steps and outcome in the developer export.")
         case "saved_trip_version_restored": title = "Earlier saved-trip version restored"
         case "recording_changed": title = d["enabled"] == "false" ? "Recording turned off" : "Recording turned on"
         case "recording_resumed": title = "Recording resumed"
@@ -109,8 +121,8 @@ enum ProblemMarkerError: LocalizedError {
     case disabled, unavailable, expired
     var errorDescription: String? {
         switch self {
-        case .disabled: return "Developer log recording is off. Turn it on in Settings → Export or import, then mark a new moment."
-        case .unavailable: return "This moment couldn't be saved. The developer log may be full or storage may be unavailable. Export or clear it in Settings → Export or import."
+        case .disabled: return "Developer log recording is off. Turn it on in Settings → Diagnostics, then mark a new moment."
+        case .unavailable: return "This moment couldn't be saved. The developer log may be full or storage may be unavailable. Export or clear it in Settings → Diagnostics."
         case .expired: return "This moment is no longer available for notes. Mark a new moment to add one."
         }
     }

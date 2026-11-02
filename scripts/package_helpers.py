@@ -17,7 +17,7 @@ CLOUD_FILES = (
     ".gitignore", "RENDER-SETUP.txt", "START-HERE.txt", "TEST-CHECKLIST.txt",
     "core.py", "render_server.py", "requirements.txt", "server.py",
     "test_cloud.py", "test_render.py", "web_apple.py", "web_life360.py", "test_life360.py",
-    "nearby.py", "nearby_web.py", "web_push.py", "web_ui.py", "test_nearby.py",
+    "nearby.py", "nearby_web.py", "web_push.py", "web_ui.py", "test_nearby.py", "test_polling.py",
     "static/style.css", "static/nearby.js", "static/sw.js",
 )
 
@@ -26,6 +26,7 @@ def manifests():
     windows = {name: "Companion/" + name for name in WINDOWS_FILES}
     cloud = {"CloudFindMy/" + name: "CloudFindMy/" + name for name in CLOUD_FILES}
     cloud["CloudFindMy/CLOUD-GUIDE.md"] = "docs/CLOUD-GUIDE.md"
+    cloud[".python-version"] = ".python-version"
     cloud.update({"Companion/" + name: "Companion/" + name
                   for name in ("companion.py", "identity.py", "reports.py")})
     windows["LICENSE"] = cloud["LICENSE"] = "LICENSE"

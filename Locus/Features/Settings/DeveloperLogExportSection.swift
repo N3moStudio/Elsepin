@@ -82,7 +82,7 @@ struct DeveloperLogExportSection: View {
     }
 }
 
-private struct DeveloperLogDocument: FileDocument {
+struct DeveloperLogDocument: FileDocument {
     static var readableContentTypes: [UTType] { [.plainText] }
     var data = Data()
     init(data: Data = Data()) { self.data = data }

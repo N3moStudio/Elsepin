@@ -27,6 +27,8 @@ struct MapHomeView: View {
     @State private var followMovement = true
     @State private var lastCameraUpdate = Date.distantPast
     @State private var selection: RouteSeek?
+    // Correlates discrete diagnostic events only; never drives route movement.
+    @State private var markerTrace: RouteDiagnosticAttempt?
     @State private var activePolyline: MKPolyline?
     @State private var snapIndex: (routeID: UUID, index: RouteSnapIndex)?
     @State private var markerScreenPoint: CGPoint?
@@ -198,12 +200,15 @@ struct MapHomeView: View {
                 return candidate.distance <= 44
             }, onPress: { touch in
                 guard canSelectRouteMarker, session.activeRoute?.id == routeID else { return }
+                markerTrace = RouteDiagnosticAttempt(kind: .marker, routeID: routeID)
+                markerTrace?.record("hold_began")
                 routeTouchMap.map = touch.map
                 markerDragging = true
                 followMovement = false
                 DeveloperLogStore.shared.record("route_marker_hold_began")
                 placeMarker(touch, requireNearRoute: true)
                 DeveloperLogStore.shared.record("route_marker_hold_ready", ["selected": String(selection != nil)])
+                markerTrace?.record("marker_ready", ["selected": String(selection != nil)])
             }, onMoved: { touch in
                 guard canSelectRouteMarker, session.activeRoute?.id == routeID else { return }
                 placeMarker(touch, requireNearRoute: false)
@@ -214,6 +219,7 @@ struct MapHomeView: View {
                 refreshMarkerDeadline()
                 DeveloperLogStore.shared.record("route_marker_hold_ended", ["cancelled": String(cancelled),
                     "metres": selection.map { String($0.metres) } ?? "none"])
+                markerTrace?.record("hold_ended", ["cancelled": String(cancelled)])
             })
     }
 
@@ -338,6 +344,12 @@ struct MapHomeView: View {
 
     private var observedRouteMap: some View {
         lifecycleMap
+        .onChange(of: selection == nil) { _, cleared in
+            if cleared {
+                markerTrace?.record("preview_cleared")
+                markerTrace = nil
+            }
+        }
         .onChange(of: session.activeRoute?.id, initial: true) { _, id in
             selection = nil
             routeTouchMap.map = nil
@@ -554,6 +566,8 @@ struct MapHomeView: View {
             // so panning elsewhere stays with MapKit and drag coordinates do not
             // depend on the marker's changing annotation/overlay position.
             RouteMarkerTouchLayer(center: point, mapReference: routeTouchMap, onBegan: { _ in
+                if markerTrace == nil { markerTrace = RouteDiagnosticAttempt(kind: .marker, routeID: selection?.routeID) }
+                markerTrace?.record("drag_began")
                 DeveloperLogStore.shared.record("route_marker_drag_began")
                 markerDragging = true
                 followMovement = false
@@ -565,11 +579,13 @@ struct MapHomeView: View {
                 markerDragging = false
                 refreshMarkerDeadline()
                 DeveloperLogStore.shared.record("route_marker_drag_ended", ["cancelled": String(cancelled)])
+                markerTrace?.record("drag_ended", ["cancelled": String(cancelled),
+                                                  "metres": selection.map { String($0.metres) } ?? "none"])
             })
             .frame(width: availableSize.width, height: availableSize.height)
             Button {
                 guard !markerDragging, let current = selection else { return }
-                if session.seekRoute(current, pairing: pairing) { selection = nil }
+                if session.seekRoute(current, pairing: pairing, trace: markerTrace) { selection = nil }
             } label: {
                 Text("Teleport").font(.subheadline.weight(.semibold))
                     .frame(width: 112, height: 44).contentShape(Capsule())

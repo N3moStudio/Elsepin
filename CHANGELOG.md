@@ -1,9 +1,26 @@
 # Elsepin changelog
 
-Updated through **31 October 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
+Updated through **1 November 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
 is the official release. Earlier Shift entries retain their original names and release status.
 
 [App introduction](README.md) · [Build history](docs/BUILD-HISTORY.md) · [Detailed Change Ledger](docs/CHANGE-LEDGER.md)
+
+## 2.6.1 (66) — incident export and experimental helper fixes — unpublished
+
+- Export retained events around a marked problem from the existing Session timeline:
+  up to five minutes before/after, associated notes, bounded streaming and explicit
+  missing/truncated-data metadata. Full export, opt-in recording and retention stay intact.
+- Link route hold/drag, manual jump/Undo/retry, queued writes and outcomes by attempt.
+  Record rejection/interruption without changing gesture, movement or confirmation rules.
+- Share recent provider reads between Nearby and spoof-checks without refreshing old
+  timestamps. Update sign-in/blocked readiness for Nearby-only failures; retain login
+  across transient timeouts and keep providers independent.
+- Package the Python runtime pin and correct setup instructions in the exported helpers.
+  Add an experimental/download audit and a complete ordered owner test walkthrough.
+- Portable validation: 443 Swift tests, 104 cloud, 19 companion and 16 packaging/icon
+  checks. Both helpers also pass tests from freshly extracted ZIPs. Native build pending;
+  real provider login, push delivery and phone gestures require owner acceptance.
+- No public release, helper deployment or website update.
 
 ## 2.6.1 (65) — native warning cleanup — 31 October 2026
 

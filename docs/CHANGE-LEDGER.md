@@ -1,9 +1,23 @@
 # Elsepin Change Ledger
 
-Updated through **31 October 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
+Updated through **1 November 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
 is the last recorded public release. Earlier entries retain their original validation context.
 
 See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all recorded 2.5.x/2.6.0 native runs.
+
+## 2.6.1 (66) — incident diagnostics and experimental audit — 1 November 2026
+
+- Added bounded incident export around explicit problem markers; the full JSONL export,
+  opt-in capture and 48-hour retention remain unchanged. Route attempts link preview,
+  manual jump, Undo, retry and actual write outcomes without changing movement gates.
+- Fixed shared Nearby/spoof-check polling and Nearby-only authentication readiness.
+  Corrected helper export runtime pin and standalone setup guides.
+- Anonymous public IPA access and both embedded helper packages verified. Public
+  docs/assets intentionally untouched; People remains unavailable.
+- 443 Swift, 104 cloud, 19 companion and 16 packaging/icon tests passed locally;
+  freshly extracted helper ZIPs independently pass. Native validation pending.
+- Ordered owner walkthrough and experimental audit are linked in CURRENT-WORK.
+  No public release or deployment. Physical-phone/provider acceptance still required.
 
 ## 2.6.1 (65) — native warning cleanup — 31 October 2026
 

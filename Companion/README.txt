@@ -1,4 +1,4 @@
-SHIFT WINDOWS HELPER — 2.3.2
+ELSEPIN WINDOWS HELPER
 
 This optional helper reads a selected Find My DEVICE or Life360 profile and sends
 that report to Elsepin. Elsepin compares the report's location time with the point it
@@ -40,7 +40,7 @@ START ON WINDOWS
 6. Allow Python on PRIVATE networks if Windows Firewall asks. The helper listens
    only on the Wi-Fi address you chose. Do not forward its port on your router.
 7. Transfer ElsepinCompanionPairing.json privately to your iPhone's Files app.
-   In Elsepin, open Settings > Find My checks > Windows helper > Set up computer checks
+   In Elsepin, open Settings > Find My & Life360 > Windows helper > Set up computer checks
    > Import setup file. Older setup files remain compatible.
    Confirm that it came from your own computer. The file contains a secret access
    token and certificate fingerprint: do not put it on GitHub or share it publicly.

@@ -1,6 +1,6 @@
-Using Render instead of Oracle? Open RENDER-SETUP.txt. Render needs Elsepin 2.2.3 or later.
+Using Render instead of a private VM? Open RENDER-SETUP.txt for browser setup.
 
-SHIFT REMOTE FIND MY — PRIVATE PROTOTYPE (2.1.0 / 25)
+ELSEPIN FIND MY DEVICES — PRIVATE VM HELPER
 
 What this does
 Your own cloud server asks Apple for your selected iPhone's Find My Devices
@@ -41,7 +41,7 @@ Apple login, device erase, sound, account-management or spoof-control endpoint.
 This is a private experimental deployment, not a public multi-user service.
 
 3. Transfer the ZIP and connect
-Use your normal SSH/SFTP client to copy Shift-2.1.0-FindMy-Cloud.zip to the VM.
+Use your normal SSH/SFTP client to copy Elsepin-FindMy-Cloud.zip to the VM.
 Use Windows Terminal/PowerShell or Oracle's Cloud Shell for SSH. For example,
 replace BOTH placeholders with your actual SSH key path and VM public address:
 
@@ -51,7 +51,7 @@ On that Ubuntu VM, install the tools and unzip the package:
 
   sudo apt-get update
   sudo apt-get install -y python3-venv unzip tmux
-  unzip Shift-2.1.0-FindMy-Cloud.zip
+  unzip Elsepin-FindMy-Cloud.zip
   cd Elsepin-FindMy-Cloud
   python3 -m venv .venv
   .venv/bin/python -m pip install -r CloudFindMy/requirements.txt
@@ -100,9 +100,9 @@ Privately copy ElsepinFindMyPairing.json to your iPhone's Files app using SFTP
 and a private transfer. Never put it on GitHub. It is an access key, not a
 regular settings backup. Do not upload the helper's key.pem anywhere.
 
-Install Elsepin 2.1.0 (25) over the existing app with SideStore.
-Elsepin > Settings > Find My checks > Set up Remote Find My.
-Choose I already have a setup file, then Import setup file.
+Install an approved compatible Elsepin IPA over the existing app with the same signing setup.
+Elsepin > Settings > Find My & Life360 > Cloud helper > Advanced > Connect your helper
+(or Connection settings if already paired) > Import setup file instead.
 Review the data-sharing prompt and allow notifications if you want warnings.
 Start spoofing and wait up to two check cycles (about two minutes) for the first
 comparable Apple report. Apple may still return an older location; that must

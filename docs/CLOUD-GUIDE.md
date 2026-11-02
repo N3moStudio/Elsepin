@@ -1,6 +1,6 @@
 # Elsepin cloud setup and Nearby alerts
 
-Elsepin 2.6.0 development guide · 26 October 2026 · no new release.
+Current helper source guide · 1 November 2026 · changes are not yet published.
 
 ## What is available
 
@@ -17,7 +17,14 @@ receipt, continuous free hosting, or physical-device behavior.
 
 ## 1. Host your private helper
 
-Use the matching **Elsepin-FindMy-Cloud.zip** exported from the app. Unzip it and upload its contents to your own private repository for hosting. The helper is independent of the private app source; include both CloudFindMy and Companion folders.
+Use the matching **Elsepin-FindMy-Cloud.zip** exported from the app:
+**Settings → Find My & Life360 → Cloud helper → Advanced → Connect your helper**
+(**Connection settings** if paired) → **Download helper files**.
+Unzip it and upload the contents of its `Elsepin-FindMy-Cloud` folder to your own
+private repository. Put `CloudFindMy/`, `Companion/`, `.python-version` and `LICENSE`
+at that repository's root, without an extra outer folder. Include `.python-version`
+even if your file browser hides dotfiles. The helper is independent of the private
+app source; public users do not need access to that repository.
 This test build does not create or update a hosted service automatically.
 In Render create a **Web Service** with:
 
@@ -60,6 +67,9 @@ invite people, or silently replace your own comparison profile.
 Each service signs in independently. Restarting the helper loses these sign-ins.
 Apple/Life360 may decline unofficial access; reconnect through their official apps
 as needed, and do not disable account security to make the helper work.
+An expired or blocked sign-in pauses reads from that service until you reconnect;
+the other service remains available. Temporary network failures show unavailable
+and retry after the normal cooldown without discarding a working sign-in.
 
 ## 3. Connect Elsepin
 
@@ -110,7 +120,11 @@ accurate reports must confirm the other side before a crossing triggers. An
 uncertain boundary, repeated report, old report or long gap does not create an
 arrival. Polls run about once a minute while an active rule and authenticated
 source remain available; provider latency and hosting downtime can delay them.
-Opening a page or pinging `/healthz` never creates a monitoring rule.
+Session checks and Nearby share one provider read per selected location within a
+minute, including the selected own Life360 profile. Other authorized Circle
+members have separate reports. Reusing a report keeps its original location and
+fetch timestamps; it cannot make an old location fresh. Opening a page or pinging
+`/healthz` never creates a monitoring rule.
 
 ### Reminders and stopping
 
@@ -151,6 +165,8 @@ host/volume is necessary for persistence guarantees. `SHIFT_DATA_DIR` can point
 to a private persistent directory on a host you control. No paid resource is
 created automatically, and the free setup is not promised to be reliable 24/7.
 
+The shared report cache stays in memory for at most one minute and is cleared on
+reconnection or authentication failure; it contains no accumulated location history.
 The provider libraries retain sign-in state only in memory/temporary session
 files. The browser receives provider names and rule summaries after unlock;
 location histories are not cached by the service worker. Push traffic goes only
@@ -194,5 +210,7 @@ free instance hours. Maintenance, restarts and quotas can still interrupt servic
 Test real provider sign-in and authorized location feeds, actual iPhone Web Push
 in foreground/background/Focus, loss of sharing, stale reports, crossing jitter,
 stop during a pending send, expiry, server restarts and a native SwiftUI build.
-This guide is published with the test branch. Consult the Change Ledger for
-exact build evidence; real provider and iPhone notification acceptance remains a device test.
+The bundled guide describes its matching helper. Public documentation and release
+assets are updated separately when publication is approved. Consult the Change
+Ledger for build evidence; real provider and iPhone notification acceptance remains
+a device test.
