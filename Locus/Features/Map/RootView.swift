@@ -275,8 +275,9 @@ struct StatusBarView: View {
             let phase = session.effectivePhase
             Button { showDetails = true } label: {
             HStack(spacing: 10) {
-                Image(systemName: phase.symbol)
-                    .font(.subheadline.weight(.semibold)).foregroundStyle(phase.color)
+                Image(systemName: session.showsClosedSessionNotice ? "info.circle" : phase.symbol)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(session.showsClosedSessionNotice ? Color.secondary : phase.color)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(session.statusTitle).font(.subheadline.weight(.semibold))
                     if remote.enabled && remote.paired && session.remoteCheckSessionRequested {
@@ -292,7 +293,7 @@ struct StatusBarView: View {
                         }
                         .font(.footnote).foregroundStyle(.secondary)
                     } else if phase == .unverified {
-                        Text(session.reopenedWithoutConnection ? "Tap for recovery options" : "Last location may still be set").font(.footnote).foregroundStyle(.secondary)
+                        Text(session.showsClosedSessionNotice ? "Not running · Tap for details" : "Last location may still be set").font(.footnote).foregroundStyle(.secondary)
                     }
                 }
                 Spacer(minLength: 0)
@@ -332,6 +333,7 @@ struct BottomControlsView: View {
     let showNotice: (String) -> Void
     var controlsEnabled = true
     @State private var collapsed = false
+    @State private var routeDetailsCollapsed = false
     @State private var showMovementSheet = false
     @State private var showRecovery = false
     @State private var handleDrag = ControlTrayDrag()
@@ -405,6 +407,7 @@ struct BottomControlsView: View {
             }
         }
         .onChange(of: interactionsAvailable) { _, available in if !available { interruptHandle() } }
+        .onChange(of: session.activeRoute?.id) { _, _ in routeDetailsCollapsed = false }
         .onChange(of: reduceMotion) { _, _ in interruptHandle() }
         .onAppear { if !handleTouchActive { handleDrag.gestureDidReset() } }
         .onDisappear { interruptHandle() }
@@ -415,10 +418,23 @@ struct BottomControlsView: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 8) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(route.destination.name).font(.headline).lineLimit(2)
-                        Text(trip.state.title).font(.caption).foregroundStyle(.secondary)
+                        Text(route.destination.name).font(.headline).lineLimit(routeDetailsCollapsed && !typeSize.isAccessibilitySize ? 1 : 2)
+                        Text(session.restoredRouteAwaitingConnection ? "Saved route position" : session.recoveringRoute ? "Reconnecting…" : trip.state.title).font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer(minLength: 0)
+                    Button {
+                        // Presentation only: never change the map viewport or route commands.
+                        withAnimation(session.lowPower ? nil : panelAnimation) { routeDetailsCollapsed.toggle() }
+                    } label: {
+                        Image(systemName: routeDetailsCollapsed ? "chevron.up" : "chevron.down")
+                            .font(.body.weight(.semibold))
+                            .frame(width: 44, height: 44).contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!controlsEnabled || scenePhase != .active)
+                    .accessibilityLabel(routeDetailsCollapsed ? "Expand route details" : "Collapse route details")
+                    .accessibilityValue(routeDetailsCollapsed ? "Collapsed" : "Expanded")
+                    .accessibilityHint("Route progress, Pause or Resume, and Stop stay available.")
                     Menu {
                         Button("Route details", systemImage: "list.bullet") { planner.isPresented = true }
                         Button("Mode & speed", systemImage: "speedometer") { showMovementSheet = true }
@@ -432,29 +448,38 @@ struct BottomControlsView: View {
                         Image(systemName: "ellipsis").frame(width: 44, height: 44).contentShape(Rectangle())
                     }.accessibilityLabel("Route controls and shortcuts")
                 }
-                let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8)) : AnyLayout(HStackLayout(alignment: .top, spacing: 20))
-                layout {
-                    Button { showMovementSheet = true } label: {
+                if !routeDetailsCollapsed {
+                    let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8)) : AnyLayout(HStackLayout(alignment: .top, spacing: 20))
+                    layout {
+                        Button { showMovementSheet = true } label: {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(preferences.speedUnit.formatted(mph: session.speedMPH(for: session.travelMode)))
+                                    .font(.title3.weight(.semibold)).monospacedDigit()
+                                Label("Target speed", systemImage: session.travelMode.icon).font(.caption).foregroundStyle(.secondary)
+                            }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
+                        }.buttonStyle(.plain).accessibilityHint("Adjust mode and speed")
                         VStack(alignment: .leading, spacing: 3) {
-                            Text(preferences.speedUnit.formatted(mph: session.speedMPH(for: session.travelMode)))
-                                .font(.title3.weight(.semibold)).monospacedDigit()
-                            Label("Target speed", systemImage: session.travelMode.icon).font(.caption).foregroundStyle(.secondary)
-                        }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
-                    }.buttonStyle(.plain).accessibilityHint("Adjust mode and speed")
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(JourneyText.distance(trip.remainingMetres)).font(.title3.weight(.semibold)).monospacedDigit()
-                        Text("Remaining").font(.caption).foregroundStyle(.secondary)
-                    }.frame(maxWidth: .infinity, alignment: .leading)
+                            Text(JourneyText.distance(trip.remainingMetres)).font(.title3.weight(.semibold)).monospacedDigit()
+                            Text("Remaining").font(.caption).foregroundStyle(.secondary)
+                        }.frame(maxWidth: .infinity, alignment: .leading)
+                    }
                 }
                 ProgressView(value: trip.fraction).tint(LocusTheme.accent).accessibilityLabel("Route progress")
+                if routeDetailsCollapsed {
+                    Text("\(JourneyText.distance(trip.remainingMetres)) remaining")
+                        .font(.caption).foregroundStyle(.secondary).monospacedDigit()
+                }
                 if trip.state == .arrived {
                     Text("Arrived. Stop spoofing to return control to your iPhone.").font(.caption).foregroundStyle(.secondary)
+                } else if session.restoredRouteAwaitingConnection {
+                    Text(session.automaticRecoveryPending ? "Waiting for Wi-Fi to resume. Keep LocalDevVPN on." : "Paused · Resume when ready.")
+                        .font(.caption).foregroundStyle(.secondary)
                 } else if session.effectivePhase != .active {
                     Text("Waiting for connection confirmation. ETA unavailable.").font(.caption).foregroundStyle(LocusTheme.statusWarn)
-                } else if let seconds = session.journeyRemainingSeconds {
+                } else if !routeDetailsCollapsed, let seconds = session.journeyRemainingSeconds {
                     Text("About \(JourneyText.duration(seconds)) including stops").font(.caption).foregroundStyle(.secondary)
                 }
-                if session.currentStop == nil, let next = route.stops.first(where: { $0.metres > trip.travelledMetres + 0.001 }) {
+                if !routeDetailsCollapsed, session.currentStop == nil, let next = route.stops.first(where: { $0.metres > trip.travelledMetres + 0.001 }) {
                     Text("Next: \(next.name)").font(.caption).foregroundStyle(.secondary).lineLimit(1)
                 }
                 if let note = route.source.playbackNote(mode: session.travelMode) {
@@ -469,6 +494,12 @@ struct BottomControlsView: View {
                 }
                 let actions = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 8)) : AnyLayout(HStackLayout(spacing: 10))
                 actions {
+                    if session.restoredRouteAwaitingConnection {
+                        Button("Resume route") { showRecovery = true }
+                            .buttonStyle(ShiftActionStyle(immediatePress: true)).frame(minHeight: 44)
+                        Button("Cancel recovery") { session.stopRoute() }
+                            .buttonStyle(ShiftActionStyle(kind: .secondary, immediatePress: true)).frame(minHeight: 44)
+                    }
                     if session.routeActive && !session.routeStopping {
                         Button { session.toggleRoutePause() } label: {
                             Label(trip.state == .pausing ? "Pausing…" : session.routePaused ? "Resume" : "Pause",

@@ -1,19 +1,21 @@
 # Elsepin app map
 
-Local cleanup removes unreachable wrappers only; see [review and pending orb plan](CLEANUP-AND-ORBS-REVIEW.md).
+Cleanup and native progress are in build 67; see [review](CLEANUP-AND-ORBS-REVIEW.md)
+and [native progress](NATIVE-PROGRESS.md). The route-card collapse follow-up is local/unbuilt.
 
 Latest local presentation pass: [UI polish notes](UI-POLISH.md) maps the three-step
 pairing guide (`PairOnDeviceView.swift`) and visible draft mode grid
 (`RoutePlannerSheet.swift`). Build 62 passed native validation; device UI checks remain pending.
 
 Maintained alongside the [Change Ledger](CHANGE-LEDGER.md). Source paths
-are relative to the repository. Current source is unreleased 2.6.1 (66); see [current work](CURRENT-WORK.md) for build evidence and publication boundaries. Historical entries below retain their original validation context.
+are relative to the repository. Latest verified private build is 2.6.1 (67); see [current work](CURRENT-WORK.md) for local changes, build evidence and publication boundaries. Historical entries below retain their original validation context.
 Build 66 incident export and helper audit are mapped below; current evidence is in CURRENT-WORK.md.
 This continues the original source/branding catalog without treating historical
 Locus identifiers as safe search-and-replace targets.
 
 | Area | Main owners | Responsibilities |
 | --- | --- | --- |
+| Route-card collapse (local, unbuilt) | `RootView.swift`: `BottomControlsView`, `routeDetailsCollapsed`, `compactJourneyPanel` | Presentation-only toggle. Reset on route ID changes, not progress ticks. Keep command controls/warnings outside hidden detail; preserve overlay viewport and skip code. See UI-POLISH device checks. |
 | Incident diagnostics (66) | `Shared/DeveloperIncident.swift`, `DeveloperLogStore.swift`, `SessionTimeline.swift`; `SessionTimelineView.swift`; `Tests/DeveloperIncidentTests.swift` | Bounded off-main JSONL slice around retained marker; preserve full log and notes, report truncation/gaps, expire with original batch. RouteDiagnosticAttempt IDs only observe map/engine transitions; never gate movement. Do not log per-frame drag coordinates or credentials. |
 | Combined Nearby/check polling (66) | `CloudFindMy/render_server.py` (`Owner.read_report`), `nearby_web.py`, `test_polling.py` | One short-lived per-target cooldown cache; preserve original timestamps and observer identity. Distinguish permanent auth failures from transient unavailable; one provider failure must not sign out the other. |
 | Search / route crash follow-up (63) | `RoutePlaceSearchSheet.swift`, `MapHomeView.swift` | General search results stay in the picker; cancellation generations reject stale results. Native route-hold coordinates, matching route/index guards, interrupted-touch cleanup. Device crash cause/retest pending. |
@@ -118,3 +120,19 @@ Callers: `RoutePlaceSearchSheet`, `RouteStopSearchSheet`, `RemoteFindMyView`.
 Read [NATIVE-PROGRESS.md](NATIVE-PROGRESS.md) before changing the dependency or
 motion lifecycle. Request ownership, cancellation and result/error paths stay in
 the existing callers; the visual must never trigger work or delay completion.
+
+## Session closure and relaunch
+
+`LocusApp.swift` / `SessionLifecycleDelegate` receives UIKit's optional termination
+callback. `SpoofSession.prepareForTermination` preserves recovery, stops process
+workers and asks `LocationEngine` to clear existing handles. `SessionLifetime` owns
+its process command gate and legacy unfinished-location evidence. Never run this
+cleanup for ordinary background/inactive scenes or block waiting for the C queue.
+
+`TripResumePolicy` and `TripRecoveryStore` persist/consume automatic recovery intent
+separately from asynchronous checkpoint writes, so Pause/Stop cannot be overwritten
+by a late file write. `SpoofSession.updateAutomaticRecovery` observes Wi-Fi only
+while an eligible launch recovery waits in the unlocked foreground; one attempt,
+then manual retry on failure. `restoreTripDisplay` restores the saved map/card
+without claiming a device confirmation. Do not bypass epoch/worker guards or count
+downtime as movement. See [lifecycle details](SESSION-CLOSURE.md).

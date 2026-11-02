@@ -1,9 +1,31 @@
 # Elsepin changelog
 
-Updated through **1 November 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
+Updated through **2 November 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
 is the official release. Earlier Shift entries retain their original names and release status.
 
 [App introduction](README.md) · [Build history](docs/BUILD-HISTORY.md) · [Detailed Change Ledger](docs/CHANGE-LEDGER.md)
+
+## 2.6.1 (68) — compact route card and automatic trip recovery — private test build
+
+- Collapse/expand the active-route card while retaining progress, remaining distance,
+  Pause/Resume, Stop and actionable warnings. New routes open expanded.
+- Restore an interrupted route and its saved position on launch. A remembered running
+  trip saved within 24 hours gets one reconnect attempt in an unlocked foreground,
+  once Wi-Fi and pairing are available. LocalDevVPN must work. Travel resumes only
+  after the saved point is accepted; downtime is not added to distance or stop waits.
+- Paused trips, legacy checkpoints without recorded intent, older checkpoints and
+  failed reconnects require manual Resume/Retry. Stop/End route, discard and disabling
+  recovery revoke automatic intent. No background polling/reconnect loop was added.
+- On a delivered UIKit termination callback, preserve the checkpoint, cancel process
+  workers, close the engine command gate and attempt a clear on the existing serial
+  connection. Normal backgrounding remains unchanged. iOS can terminate without
+  this callback; clearing/activity removal cannot be guaranteed after force-kill.
+- Show saved/reconnecting state without claiming active spoofing. Preserve genuine
+  errors and explicit clearing when the device state remains unknown. A successful
+  clear alone, or proof no location was sent, clears the legacy unfinished marker.
+- Preserve compatibility IDs, backup formats, themes and bundled helper exports.
+  Build 67 is retained. No public release, deployment or public asset changes.
+- Local and native results are recorded in CURRENT-WORK after validation.
 
 ## 2.6.1 (67) — native request progress — unpublished
 

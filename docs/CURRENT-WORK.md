@@ -2,6 +2,36 @@
 
 Updated 2 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
 
+## 2.6.1 (68) — compact route card and automatic trip recovery — private test build
+
+- Collapse/expand the active-route card while retaining progress, remaining distance,
+  Pause/Resume, Stop and actionable warnings. New routes open expanded.
+- Restore an interrupted route and its saved position on launch. A remembered running
+  trip saved within 24 hours gets one reconnect attempt in an unlocked foreground,
+  once Wi-Fi and pairing are available. LocalDevVPN must work. Travel resumes only
+  after the saved point is accepted; downtime is not added to distance or stop waits.
+- Paused trips, legacy checkpoints without recorded intent, older checkpoints and
+  failed reconnects require manual Resume/Retry. Stop/End route, discard and disabling
+  recovery revoke automatic intent. No background polling/reconnect loop was added.
+- On a delivered UIKit termination callback, preserve the checkpoint, cancel process
+  workers, close the engine command gate and attempt a clear on the existing serial
+  connection. Normal backgrounding remains unchanged. iOS can terminate without
+  this callback; clearing/activity removal cannot be guaranteed after force-kill.
+- Show saved/reconnecting state without claiming active spoofing. Preserve genuine
+  errors and explicit clearing when the device state remains unknown. A successful
+  clear alone, or proof no location was sent, clears the legacy unfinished marker.
+- Preserve compatibility IDs, backup formats, themes and bundled helper exports.
+  Build 67 is retained. No public release, deployment or public asset changes.
+- Local validation: 461 Swift tests passed (14 new lifecycle/recovery tests), edited
+  Swift 5 source parsing, appearance/identity/helper archive checks and whitespace.
+  Both controlled command-gate/foreground mutations failed as intended; restored
+  originals then passed. Native compilation/package verification is pending.
+
+The user's 2 November clarification explicitly authorizes automatic restoration and
+resumption of the previously running route. It supersedes the earlier no-auto-resume
+interpretation. Private push/build 68 is authorized; publication/deployment is not.
+See [lifecycle design](SESSION-CLOSURE.md) and the updated 244-step owner walkthrough.
+
 ## 2.6.1 (67) — native request progress — unpublished
 
 - Add native 20-point Thinking Orbs beside existing place search, route-stop search

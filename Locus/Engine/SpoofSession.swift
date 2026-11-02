@@ -1,6 +1,7 @@
 import CoreLocation
 import Combine
 import Foundation
+import Network
 import MapKit
 import UIKit
 import UserNotifications
@@ -103,6 +104,10 @@ final class SpoofSession: ObservableObject {
     let recovery = TripRecoveryStore()
     let reliability = ReliabilityRecorder()
     @Published private(set) var recoveryAvailable = false
+    @Published private(set) var automaticRecoveryPending = false
+    @Published private(set) var recoveringRoute = false
+    private var recoveryMonitor: NWPathMonitor?
+    private var recoveryMonitorID = UUID()
     @Published var arrivalChoice: ArrivalChoice = .stay {
         didSet { saveTripCheckpoint(force: true) }
     }
@@ -141,7 +146,7 @@ final class SpoofSession: ObservableObject {
     private var sessionLocationKeepAlive = false
     private let favoritesKey = "locus.favorites"
     private let recentsKey = "locus.recents"
-    private let unfinishedKey = "locus.unfinishedSession"
+    private var terminating = false
 
     init() {
         if let saved = UserDefaults.standard.object(forKey: EBikeSpeed.preferenceKey) as? Double {
@@ -153,12 +158,18 @@ final class SpoofSession: ObservableObject {
         favorites = SavedPlace.load(key: favoritesKey)
         recents = SavedPlace.loadRecents(retention: preferences.recentHistoryRetention, saveEnabled: preferences.saveRecentLocations)
         // Never adopt the old app process's green status after a crash/relaunch.
-        if UserDefaults.standard.bool(forKey: unfinishedKey) {
+        if SessionLifetime.shared.previousLocationMayRemain {
             requiresClear = true
             reopenedWithoutConnection = true
             DeveloperLogStore.shared.record("unfinished_session_on_launch", ["meaning": "Previous location may remain; old process connection is unavailable."])
             status = .unverified
-            recoveryAvailable = recovery.checkpoint != nil
+        }
+        // Restore display state before any network attempt. The saved point is
+        // not a new device confirmation, and the elapsed downtime is not travel.
+        if let saved = recovery.checkpoint, saved.isValid, let plan = saved.trip.plannedRoute {
+            recoveryAvailable = true
+            restoreTripDisplay(saved, plan: plan)
+            automaticRecoveryPending = recovery.resumePolicy.isEligible(saved)
         }
         locationKeeper.acceptDeviceFixes = !requiresClear
         locationKeeper.onDeviceLocation = { [weak self] fix in self?.deviceLocationFix = fix }
@@ -170,8 +181,70 @@ final class SpoofSession: ObservableObject {
     }
 
     func discardRecovery() {
+        let wasRestored = restoredRouteAwaitingConnection
+        automaticRecoveryPending = false
+        stopRecoveryMonitor()
         recoveryAvailable = false
         recovery.discard()
+        if wasRestored {
+            activeRoute = nil; journey = nil; stopProgress = RouteStopProgress()
+            routeSectionSettingsEnabled = false; sectionSpeedOverrides = [:]; appliedSectionID = nil
+        }
+    }
+
+    var restoredRouteAwaitingConnection: Bool { recoveryAvailable && journey != nil && !routeActive }
+
+    private func restoreTripDisplay(_ saved: TripCheckpoint, plan: PlannedRoute) {
+        travelMode = saved.trip.mode
+        setSpeedMPH(saved.trip.speedMPH, for: saved.trip.mode)
+        smoothMovement = saved.trip.smoothMovement
+        arrivalChoice = saved.arrival
+        activeRoute = plan
+        routeSectionSettingsEnabled = !plan.travelSections.isEmpty
+        sectionSpeedOverrides = [:]
+        appliedSectionID = nil
+        journey = JourneyProgress(totalMetres: plan.track.length)
+        journey?.confirmPosition(saved.metres)
+        journey?.state = .paused
+        stopProgress = saved.stops
+        applyPlannedSection(at: saved.metres)
+        pin = plan.track.point(at: saved.metres).coordinate
+        pinIsPreview = false
+        previewSpotName = nil
+    }
+
+    /// Observe Wi-Fi only while a launch recovery waits in an unlocked foreground.
+    /// One attempt is consumed durably; errors remain manual retry, not a loop.
+    func updateAutomaticRecovery(pairing: PairingStore, allowed: Bool) {
+        if automaticRecoveryPending && !recovery.resumePolicy.isEligible(recovery.checkpoint) {
+            automaticRecoveryPending = false
+        }
+        guard allowed, appActive, automaticRecoveryPending, recoveryAvailable,
+              !terminating, pairing.hasPairingFile else { stopRecoveryMonitor(); return }
+        guard recoveryMonitor == nil else { return }
+        let id = UUID(); recoveryMonitorID = id
+        let monitor = NWPathMonitor(requiredInterfaceType: .wifi)
+        recoveryMonitor = monitor
+        monitor.pathUpdateHandler = { [weak self, weak pairing] path in
+            let available = path.status == .satisfied && path.usesInterfaceType(.wifi)
+            Task { @MainActor in
+                guard let self, let pairing, self.recoveryMonitorID == id,
+                      self.automaticRecoveryPending,
+                      self.recovery.resumePolicy.takeAttempt(self.recovery.checkpoint,
+                        foreground: self.appActive, wifi: available, paired: pairing.hasPairingFile,
+                        busy: self.isBusy || self.stopInFlight || self.routeActive) else { return }
+                self.automaticRecoveryPending = false
+                self.stopRecoveryMonitor()
+                DeveloperLogStore.shared.record("route_launch_recovery_requested")
+                _ = self.resumeSavedTrip(pairing: pairing, wifiAvailable: true)
+            }
+        }
+        monitor.start(queue: DispatchQueue(label: "com.n3mostudio.shift.recovery-wifi"))
+    }
+
+    private func stopRecoveryMonitor() {
+        recoveryMonitorID = UUID()
+        recoveryMonitor?.cancel(); recoveryMonitor = nil
     }
 
     func resumeSavedTrip(pairing: PairingStore, wifiAvailable: Bool) -> Bool {
@@ -183,21 +256,13 @@ final class SpoofSession: ObservableObject {
         }
         cancelRoute(clearJourney: false)
         stopJoystick()
-        travelMode = saved.trip.mode
-        setSpeedMPH(saved.trip.speedMPH, for: saved.trip.mode)
-        smoothMovement = saved.trip.smoothMovement
-        arrivalChoice = saved.arrival
+        automaticRecoveryPending = false
+        stopRecoveryMonitor()
+        recovery.resumePolicy.setAllowed(false)
+        restoreTripDisplay(saved, plan: plan)
         beginSession()
-        activeRoute = plan
-        routeSectionSettingsEnabled = !plan.travelSections.isEmpty
-        sectionSpeedOverrides = [:]
-        appliedSectionID = nil
-        journey = JourneyProgress(totalMetres: plan.track.length)
-        journey?.confirmPosition(saved.metres)
-        stopProgress = saved.stops
-        applyPlannedSection(at: saved.metres)
-        pinIsPreview = false
-        previewSpotName = nil
+        recoveringRoute = true
+        reopenedWithoutConnection = false
         recoveryAvailable = false
         routeActive = true
         routePaused = false
@@ -213,7 +278,8 @@ final class SpoofSession: ObservableObject {
         let trip = route.savedTrip(name: route.name, mode: travelMode, speed: speedMPH(for: travelMode),
                                   smooth: smoothMovement, arrival: arrivalChoice)
         recovery.save(TripCheckpoint(trip: trip, metres: progress.travelledMetres, stops: stopProgress,
-                                    confirmedAt: confirmedAt, savedAt: Date(), arrival: arrivalChoice))
+                                    confirmedAt: confirmedAt, savedAt: Date(), arrival: arrivalChoice),
+                      resumeAutomatically: routeActive && !routePaused)
     }
 
     var backupPreferences: BackupPreferences {
@@ -271,17 +337,23 @@ final class SpoofSession: ObservableObject {
 
     var hasSession: Bool { sessionRequested || requiresClear || stopInFlight }
     var statusTitle: String {
+        if recoveringRoute && isBusy { return "Reconnecting route…" }
+        if restoredRouteAwaitingConnection { return automaticRecoveryPending ? "Waiting to resume route" : "Saved route · Paused" }
         if status.isDropped && !hasSession { return "Couldnâ€™t start spoofing" }
         if isBusy { return effectivePhase.title }
-        if reopenedWithoutConnection { return "Previous session needs a connection" }
+        if showsClosedSessionNotice { return "Previous session ended" }
         return effectivePhase.title
+    }
+    var showsClosedSessionNotice: Bool {
+        reopenedWithoutConnection && !sessionRequested && !isBusy && !stopInFlight && lastError == nil
     }
     var stopButtonTitle: String {
         if stopInFlight { return "Stoppingâ€¦" }
+        if recoveringRoute { return "Cancel reconnect" }
         return effectivePhase == .active ? "Stop spoofing" : "Try clearing location"
     }
     var recoveryExplanation: String {
-        "Closing Elsepin fully ends its connection. Your iPhone may keep the last spoofed location, but Elsepin cannot move or clear it until a new connection works. If Wi-Fi isnâ€™t available now, you canâ€™t finish reconnecting yet. When you have Wi-Fi, connect LocalDevVPN and try clearing the location. Leaving Wi-Fi during an already working session is different: that connection may keep working."
+        "The previous connection ended. A remembered running route can resume from its saved point once Wi-Fi and LocalDevVPN work. Paused routes wait for Resume. iOS may clear simulation when the app closes, but Elsepin cannot confirm that after an abrupt exit. Try clearing location sends an explicit clear."
     }
     var isSpoofing: Bool { sessionRequested && effectivePhase == .active }
     var effectivePhase: SessionPhase {
@@ -309,6 +381,11 @@ final class SpoofSession: ObservableObject {
     }
     func cancelDeviceLocationRefresh() { locationKeeper.cancelPreciseFix() }
     func selectPin(_ coordinate: CLLocationCoordinate2D, name: String? = nil) {
+        if automaticRecoveryPending {
+            automaticRecoveryPending = false
+            stopRecoveryMonitor()
+            recovery.resumePolicy.setAllowed(false)
+        }
         DeveloperLogStore.shared.record("pin_selected", ["latitude": String(coordinate.latitude), "longitude": String(coordinate.longitude), "name": name ?? ""])
         pin = coordinate
         pinIsPreview = true
@@ -509,7 +586,7 @@ final class SpoofSession: ObservableObject {
                 startedAt = nil
                 status = .idle
                 lastError = nil
-                UserDefaults.standard.set(false, forKey: unfinishedKey)
+                SessionLifetime.shared.locationCleared()
                 monitorTask?.cancel()
                 monitorTask = nil
             case .failure(let error):
@@ -985,6 +1062,7 @@ final class SpoofSession: ObservableObject {
         guard routeActive, canEditRouteMovement, journey?.state != .pausing else { return }
         if routePaused, effectivePhase != .active { return }
         routePaused.toggle()
+        recovery.resumePolicy.setAllowed(!routePaused)
         motionSpeed = 0
         waitRevision += 1
         journey?.state = RouteRefreshPolicy.stateAfterPause(paused: routePaused, writeInFlight: sendInFlight,
@@ -1012,6 +1090,7 @@ final class SpoofSession: ObservableObject {
     }
 
     private func cancelRoute(clearJourney: Bool = true) {
+        recoveringRoute = false
         cancelReroute()
         routeWorkerID = UUID()
         pendingSeek?.trace.record("cancelled_or_replaced")
@@ -1043,7 +1122,7 @@ final class SpoofSession: ObservableObject {
         if !sessionRequested { verification.reset(); sessionID = UUID(); startedAt = Date(); lastConfirmedAt = nil; sessionSpotName = nil }
         sessionRequested = true
         requiresClear = true
-        UserDefaults.standard.set(true, forKey: unfinishedKey)
+        SessionLifetime.shared.locationMayRemain()
         warnedFailure = false
         warnedUnverified = false
         status = .connecting
@@ -1099,6 +1178,7 @@ final class SpoofSession: ObservableObject {
         trace?.record("write_result", ["write": writeID.uuidString, "result": details["result"] ?? "unknown",
                                       "current_operation": details["current_operation"] ?? "unknown"])
         guard ticket == epoch, sessionRequested else { return .invalidated }
+        recoveringRoute = false
         if isBusy { isBusy = false }
         switch result {
         case .success:
@@ -1134,7 +1214,7 @@ final class SpoofSession: ObservableObject {
                                                           failedBeforeWrite: error.failedBeforeWrite)
             if !requiresClear {
                 sessionRequested = false
-                UserDefaults.standard.set(false, forKey: unfinishedKey)
+                SessionLifetime.shared.locationCleared()
                 locationKeeper.acceptDeviceFixes = true
                 pinIsPreview = pin != nil
                 if pinIsPreview { previewSpotName = confirmedName }
@@ -1179,6 +1259,7 @@ final class SpoofSession: ObservableObject {
     private weak var activePairingStore: PairingStore?
 
     private func startMonitor(pairing: PairingStore) {
+        guard !terminating else { return }
         activePairingStore = pairing
         guard monitorTask == nil else { return }
         monitorTask = Task { [weak self] in
@@ -1225,6 +1306,7 @@ final class SpoofSession: ObservableObject {
     }
 
     private func checkEvidence() {
+        guard !terminating else { return }
         reliability.observe(configuration: reliabilityConfiguration)
         updatePowerState()
         let timedOut = operationStartedAt.map { Date().timeIntervalSince($0) >= SessionTiming.operationDeadline } == true
@@ -1256,6 +1338,7 @@ final class SpoofSession: ObservableObject {
     }
 
     func becameInactive() {
+        stopRecoveryMonitor()
         appActive = false
         reliability.setAppActive(false, configuration: reliabilityConfiguration)
         updateLocationTracking()
@@ -1265,6 +1348,32 @@ final class SpoofSession: ObservableObject {
         becameInactive()
         saveTripCheckpoint(force: true)
         reliability.observe(forceSave: true, configuration: reliabilityConfiguration)
+    }
+
+    func prepareForTermination() {
+        guard !terminating else { return }
+        saveTripCheckpoint(force: true)
+        terminating = true
+        epoch += 1 // Ignore late set/clear results from this process.
+        sessionRequested = false
+        stopRecoveryMonitor()
+        cancelRoute(clearJourney: false)
+        stopJoystick()
+        monitorTask?.cancel(); monitorTask = nil
+        verification.reset()
+        RemoteFindMyController.shared.stop()
+        CompanionClient.shared.cancel()
+        SessionNotifications.shared.cancelReminder()
+        sessionLocationKeepAlive = false
+        appActive = false
+        updateLocationTracking()
+        activity.sync(id: sessionID, snapshot: nil)
+        // Uses the engine queue directly: do not wait or require a MainActor
+        // task to start before UIKit terminates this process.
+        LocationEngine.prepareForTermination()
+        endBackground()
+        DeveloperLogStore.shared.record("session_termination_requested", ["clear": "best_effort_only"])
+        DeveloperLogStore.shared.maintenance(flush: true)
     }
 
     func updatePowerState() {
@@ -1314,10 +1423,11 @@ final class SpoofSession: ObservableObject {
     }
 
     private func publishActivity(force: Bool = false, checkpoint: Bool = true) {
+        guard !terminating else { return }
         if checkpoint { saveTripCheckpoint(force: force) }
         guard force || Date().timeIntervalSince(lastActivityPublish) >= min(4, connectionCheckInterval) else { return }
         lastActivityPublish = Date()
-        guard preferences.liveActivities, hasSession else {
+        guard preferences.liveActivities, hasSession, !showsClosedSessionNotice else {
             activity.sync(id: sessionID, snapshot: nil)
             return
         }

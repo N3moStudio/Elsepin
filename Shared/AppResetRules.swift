@@ -78,7 +78,7 @@ enum AppResetRules {
         "liveActivities", "hideLocation", "hideIslandLocation", "lockScreenProgress", "islandProgress", "islandTimer",
         "showFindMyStatus", "showLife360Status", "glassPanel", "connectionAlerts", "reminderMinutes", "appearance",
         "appLockEnabled", "hideInAppSwitcher", "saveRecentLocations", "recentHistoryRetention", "panelShortcuts",
-        "modeSpeeds", "usualSpeeds", "eBikeSpeedMPH", "smoothMovement", "preferWalkingPaths", "tripRecovery",
+        "modeSpeeds", "usualSpeeds", "eBikeSpeedMPH", "smoothMovement", "preferWalkingPaths", "tripRecovery", "tripRecoveryAutoResume",
         "keepTroubleshootingEvents", "developerLogEnabled", "widget.selected", "widget.primary", "remoteFindMy.enabled", "remoteFindMy.alerts"
     ].map { "locus." + $0 } + ["shift.speedUnit", "shift.connectionCheckSeconds", "shift.visualStyle", AppearanceOverrides.defaultsKey, "shift.appearancePresetMigration.v1", "shift.cloud.findMy", "shift.cloud.life360", "shift.computerChecks.enabled"])
 

@@ -21,7 +21,8 @@ struct TripRecoveryView: View {
             Section {
                 SettingsHelp(lines: [
                     "Keeps one recovery point on this phone, about every 10 seconds and when you leave the app.",
-                    "A sudden close can leave the saved point slightly behind. Recovery only starts when you tap Resume; it can wait until Wi-Fi is available."
+                    "A sudden close can leave the saved point slightly behind. A remembered running trip tries to reconnect once when you reopen with Wi-Fi. Paused trips, older checkpoints and failed reconnects wait for Resume.",
+                    "Keep LocalDevVPN on. Turning off Remember interrupted trips or choosing Stop/End route cancels automatic recovery."
                 ])
             }.shiftSettingsRows()
             if session.recoveryAvailable, let saved = recovery.checkpoint, let route = saved.trip.plannedRoute {

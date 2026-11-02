@@ -39,7 +39,7 @@ targets:
         SHIFT_RELEASE_CHANNEL: prerelease
         PRODUCT_NAME: Locus
         MARKETING_VERSION: "2.6.1"
-        CURRENT_PROJECT_VERSION: "67"
+        CURRENT_PROJECT_VERSION: "68"
         INFOPLIST_FILE: Locus/Resources/Info.plist
         CODE_SIGN_ENTITLEMENTS: Locus/Resources/Locus.entitlements
         CODE_SIGN_STYLE: Automatic
@@ -87,7 +87,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.n3mostudio.shift.activity
         PRODUCT_NAME: LocusActivity
         MARKETING_VERSION: "2.6.1"
-        CURRENT_PROJECT_VERSION: "67"
+        CURRENT_PROJECT_VERSION: "68"
         CODE_SIGN_ENTITLEMENTS: LocusActivity/LocusActivity.entitlements
         INFOPLIST_FILE: LocusActivity/Info.plist
         GENERATE_INFOPLIST_FILE: false

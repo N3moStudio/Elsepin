@@ -126,6 +126,10 @@ struct MapHomeView: View {
             Marker(session.suggestedFavoriteName(for: pin), systemImage: pinStyle(at: pin)?.symbol.rawValue ?? "mappin",
                    coordinate: pin).tint(pinStyle(at: pin)?.tint.swatch ?? LocusTheme.accentSecondary)
         }
+        if session.restoredRouteAwaitingConnection || session.recoveringRoute, let route = session.activeRoute, let progress = session.journey {
+            Marker("Saved route position", systemImage: "pause.circle", coordinate: route.track.point(at: progress.travelledMetres).coordinate)
+                .tint(.secondary)
+        }
         if let simulated = session.simulated {
             Annotation("Last simulated location", coordinate: simulated) {
                 Image(systemName: session.travelMode.icon)

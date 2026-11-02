@@ -3,6 +3,7 @@ import UIKit
 
 @main
 struct LocusApp: App {
+    @UIApplicationDelegateAdaptor(SessionLifecycleDelegate.self) private var lifecycle
     @StateObject private var session = SpoofSession()
     @StateObject private var pairing = PairingStore()
     @StateObject private var preferences = SessionPreferences.shared
@@ -35,6 +36,7 @@ struct LocusApp: App {
                 }
             }
             .id(reset.revision)
+            .onAppear { lifecycle.session = session }
             .disabled(reset.isResetting)
             .overlay {
                 if reset.isResetting {
@@ -83,6 +85,7 @@ struct LocusApp: App {
                     ShiftIconController.shared.refresh()
                     guard !reset.isResetting else { return }
                     session.becameActive(pairing: pairing)
+                    session.updateAutomaticRecovery(pairing: pairing, allowed: privacy.canOpenContent && showMap)
                     session.refreshRecentHistory()
                     RecentlyDeletedStore.shared.prune()
                     SessionDiagnostics.shared.recordAppActivity(isActive: true)
@@ -98,8 +101,20 @@ struct LocusApp: App {
             .onChange(of: preferences.hideInAppSwitcher) { _, _ in privacy.preferencesChanged() }
             .onChange(of: preferences.saveRecentLocations) { _, _ in session.refreshRecentHistory() }
             .onChange(of: preferences.recentHistoryRetention) { _, _ in session.refreshRecentHistory() }
-            .onChange(of: privacy.canOpenContent) { _, allowed in if allowed { drainIncoming() } }
-            .onChange(of: showMap) { _, _ in drainIncoming() }
+            .onChange(of: privacy.canOpenContent) { _, allowed in
+                if allowed { drainIncoming() }
+                session.updateAutomaticRecovery(pairing: pairing, allowed: allowed && showMap && scenePhase == .active && !reset.isResetting)
+            }
+            .onChange(of: showMap) { _, _ in
+                drainIncoming()
+                session.updateAutomaticRecovery(pairing: pairing, allowed: privacy.canOpenContent && showMap && scenePhase == .active && !reset.isResetting)
+            }
+            .onChange(of: pairing.revision) { _, _ in
+                session.updateAutomaticRecovery(pairing: pairing, allowed: privacy.canOpenContent && showMap && scenePhase == .active && !reset.isResetting)
+            }
+            .onChange(of: reset.isResetting) { _, resetting in
+                session.updateAutomaticRecovery(pairing: pairing, allowed: privacy.canOpenContent && showMap && scenePhase == .active && !resetting)
+            }
             .task(id: scenePhase) {
                 guard scenePhase == .active, !reset.isResetting else { return }
                 await appUpdates.checkIfDue()
@@ -147,6 +162,7 @@ struct LocusApp: App {
                 DeveloperLogObserver.shared.start(session: session)
                 privacy.sceneChanged(scenePhase)
                 session.becameActive(pairing: pairing)
+                session.updateAutomaticRecovery(pairing: pairing, allowed: privacy.canOpenContent && showMap && scenePhase == .active && !reset.isResetting)
                 session.refreshRecentHistory()
             }
         }
@@ -208,6 +224,17 @@ struct LocusApp: App {
         } else if ext == "gpx" {
             NotificationCenter.default.post(name: .locusImportGPX, object: url)
         }
+    }
+}
+
+/// UIKit does not guarantee this callback on force-quit or system termination.
+/// Background/inactive scenes deliberately do not invoke termination cleanup.
+@MainActor
+final class SessionLifecycleDelegate: NSObject, UIApplicationDelegate {
+    weak var session: SpoofSession?
+
+    func applicationWillTerminate(_ application: UIApplication) {
+        session?.prepareForTermination()
     }
 }
 

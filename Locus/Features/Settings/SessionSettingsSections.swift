@@ -74,7 +74,10 @@ struct SessionSettingsSections: View {
             }.shiftSettingsRows()
             Section("Status") {
                 ForegroundTimeline { _ in
-                    LabeledContent("Connection") { Text(session.effectivePhase.title).foregroundStyle(session.effectivePhase.color) }
+                    LabeledContent("Connection") {
+                        Text(session.statusTitle)
+                            .foregroundStyle(session.showsClosedSessionNotice ? Color.secondary : session.effectivePhase.color)
+                    }
                 }
                 if let last = session.lastConfirmedAt {
                     LabeledContent("iPhone accepted update") { Text(last, style: .relative) }

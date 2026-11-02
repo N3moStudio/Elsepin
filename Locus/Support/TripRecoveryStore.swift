@@ -3,6 +3,7 @@ import Foundation
 
 @MainActor
 final class TripRecoveryStore: ObservableObject {
+    let resumePolicy = TripResumePolicy(defaults: .standard)
     @Published private(set) var checkpoint: TripCheckpoint?
     @Published private(set) var error: String?
     @Published var enabled = UserDefaults.standard.object(forKey: "locus.tripRecovery") as? Bool ?? true {
@@ -32,8 +33,9 @@ final class TripRecoveryStore: ObservableObject {
     func shouldSave(force: Bool, now: Date = Date()) -> Bool {
         enabled && (force || now.timeIntervalSince(lastWrite) >= 10)
     }
-    func save(_ value: TripCheckpoint) {
+    func save(_ value: TripCheckpoint, resumeAutomatically: Bool) {
         guard enabled, value.isValid else { return }
+        resumePolicy.setAllowed(resumeAutomatically)
         let token = UUID()
         revision = token
         lastWrite = Date()
@@ -60,6 +62,7 @@ final class TripRecoveryStore: ObservableObject {
         }
     }
     func discard() {
+        resumePolicy.setAllowed(false)
         UserDefaults.standard.set(false, forKey: "locus.checkpointAvailable")
         revision = UUID()
         checkpoint = nil
@@ -81,6 +84,7 @@ final class TripRecoveryStore: ObservableObject {
     }
 
     func resetAll() async throws {
+        resumePolicy.setAllowed(false)
         // A barrier on the same queue waits out earlier saves before removing their output.
         revision = UUID()
         let file = file

@@ -107,3 +107,51 @@ The user approved native ThinkingOrbsKit at three existing request-progress labe
 See [scope, motion gates and device acceptance](NATIVE-PROGRESS.md). This supersedes
 the earlier blanket preference for native spinners at those labels only; all other
 UI constraints and useful existing feedback remain.
+
+## Route-card collapse — local follow-up
+
+The actual owner screenshot shows the large translucent bottom route card above
+the tab bar; the top sent-location banner and floating map controls are separate.
+The new chevron button minimizes/expands only the bottom card's optional details.
+Pause/Resume and Stop keep their existing actions, guards and accessibility-size
+stacking. Current-stop/Continue now, arrival/connection feedback, reroute Cancel
+and Retry remain visible. The existing ellipsis menu still exposes Mode & speed.
+Route progress and remaining distance remain visible. No app identity, preference,
+backup, engine, route-marker or map-coordinate change. One view-local Boolean resets
+for new route identity; it does not reset on progress updates, pause or app backgrounding.
+
+Local evidence: 447 model tests and RootView Swift 5 syntax parse passed. Existing
+command/menu blocks compare identically to build 67. This does not prove native
+SwiftUI type checking, height changes, VoiceOver focus or interruption behavior.
+The user's report that route skipping works is specific positive device feedback.
+
+After a separately approved native build, test on the phone:
+
+1. Start a disposable saved test route. Confirm the full card initially appears.
+2. Tap its down-chevron. Expect more map space, route progress/distance, Pause,
+   Stop and the ellipsis menu; speed/ETA/next-stop details should hide.
+3. Let it run briefly. Distance/progress should keep updating without expansion
+   or any jump caused by the toggle. Pause and Resume while minimized.
+4. Expand and minimize several times. Hold/drag a jump marker and explicitly
+   confirm a skip; the same route controls and manual confirmation must work.
+5. At a route stop, verify the countdown and Continue now remain available when
+   minimized. While rerouting, verify Cancel remains available.
+6. Disconnect/reconnect only after reaching a safe test state. The connection
+   warning and Retry must remain visible. Resolve any failed clear before continuing.
+7. Switch apps/lock and return. The panel should keep its presentation state for
+   the same route; a newly started route should open expanded. Progress must survive.
+8. Enable Reduce Motion, then Low Power separately: toggling should be instant.
+   Check large accessibility text and VoiceOver: named expand/collapse button,
+   readable route state, reachable Pause/Resume and Stop. Restore preferences.
+9. Tap Stop while minimized and verify the normal clear result. This remains the
+   same Stop action, not a separate abbreviated implementation.
+
+No new IPA, push or release was authorized for this follow-up. Build 67 remains
+the latest verified binary and does not include the collapse control.
+
+Build 68 includes the route-card collapse above plus an explicitly requested change
+in recovery controls: saved/reconnecting presentation, Resume/Cancel recovery, and
+Cancel reconnect before a location is confirmed. Existing active-route pause/skip/
+Stop handling remains; no map viewport resize. See SESSION-CLOSURE.md and the
+ordered walkthrough for current behavior. The earlier local 447-test/no-native
+record describes the pre-build collapse patch, not final build 68 validation.

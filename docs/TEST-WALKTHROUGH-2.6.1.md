@@ -1,6 +1,6 @@
 # Elsepin 2.6.1 — complete owner test walkthrough
 
-Updated 2 November 2026 for private build **67**. Follow the numbered steps in order. A compiled build is not a completed phone test. Nothing in this checklist publishes a release.
+Updated 2 November 2026 for private build **68**. Follow the numbered steps in order. A compiled build is not a completed phone test. Nothing in this checklist publishes a release.
 
 Write `PASS`, `FAIL`, or `BLOCKED` beside each step. `BLOCKED` means a prerequisite is unavailable, not that the feature passed. Record a failure as `step / time / what you tapped / what happened`. If the app closes, reopen it and record the time immediately; do not repeatedly retry a failing command. Stop that section and continue only after the connection can be safely cleared.
 
@@ -9,14 +9,14 @@ Write `PASS`, `FAIL`, or `BLOCKED` beside each step. `BLOCKED` means a prerequis
 ## 1. Save your current data and install
 
 1. On the old installed app, stop any location session. Wait for the clear command to succeed; if it fails, reconnect Wi-Fi and LocalDevVPN and try clearing again before continuing.
-2. Open **Settings → Import & export**. Choose **Everything**, export, and save as `Before-build67.json` in Files. Keep a second copy on your computer. This does not back up pairing files, helper secrets, app lock, or every device-only setting.
+2. Open **Settings → Import & export**. Choose **Everything**, export, and save as `Before-build68.json` in Files. Keep a second copy on your computer. This does not back up pairing files, helper secrets, app lock, or every device-only setting.
 3. Write down your current theme, surface, icon, units, and the names/counts of your saved routes and favorites. Preserve any original pairing/helper setup files separately and privately.
-4. On the computer, locate **Elsepin 2.6.1 build 67.ipa** in Downloads. Do not accidentally install build 64, 65 or 66. The accompanying build receipt records the unsigned/ad-hoc artifact hash; your sideloader changes the signed file.
+4. On the computer, locate **Elsepin 2.6.1 build 68.ipa** in Downloads. Do not accidentally install an older build. The accompanying build receipt records the unsigned/ad-hoc artifact hash; your sideloader changes the signed file.
 5. Install/update using the same sideloader, app identity and signing setup used for build 65. Keep the Live Activity/widget extension when signing. Do not uninstall the old app just to test this update.
-6. Open Elsepin. Open **Settings → About Elsepin** and verify **2.6.1 (67)**. If it shows another build, stop and install the correct IPA.
+6. Open Elsepin. Open **Settings → About Elsepin** and verify **2.6.1 (68)**. If it shows another build, stop and install the correct IPA.
 7. Check that your saved places/routes and pairing are still present. An update should keep existing preferences; Bloom/Solid are fresh-install defaults, not a forced replacement of your chosen theme.
 8. Return to Settings. Reveal **Find a setting** by scrolling at the top; search `diagnostics` and open the result. Confirm the search area does not overlap the larger appearance card.
-9. Turn on **Record developer log**. Open **Log tools → Something went wrong**, leave note `Build 67 test started`, and save. This is a deliberate test marker, not a real failure.
+9. Turn on **Record developer log**. Open **Log tools → Something went wrong**, leave note `Build 68 test started`, and save. This is a deliberate test marker, not a real failure.
 10. Open **Session timeline** and confirm the marked time/note appears. Keep detailed recording on through the tests. Its exports contain exact locations; do not post them publicly.
 
 ## 2. Connection and on-device pairing
@@ -114,7 +114,7 @@ Write `PASS`, `FAIL`, or `BLOCKED` beside each step. `BLOCKED` means a prerequis
 86. Turn **Airplane Mode** on in iPhone Settings, checking that Wi-Fi is actually off too. Return to Elsepin; record the loss/staleness and any warning. It must not claim a fresh successful check while offline.
 87. Turn Airplane Mode off, restore Wi-Fi and LocalDevVPN, and retry/clear as instructed by the app. Confirm Stop is reachable throughout recovery.
 88. Start TEST ROUTE once more. Mark **About to force-close Elsepin**, allow a moment for the marker to save, then swipe Elsepin away from the app switcher. Reopen it.
-89. Expect an interrupted/unconfirmed state, not an assertion that closing the app cleared the simulated location. Reconnect. Use **Trip recovery → Resume trip** if a checkpoint is available, then test a new route marker. Record whether progress/stops were preserved.
+89. Expect the saved route position, then one automatic reconnect attempt for a recently running trip when Wi-Fi and pairing are available. Paused/legacy trips wait for **Trip recovery → Resume trip**. Only an accepted location permits playback; if reconnect fails, use manual Retry and Continue. Record progress/stops, then test a new route marker. Closing the app alone is not proof that the device cleared simulation.
 90. If no recoverable checkpoint exists, mark that result and use **Try clearing previous location** before beginning a new session. Do not loop the same failing recovery action.
 91. In Diagnostics, mark **Something went wrong** with note `Recovery test result`, including the approximate earlier event time if it actually failed. A marker made after reopening records that later time; its export is not a crash stack trace.
 
@@ -154,7 +154,7 @@ Write `PASS`, `FAIL`, or `BLOCKED` beside each step. `BLOCKED` means a prerequis
 
 ## 11. Backup compatibility and selective imports
 
-117. Stop any active session. In **Import & export**, export **Everything** as `Build67-before-import.json`, then export **Settings** and **Saved routes & areas** separately. Confirm Everything is the initial export choice and saved places are included in the library export.
+117. Stop any active session. In **Import & export**, export **Everything** as `Build68-before-import.json`, then export **Settings** and **Saved routes & areas** separately. Confirm Everything is the initial export choice and saved places are included in the library export.
 118. Choose the supplied **Shift-Routes-Areas-Test.json** from the test pack. In the review, expect two routes, two saved places and two areas available only if their identities are not already stored.
 119. Check only **REVIEW TEST - South loop** and **REVIEW TEST - North area**; uncheck the other items. Confirm **Import selected changes**. Find only the selected additions. Settings must stay unchanged.
 120. Import that same file again. Already-present items should not be duplicated. Select the remaining four additions and confirm. Their folder is **Shift review test**.
@@ -169,7 +169,7 @@ Write `PASS`, `FAIL`, or `BLOCKED` beside each step. `BLOCKED` means a prerequis
 129. Cancel Files selection, reopen it, choose a file downloaded locally, and repeat once from your Files cloud provider if available. A provider may need to download the file first; the app should recover from a canceled read.
 130. Start a held session. Review a library-only backup; applying new library entries should be allowed without changing movement. Try applying changed settings: the app must require stopping, or let you uncheck settings. Cancel, then Stop.
 131. Choose **Elsepin-Area-Conflict-Test.json** after importing the North area in step 119. Its different ID has the same outline. Expect an overlap explanation and the ability to deselect it; no duplicate overlapping area should be saved.
-132. Restore desired settings from `Build67-before-import.json` using only selected settings. Reopen the app and verify persistence. Keep all backups until the whole test is complete.
+132. Restore desired settings from `Build68-before-import.json` using only selected settings. Reopen the app and verify persistence. Keep all backups until the whole test is complete.
 
 ## 12. Live Activities, notifications, and widgets
 
@@ -270,26 +270,48 @@ Write `PASS`, `FAIL`, or `BLOCKED` beside each step. `BLOCKED` means a prerequis
 212. Compare a dark theme and Porcelain/light, then a large accessibility text size. Expect readable text and reachable Cancel. Restore your preferred appearance afterward.
 213. With VoiceOver, inspect loading feedback: expect the status once, without an extra “searching image” announcement. Cancel should remain a separate action. Restore your preferred accessibility settings.
 
-## 18. Finish cleanly and preserve evidence
+## 18. Route-card size, backgrounding and closing Elsepin
 
-214. Pause all Nearby rules you do not intend to keep. Disable unwanted Windows/cloud checks. Stop the Windows helper if unused. A free Render web service may sleep, lose local state, hit quotas or restart; a ping does not make it guaranteed 24/7.
-215. If using an uptime service, configure only an unauthenticated GET to your helper's `/healthz`; never send provider credentials or helper keys. This tests reachability only and can consume the host's included usage. You do not need a ping for the separate static marketing website.
-216. In Elsepin tap Stop and wait for the clear request's result. Verify your real location independently after the other app refreshes. Keep an unsuccessful-clear warning as a failure until resolved.
-217. Export the full developer log and any relevant incident files. Save this checklist with PASS/FAIL/BLOCKED marks, build number, device/iOS version, sideloader/extension configuration, test times and non-secret failure descriptions.
-218. Turn detailed developer recording off when testing ends. Exported files are yours to delete; automatic log retention does not delete your exported copies.
-219. Restore desired appearance, units, shortcuts, privacy and reminder settings. Delete only disposable test library items. Keep the pre-test backup and any private setup files securely.
-220. Decide readiness from actual results: route drag/jump/retry/Stop, data compatibility and core navigation must pass. Provider login, push receipt and background reliability remain explicitly unverified wherever BLOCKED. Do not publish merely because the build passed.
+214. With Wi-Fi and LocalDevVPN connected, preview a short saved test route and manually tap Start. Wait for an accepted update and visible progress before continuing.
+215. In the bottom route card, tap the small collapse chevron. Expect route name/state, progress, remaining distance, Pause/Resume and Stop to remain; speed, ETA and next-stop detail should hide.
+216. Pan/zoom the map, then pause and resume the route using the compact card. Expect the card size to stay compact and Stop to remain reachable. The map must not jump merely because the card changed size.
+217. Expand it. Expect the same route/progress with speed and ETA restored. Collapse again, stop the route using its existing control, and manually start a new route. The new route should open expanded.
+218. Test the collapse button with VoiceOver and Reduce Motion if you use them. Expect an Expand/Collapse route details label, reachable controls and no collapse animation with Reduce Motion or Low Power. Restore your preferred settings.
+219. While a route runs, go Home normally without swiping Elsepin away. Wait 15 seconds and return. Ordinary backgrounding must not intentionally end the session or clear the route. Record movement/status; background execution still depends on iOS.
+220. Go Home again, disable Wi-Fi, then return. Record whether the existing connection continues or becomes unverified. Both depend on the connection; a forced app-closure notice should not appear just because Wi-Fi changed. Restore Wi-Fi and LocalDevVPN before any new connection attempt.
+221. Tap Stop spoofing and wait for a successful clear. If it fails, restore connectivity and try clearing; do not continue this section while the location state is unresolved.
+222. Manually start the short test route again. Record the current time, last accepted location and progress. Take a screenshot of the route card.
+223. Open the app switcher and swipe Elsepin away. This deliberately ends the app process. Observe what other apps show; a final clear or activity removal is not guaranteed. Leave Wi-Fi and LocalDevVPN available for the next step.
+224. Reopen and unlock Elsepin. Expect the saved route/point and one Reconnecting route attempt, then movement only after the saved point is accepted. Progress can be slightly behind the last screen, but must not jump ahead by time spent closed. No stale Stop spoofing label should appear before confirmation; Cancel reconnect is available during connection.
+225. After recovery works, Pause the route and let its checkpoint save. Swipe Elsepin away, disable Wi-Fi, then reopen. Expect the route at the saved point, paused, with no automatic movement or reconnect. Restored progress is not proof of current-device location.
+226. Restore Wi-Fi and LocalDevVPN, open Resume route and explicitly Resume. Expect the saved point to be accepted before movement. Stop spoofing and wait for successful clear. Swipe away and reopen: that explicitly stopped route must not return or reconnect.
+227. Start a short test route again and let a checkpoint save. Swipe away, disable LocalDevVPN, leave Wi-Fi on, then reopen. Expect one attempted reconnect and a genuine connection error if the tunnel cannot work; no false active status and no repeated automatic retries. Keep the saved route visible.
+228. Turn LocalDevVPN on. Use Retry connection, then Continue/Resume only when confirmation is current. Expect the same saved route and no movement before that manual continuation. Stop spoofing and wait for a successful clear.
+229. Repeat with a running checkpoint, but Wi-Fi off before reopening. Expect the saved route waiting for Wi-Fi, with Cancel recovery. Restore Wi-Fi with LocalDevVPN on while the app is unlocked: expect one attempt. Alternatively cancel recovery first and confirm it never starts when Wi-Fi returns.
 
-## 19. Destructive reset tests — disposable install only
+230. Confirm your saved library, appearance and normal location previews still work. Turn Remember interrupted trips off on a disposable test route, close and reopen, and confirm no automatic route recovery. Restore your preference afterward.
+231. Export an incident for any failure with the step/time. A missing termination callback is not proof of a crash or successful clear. Test old checkpoints manually if available; they must not gain automatic permission merely by installing this update.
 
-These are included so reset behavior has a test path. Do **not** run them on your only real library or pairing. Your JSON backup does not include every credential/device-only setting. If you cannot restore a separate test installation, mark 221–226 BLOCKED.
+## 19. Finish cleanly and preserve evidence
 
-221. In an idle disposable install with only test data, open **Advanced & experimental → Restore default settings…**. Review and Cancel first; nothing should change.
-222. Repeat and confirm. Expect Bloom/Solid, compact rounded presentation and starting settings; saved library and connection setup should remain. Reopen the app to confirm persistence.
-223. Open **Wipe everything…**, inspect the available keep-setup/full-wipe choices, and cancel each review first. An active session or pending command should prevent the wipe.
-224. After verified backups, use the option retaining pairing/setup on the disposable install. Confirm test library/history/log/recovery data is cleared and retained setup still works. Import your test library again to prove recovery.
-225. Only when you can re-pair, use the full wipe on the disposable install. Expect fresh setup, no saved library, no helper credentials, no retained developer log, and fresh appearance defaults. Repeat the initial connection setup before moving again.
-226. If a reset reports partial failure, record exactly which steps finished; do not claim the reset was atomic. Keep real data out of this test.
+232. Pause all Nearby rules you do not intend to keep. Disable unwanted Windows/cloud checks. Stop the Windows helper if unused. A free Render web service may sleep, lose local state, hit quotas or restart; a ping does not make it guaranteed 24/7.
+233. If using an uptime service, configure only an unauthenticated GET to your helper's `/healthz`; never send provider credentials or helper keys. This tests reachability only and can consume the host's included usage. You do not need a ping for the separate static marketing website.
+234. In Elsepin tap Stop and wait for the clear request's result. Verify your real location independently after the other app refreshes. Keep an unsuccessful-clear warning as a failure until resolved.
+235. Export the full developer log and any relevant incident files. Save this checklist with PASS/FAIL/BLOCKED marks, build number, device/iOS version, sideloader/extension configuration, test times and non-secret failure descriptions.
+236. Turn detailed developer recording off when testing ends. Exported files are yours to delete; automatic log retention does not delete your exported copies.
+237. Restore desired appearance, units, shortcuts, privacy and reminder settings. Delete only disposable test library items. Keep the pre-test backup and any private setup files securely.
+238. Decide readiness from actual results: route drag/jump/retry/Stop, data compatibility and core navigation must pass. Provider login, push receipt and background reliability remain explicitly unverified wherever BLOCKED. Do not publish merely because the build passed.
+
+## 20. Destructive reset tests — disposable install only
+
+These are included so reset behavior has a test path. Do **not** run them on your only real library or pairing. Your JSON backup does not include every credential/device-only setting. If you cannot restore a separate test installation, mark 239–244 BLOCKED.
+
+239. In an idle disposable install with only test data, open **Advanced & experimental → Restore default settings…**. Review and Cancel first; nothing should change.
+240. Repeat and confirm. Expect Bloom/Solid, compact rounded presentation and starting settings; saved library and connection setup should remain. Reopen the app to confirm persistence.
+241. Open **Wipe everything…**, inspect the available keep-setup/full-wipe choices, and cancel each review first. An active session or pending command should prevent the wipe.
+242. After verified backups, use the option retaining pairing/setup on the disposable install. Confirm test library/history/log/recovery data is cleared and retained setup still works. Import your test library again to prove recovery.
+243. Only when you can re-pair, use the full wipe on the disposable install. Expect fresh setup, no saved library, no helper credentials, no retained developer log, and fresh appearance defaults. Repeat the initial connection setup before moving again.
+244. If a reset reports partial failure, record exactly which steps finished; do not claim the reset was atomic. Keep real data out of this test.
 
 ## Evidence and references
 

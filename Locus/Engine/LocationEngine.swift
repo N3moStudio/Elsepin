@@ -57,6 +57,7 @@ enum LocationEngineError: LocalizedError {
         case 10: return .simulationCreate
         case 11: return .locationSet
         case 12: return .locationClear
+        case 13: return .notActive
         default: return .locationSet
         }
     }
@@ -86,6 +87,7 @@ enum LocationEngine {
     private static let simulationCreate: Int32 = 10
     private static let locationSet: Int32 = 11
     private static let locationClear: Int32 = 12
+    private static let terminating: Int32 = 13
 
     private static func logError(_ error: UnsafeMutablePointer<IdeviceFfiError>, stage: String) {
         DeveloperLogStore.shared.record("engine_error", ["stage": stage,
@@ -180,6 +182,10 @@ enum LocationEngine {
     static func clear(pairingPath: String, deviceIP: String) async -> Result<Void, LocationEngineError> {
         await withCheckedContinuation { continuation in
             queue.async {
+                guard SessionLifetime.shared.acceptsCommands else {
+                    continuation.resume(returning: .failure(.notActive))
+                    return
+                }
                 // Reopen the service after a failure so Stop can still clear a
                 // simulation. Clearing must not set a new coordinate first.
                 let connectionCode = connectLocked(pairingPath: pairingPath, deviceIP: deviceIP)
@@ -187,6 +193,23 @@ enum LocationEngine {
                 let result: Result<Void, LocationEngineError> = code == ok ? .success(()) : .failure(.from(code: code))
                 continuation.resume(returning: result)
             }
+        }
+    }
+
+    /// Best effort only: no fresh connection, main-thread wait or force-kill guarantee.
+    /// Closing the gate immediately prevents queued writes from reopening simulation.
+    static func prepareForTermination() {
+        guard SessionLifetime.shared.beginTermination() else { return }
+        queue.async {
+            guard locationSimulation != nil else {
+                DeveloperLogStore.shared.record("termination_clear_unavailable", ["reason": "no_live_handle"])
+                DeveloperLogStore.shared.maintenance(flush: true)
+                return
+            }
+            let code = clearLocked()
+            if code == ok { SessionLifetime.shared.locationCleared() }
+            DeveloperLogStore.shared.record("termination_clear_result", ["result": code == ok ? "accepted" : "failed"])
+            DeveloperLogStore.shared.maintenance(flush: true)
         }
     }
 
@@ -210,8 +233,11 @@ enum LocationEngine {
     }
 
     private static func setLocked(latitude: Double, longitude: Double, pairingPath: String, deviceIP: String) -> Int32 {
+        guard SessionLifetime.shared.acceptsCommands else { return terminating }
         let code = connectLocked(pairingPath: pairingPath, deviceIP: deviceIP)
         guard code == ok, let locationSimulation else { return code == ok ? simulationCreate : code }
+        // A termination request can arrive while opening the connection.
+        guard SessionLifetime.shared.acceptsCommands else { return terminating }
         if let err = location_simulation_set(locationSimulation, latitude, longitude) {
             logError(err, stage: "set")
             idevice_error_free(err)
