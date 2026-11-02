@@ -25,7 +25,9 @@ See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all re
   clear alone, or proof no location was sent, clears the legacy unfinished marker.
 - Preserve compatibility IDs, backup formats, themes and bundled helper exports.
   Build 67 is retained. No public release, deployment or public asset changes.
-- Local and native results are recorded in CURRENT-WORK after validation.
+- 461 local Swift tests and source/resource checks passed. Native run 41526208045
+  failed twice to acquire a hosted runner before any steps ran; no build 68 IPA.
+  See CURRENT-WORK for the retained failure evidence.
 
 ## 2.6.1 (67) — native request progress — unpublished
 

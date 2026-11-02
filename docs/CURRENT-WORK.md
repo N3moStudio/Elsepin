@@ -25,12 +25,32 @@ Updated 2 November 2026. Read AGENTS.md, inspect Git status, preserve newer work
 - Local validation: 461 Swift tests passed (14 new lifecycle/recovery tests), edited
   Swift 5 source parsing, appearance/identity/helper archive checks and whitespace.
   Both controlled command-gate/foreground mutations failed as intended; restored
-  originals then passed. Native compilation/package verification is pending.
+  originals then passed. Native compilation/package verification is blocked as recorded below.
 
 The user's 2 November clarification explicitly authorizes automatic restoration and
 resumption of the previously running route. It supersedes the earlier no-auto-resume
 interpretation. Private push/build 68 is authorized; publication/deployment is not.
 See [lifecycle design](SESSION-CLOSURE.md) and the updated 244-step owner walkthrough.
+
+Native build 68 is **blocked by hosted-runner allocation**, not a diagnosed
+compiler failure. [Run 41526208045](https://github.com/N3moStudio/Elsepin/actions/runs/41526208045)
+at `3c53deefbd8cbd44fd081bf64bbecc58bfb1ea8b` failed on attempts 1 and 2 with
+“The job was not acquired by Runner of type hosted even after multiple attempts”.
+No build/test steps ran; no build 68 IPA, native test result or artifact checksum
+exists. The source remains pushed privately. Local validation passed **461 Swift
+tests**, Swift 5 parsing and identity/appearance/helper archive checks. Both
+controlled mutations failed as expected before restoration. Keep these local checks
+separate from native validation. Both downloaded log ZIPs are empty because no steps ran; API annotations provide
+the failure evidence. Those archives and API records are in
+`.build/artifacts/41526208045/` with a blocked receipt. Retry the existing workflow
+when a runner is available; do not downgrade the SDK or enable a paid runner blindly.
+
+The 244-step walkthrough, fixtures and helper ZIPs are in Downloads as
+`Elsepin build 68 - Test Guide`; its receipt explicitly says no IPA is available.
+Build 67 remains the last verified artifact, unchanged at SHA-256
+`5b68513fc20b76d29690e8056ac2a5b40c6fd4836b0df14fe563cd87c6cfe741`.
+Public release stays 2.6.0. The 2.6.1 draft remains unpublished with zero assets.
+Physical recovery/collapse/gesture/provider acceptance remains pending.
 
 ## 2.6.1 (67) — native request progress — unpublished
 

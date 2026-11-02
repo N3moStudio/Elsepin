@@ -64,7 +64,10 @@ by automated checks.
 
 ## Primary platform references
 
-- [Apple: applicationWillTerminate](https://developer.apple.com/documentation/uikit/uiapplicationdelegate/applicationwillterminate(_:)) — optional callback and finite cleanup time.
+- [Apple: applicationWillTerminate](https://developer.apple.com/documentation/uikit/uiapplicationdelegate/applicationwillterminate%28_%3A%29) — optional callback and finite cleanup time.
 - [Apple: background execution time](https://developer.apple.com/documentation/uikit/extending-your-app-s-background-execution-time) — suspension and limited background tasks.
 
 Read 2 November 2026. Neither guarantees clearing this private simulation service.
+
+Build 68 native validation is blocked: both runner attempts failed before any steps
+ran. No new IPA exists. 461 portable tests pass; see CURRENT-WORK for evidence.

@@ -1,10 +1,43 @@
 # Elsepin build history
 
-Updated **1 November 2026**, America/Los_Angeles. Read the [full changelog](../CHANGELOG.md)
+Updated **2 November 2026**, America/Los_Angeles. Read the [full changelog](../CHANGELOG.md)
 for feature details. This page separates compilation, test artifacts and published
 releases so a successful check is not mistaken for an available download.
 
-## Latest native validation and private delivery: 2.6.1 (66) — 1 November 2026
+## Build 68 — runner allocation failed — 2 November 2026
+
+Native build 68 is **blocked by hosted-runner allocation**, not a diagnosed
+compiler failure. [Run 41526208045](https://github.com/N3moStudio/Elsepin/actions/runs/41526208045)
+at `3c53deefbd8cbd44fd081bf64bbecc58bfb1ea8b` failed on attempts 1 and 2 with
+“The job was not acquired by Runner of type hosted even after multiple attempts”.
+No build/test steps ran; no build 68 IPA, native test result or artifact checksum
+exists. The source remains pushed privately. Local validation passed **461 Swift
+tests**, Swift 5 parsing and identity/appearance/helper archive checks. Both
+controlled mutations failed as expected before restoration. Keep these local checks
+separate from native validation. Both downloaded log ZIPs are empty because no steps ran; API annotations provide
+the failure evidence. Those archives and API records are in
+`.build/artifacts/41526208045/` with a blocked receipt. Retry the existing workflow
+when a runner is available; do not downgrade the SDK or enable a paid runner blindly.
+
+The 244-step walkthrough, fixtures and helper ZIPs are in Downloads as
+`Elsepin build 68 - Test Guide`; its receipt explicitly says no IPA is available.
+Build 67 remains the last verified artifact, unchanged at SHA-256
+`5b68513fc20b76d29690e8056ac2a5b40c6fd4836b0df14fe563cd87c6cfe741`.
+Public release stays 2.6.0. The 2.6.1 draft remains unpublished with zero assets.
+Physical recovery/collapse/gesture/provider acceptance remains pending.
+
+## Last successful native build: 2.6.1 (67) — 2 November 2026
+
+[Run 41518500417](https://github.com/N3moStudio/Elsepin/actions/runs/41518500417)
+passed at `776d1915f742874e3e1ef4a968d7769ca6ddadf5`: 586 tests (447 Swift,
+104 cloud, 19 Companion, 16 packaging/icon), native app/extension compilation and
+IPA validation, zero compiler warnings/errors. SDK 27.1, both bundles 2.6.1 (67).
+Downloads IPA is 18,512,366 bytes, SHA-256
+`5b68513fc20b76d29690e8056ac2a5b40c6fd4836b0df14fe563cd87c6cfe741`.
+The 226-step build 67 guide and older IPAs are retained. This does not validate
+build 68 changes or physical-phone behavior.
+
+## Earlier native validation and private delivery: 2.6.1 (66) — 1 November 2026
 
 [Native run 41396515177](https://github.com/N3moStudio/Elsepin/actions/runs/41396515177)
 passed at source `7bdf1a5f8051ccc94d38420fb45ee3d24236c6d9`: **582 tests**
