@@ -25,9 +25,11 @@ See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all re
   clear alone, or proof no location was sent, clears the legacy unfinished marker.
 - Preserve compatibility IDs, backup formats, themes and bundled helper exports.
   Build 67 is retained. No public release, deployment or public asset changes.
-- 461 local Swift tests and source/resource checks passed. Native run 41526208045
-  failed twice to acquire a hosted runner before any steps ran; no build 68 IPA.
-  See CURRENT-WORK for the retained failure evidence.
+- Native run 41526208045, attempt 3, passed all 600 tests (461 Swift, 104 cloud,
+  19 Companion, 16 packaging/icon), app/extension compilation and IPA verification,
+  with zero compiler warnings/errors. The private build 68 IPA is hash-verified in
+  Downloads. Earlier runner-allocation failures remain recorded in CURRENT-WORK.
+  Physical-phone acceptance remains pending; the release stays unpublished.
 
 ## 2.6.1 (67) — native request progress — unpublished
 

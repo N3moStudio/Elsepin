@@ -79,8 +79,9 @@ IPA validator checks the compiled bundle IDs and URL scheme.
 
 ## Official versus prerelease builds
 
-The current source is Elsepin 2.6.1 (68), awaiting native validation after hosted-runner allocation failures. Creating an IPA
-artifact does not publish a release or declare it stable. Verify both target
+The current source is Elsepin 2.6.1 (68), privately built and verified for owner testing.
+See [build history](BUILD-HISTORY.md) for native results and the artifact checksum.
+Creating an IPA artifact does not publish a release or declare it stable. Verify both target
 versions and the resolved `ShiftReleaseChannel` metadata before distribution;
 that internal compatibility key intentionally retains its old name.
 

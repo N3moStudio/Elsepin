@@ -69,5 +69,8 @@ by automated checks.
 
 Read 2 November 2026. Neither guarantees clearing this private simulation service.
 
-Build 68 native validation is blocked: both runner attempts failed before any steps
-ran. No new IPA exists. 461 portable tests pass; see CURRENT-WORK for evidence.
+Build 68 native validation passed on attempt 3: 600 tests (461 Swift, 104 cloud,
+19 Companion, 16 packaging/icon), app/extension compilation and IPA verification,
+with zero compiler warnings/errors. The private IPA is hash-verified in Downloads.
+Earlier runner-allocation failures and full logs remain recorded in
+[CURRENT-WORK](CURRENT-WORK.md). Physical-phone acceptance is still pending.

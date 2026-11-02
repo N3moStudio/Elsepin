@@ -25,29 +25,33 @@ Updated 2 November 2026. Read AGENTS.md, inspect Git status, preserve newer work
 - Local validation: 461 Swift tests passed (14 new lifecycle/recovery tests), edited
   Swift 5 source parsing, appearance/identity/helper archive checks and whitespace.
   Both controlled command-gate/foreground mutations failed as intended; restored
-  originals then passed. Native compilation/package verification is blocked as recorded below.
+  originals then passed. Native compilation/package verification also passed, as recorded below.
 
 The user's 2 November clarification explicitly authorizes automatic restoration and
 resumption of the previously running route. It supersedes the earlier no-auto-resume
 interpretation. Private push/build 68 is authorized; publication/deployment is not.
 See [lifecycle design](SESSION-CLOSURE.md) and the updated 244-step owner walkthrough.
 
-Native build 68 is **blocked by hosted-runner allocation**, not a diagnosed
-compiler failure. [Run 41526208045](https://github.com/N3moStudio/Elsepin/actions/runs/41526208045)
-at `3c53deefbd8cbd44fd081bf64bbecc58bfb1ea8b` failed on attempts 1 and 2 with
-“The job was not acquired by Runner of type hosted even after multiple attempts”.
-No build/test steps ran; no build 68 IPA, native test result or artifact checksum
-exists. The source remains pushed privately. Local validation passed **461 Swift
-tests**, Swift 5 parsing and identity/appearance/helper archive checks. Both
-controlled mutations failed as expected before restoration. Keep these local checks
-separate from native validation. Both downloaded log ZIPs are empty because no steps ran; API annotations provide
-the failure evidence. Those archives and API records are in
-`.build/artifacts/41526208045/` with a blocked receipt. Retry the existing workflow
-when a runner is available; do not downgrade the SDK or enable a paid runner blindly.
+Native build 68 **passed** on attempt 3 of
+[run 41526208045](https://github.com/N3moStudio/Elsepin/actions/runs/41526208045),
+at source `3c53deefbd8cbd44fd081bf64bbecc58bfb1ea8b`. All **600 tests** passed
+(461 Swift, 104 cloud, 19 Companion, 16 packaging/icon). Native app and Live Activity
+extension compilation passed with **zero compiler warnings/errors**. Both bundles
+are 2.6.1 (68), linked against SDK 27.1; compatibility IDs, thirteen icons, resources,
+bundled helpers and ZIP integrity were verified against the downloaded artifact.
 
-The 244-step walkthrough, fixtures and helper ZIPs are in Downloads as
-`Elsepin build 68 - Test Guide`; its receipt explicitly says no IPA is available.
-Build 67 remains the last verified artifact, unchanged at SHA-256
+The SHA-256-verified private IPA is at
+`C:/Users/naith/Downloads/Elsepin 2.6.1 build 68.ipa` (18,538,590 bytes):
+`31dece8b203564bb50d838fb2d842a3e5ba5c578a73d11e716ebe46e55f4c65c`.
+Full original workflow logs, test results and the successful receipt are retained in
+`.build/artifacts/41526208045/`. Attempts 1 and 2 failed to acquire a hosted runner
+before any build steps executed. Their API annotations, empty log archives and
+`receipt-blocked-attempt2.json` remain as historical evidence. Attempt 3 followed a
+backoff and reused the same source/run; no runner-label or infrastructure changes.
+
+The refreshed 244-step walkthrough, fixtures, helper ZIPs and successful receipt
+are in Downloads as `Elsepin build 68 - Test Guide` and its ZIP. Build 67 remains
+unchanged at SHA-256
 `5b68513fc20b76d29690e8056ac2a5b40c6fd4836b0df14fe563cd87c6cfe741`.
 Public release stays 2.6.0. The 2.6.1 draft remains unpublished with zero assets.
 Physical recovery/collapse/gesture/provider acceptance remains pending.
