@@ -7,6 +7,34 @@ The work below is **unreleased 2.6.1**, private builds 60–66; not an announcem
 that the public release includes it. See [changelog](../CHANGELOG.md) and
 [build history](BUILD-HISTORY.md) for individual build evidence.
 
+## Build 67 — native progress and focused cleanup
+
+Three existing search/connection indicators now use small native Thinking Orbs,
+with static feedback for Reduce Motion, Low Power and inactive/disappeared views.
+Text, cancellation, errors and movement controls remain unchanged. The reviewed
+MIT dependency is pinned; 264 unused production Swift lines were removed in a
+separate commit with existing tests retained. No new AI service or permission.
+
+[Native run 41518500417](https://github.com/N3moStudio/Elsepin/actions/runs/41518500417)
+passed at source `776d1915f742874e3e1ef4a968d7769ca6ddadf5`: **586 tests**
+(447 Swift, 104 cloud, 19 Companion, 16 packaging/icon), native app/extension
+compilation and IPA validation, with **zero compiler warnings/errors**. The
+resolved dependency revision and bundled MIT notice were checked. Separately,
+the unchanged native orb geometry passed 72 upstream golden cases / 70,115 values.
+
+Downloads: `Elsepin 2.6.1 build 67.ipa`, 18,512,366 bytes; SHA-256
+`5b68513fc20b76d29690e8056ac2a5b40c6fd4836b0df14fe563cd87c6cfe741`.
+GitHub digest, ZIP CRC, app/extension 2.6.1 (67), SDK 27.1, compatibility IDs,
+thirteen icons and bundled helper/resources passed. Build 66's hash is unchanged.
+Logs/receipt: `.build/artifacts/41518500417/`. Public release remains 2.6.0;
+the 2.6.1 release is still an unpublished draft with no assets. No deployment.
+
+Phone layout, VoiceOver, interrupted requests, route-crash outcome and energy
+remain owner acceptance checks. Visuals are code-based mockups, not runtime
+screenshots; geometry is from the pinned native code. See the 226-step walkthrough
+and the build 67 visual-preview folder in Downloads. No Library upload tool was
+available in this local task; exact artifact paths are retained for the coordinator.
+
 ## Appearance and Settings
 - Retire Abyss; retain eight themes and all thirteen icons. Bloom becomes the
   fresh-install/reset default; old Abyss selections and backups migrate to Bloom.

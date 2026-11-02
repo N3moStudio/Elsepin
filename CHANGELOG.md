@@ -17,8 +17,9 @@ is the official release. Earlier Shift entries retain their original names and r
   retain its notice. No web bridge, AI service, new permissions or polling.
 - Include the separately reviewed removal of 264 unused production Swift lines.
   Existing tests were retained; four motion-policy regression tests were added.
-- Native verification and private IPA delivery are pending the build below.
-  No public release or website deployment is authorized by this work.
+- Native run 41518500417 passed 586 tests, app/extension compilation and IPA
+  validation with zero compiler warnings/errors. Build 67 is verified in Downloads.
+  No public release or website deployment.
 
 ## Local cleanup after build 66 — 2 November 2026 — not built or published
 
