@@ -22,8 +22,16 @@ See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all re
   viewport and slows optional camera updates during thermal pressure.
 - Review preserved actual wait duration, interruption wakeups, movement cadence,
   Stop, privacy, compatibility, themes, icons and recovery timing.
-- Local checks passed; native run was blocked by GitHub account billing before
-  execution. No new IPA or release. See BUILD-HISTORY and CURRENT-WORK for next steps.
+- Add a manual personal Codemagic M2/Xcode 27.1 build alternative after GitHub's
+  account quota blocked the native runner. Preserve every test and original log;
+  verify stderr/failure-status capture with an intentional exit-23 check.
+- Fix the library-only backup fixture without weakening production validation,
+  make its unrelated incident-test teardown Sendable-safe, and convert the
+  MapKit fallback error code to the Int required by NSError.
+- Codemagic run `6aec1824004ce28f20ee09d4` at `8b155ec` passed the native app and
+  extension build with zero compiler warnings/errors. All 609 distinct tests
+  passed across the Mac and the Windows-specific helper check. Verified build 69
+  is in Downloads; full evidence is in BUILD-HISTORY. No release or deployment.
 
 ## 2.6.1 (68) — compact route card and automatic trip recovery — private test build
 

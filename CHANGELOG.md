@@ -1,6 +1,6 @@
 # Elsepin changelog
 
-Updated through **2 November 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
+Updated through **4 November 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
 is the official release. Earlier Shift entries retain their original names and release status.
 
 [App introduction](README.md) · [Build history](docs/BUILD-HISTORY.md) · [Detailed Change Ledger](docs/CHANGE-LEDGER.md)
@@ -16,7 +16,12 @@ is the official release. Earlier Shift entries retain their original names and r
 - Ask before using a walking path when a cycling/e-bike route is unavailable.
 - Reduce stop-wait wakeups and throttle camera following during thermal pressure without slowing simulated travel or changing connection checks.
 - Preserve legacy backup import, saved pin favorites, routes, areas, themes, icons, manual movement and recovery safeguards.
-- Private validation in progress. No release or deployment.
+- Add a manual private Codemagic Mac build alternative, preserving tests, complete logs and failure status; no automatic release or paid subscription.
+- Correct the library-only backup test fixture, remove a test cleanup concurrency warning, and fix the native MapKit fallback error-code conversion.
+- Native app/extension compilation and IPA validation passed in Codemagic at
+  `8b155ec`, with zero compiler warnings/errors and 609 distinct tests passed
+  across Mac and Windows checks. Build 69 is privately delivered in Downloads.
+  Device acceptance is pending; no release or deployment.
 
 ## 2.6.1 (68) — compact route card and automatic trip recovery — private test build
 

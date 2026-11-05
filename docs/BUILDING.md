@@ -102,7 +102,9 @@ IPA validator checks the compiled bundle IDs and URL scheme.
 
 ## Official versus prerelease builds
 
-The current source is Elsepin 2.6.1 (68), privately built and verified for owner testing.
+The latest validated development source is Elsepin 2.6.1 (69) on
+`codex/pins-search-69`, privately built in Codemagic for owner testing. `main`
+still contains build 68; select the branch intentionally.
 See [build history](BUILD-HISTORY.md) for native results and the artifact checksum.
 Creating an IPA artifact does not publish a release or declare it stable. Verify both target
 versions and the resolved `ShiftReleaseChannel` metadata before distribution;
@@ -114,4 +116,4 @@ is a separate action, after device acceptance, in `Elsepin-Releases`.
 
 ThinkingOrbsKit is pinned in `project.yml` and linked only to the app target.
 Xcode resolves it during the existing native build; the portable Swift package
-does not import SwiftUI or this dependency. No new CI hook or external service.
+does not import SwiftUI or this dependency. The dependency adds no CI hook or runtime service.

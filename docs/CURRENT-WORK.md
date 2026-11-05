@@ -2,7 +2,29 @@
 
 Updated 4 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
 
-## 2.6.1 (69) — Pins, Favorites, search and energy — in validation
+## 2.6.1 (69) — Pins, Favorites, search and energy — private test build
+
+**Native validation and delivery completed 4 November.** The alternative personal
+Codemagic workflow passed at `8b155ece426f557cb81725e4a19b9b66d6629087`:
+[successful run](https://codemagic.io/app/6aec13aad70bff100bb5b859/build/6aec1824004ce28f20ee09d4).
+All 609 distinct tests passed: 470 Swift, 104 cloud, 16 packaging and 19 Companion.
+The Mac skips the Windows account-protection test; that test passed separately
+on this Windows PC. App and Live Activity extension compiled with zero warnings
+or errors under Xcode 27.1. Both bundles are 2.6.1 (69); SDK, thirteen icons,
+entitlements, helper resources and ZIP integrity passed artifact verification.
+
+Delivery: `C:/Users/naith/Downloads/Elsepin 2.6.1 build 69.ipa`. Full original logs,
+build metadata, package and receipt are in
+`.build/artifacts/codemagic-6aec1824004ce28f20ee09d4/`. The first Codemagic run caught
+an invalid library-only backup test fixture and a test cleanup concurrency warning;
+the second caught an unsigned MapKit error code passed to an Int parameter. Both
+were corrected before the successful third run. Their original failures/logs remain.
+
+Use `codex/pins-search-69` in Codemagic for this update; `main` remains at build 68.
+The committed workflow is manual-only, uses the personal M2 allowance and does
+not publish releases. No paid subscription was enabled. See [building](BUILDING.md).
+Physical pin/search/route gestures, provider behavior and energy still need device
+acceptance. No release, public asset or deployment was changed.
 
 User scope: implement locally/private validation; **do not publish a release**.
 Pins are independent of favorites. Library has Favorites (Pins and Routes), Pins,
@@ -28,16 +50,16 @@ to movement cadence or connection/verification/recovery settings; thermal camera
 throttling only; saved-pin rendering restricted to viewport. No measured battery
 or temperature reduction is claimed. No checkpoint-format migration was needed.
 
-Local checks: appearance/identity checks, helper-package integrity, 16 packaging
+Earlier GitHub attempts: appearance/identity checks, helper-package integrity, 16 packaging
 tests and whitespace checks passed. WSL is unresponsive even to `/bin/true`;
 Swift tests could not start locally. Private Mac run **41970102369** at `1d12f675`
 was rejected before any job started: GitHub reports failed account payments or a
-spending limit. This is **not** compilation/test evidence. No new IPA exists.
+spending limit. This was **not** compilation/test evidence; no IPA existed then.
 Subsequent review fixes preserve folders, correct stop countdown advancement for
 the longer wait interval, cancel abandoned native directions, and immediately
-revoke visibility of cleared route history. They still need a fresh Mac run at
-the latest branch head after the owner restores build access. Do not rerun the
-older commit or publish. Work is on **codex/pins-search-69**; main remains unchanged.
+revoke visibility of cleared route history. These changes are now included in the
+successful Codemagic build above. Do not rerun an older commit or publish.
+Work is on **codex/pins-search-69**; main remains unchanged.
 At the user's request, a fresh run **41971922423** at final app source `9d188fb3`
 was attempted again and rejected with the same account billing annotation before
 any step ran. The browser automation profile was signed out; the authenticated

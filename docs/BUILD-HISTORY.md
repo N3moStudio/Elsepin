@@ -14,18 +14,48 @@ remain. A verified empty Actions history was followed by fresh run
 or spending-limit annotation. Deleting history did not resolve the billing block.
 No new IPA or release resulted.
 
-## Build 69 — native validation blocked, 4 November 2026
+## Latest native build and private delivery: 2.6.1 (69) — 4 November 2026
+
+[Codemagic run 6aec1824004ce28f20ee09d4](https://codemagic.io/app/6aec13aad70bff100bb5b859/build/6aec1824004ce28f20ee09d4)
+passed at `8b155ece426f557cb81725e4a19b9b66d6629087` on the personal Mac mini M2
+runner, Xcode 27.1. All 609 distinct tests passed: 470 Swift, 104 cloud, 16 packaging,
+18 Companion on the Mac and the remaining Windows-only Companion test locally.
+Native app/extension compilation passed with zero compiler warnings/errors.
+Both bundles are 2.6.1 (69), linked to SDK 27.1. Compatibility identities, requested
+entitlements, thirteen icons, helper archives and ZIP integrity were verified.
+
+Delivery: `C:/Users/naith/Downloads/Elsepin 2.6.1 build 69.ipa`, 18,637,170 bytes,
+SHA-256 `d05af882430cfdfd481e3e19389728f65c31558d93eb216e16b8ef65fccbaf38`.
+Complete original logs, metadata and receipt are retained in
+`.build/artifacts/codemagic-6aec1824004ce28f20ee09d4/`. No checksum sidecar was
+added to Downloads. Previous IPAs remain. Device/provider/energy acceptance is pending.
+
+The first Codemagic run (`6aec14b4004ce28f20ee0918`, source `100d455`) correctly
+failed an invalid library-only backup test fixture and exposed a test cleanup
+Sendable warning. Source `957971b` corrected both; its second run
+(`6aec1637004ce28f20ee096b`) passed the tests but failed native compilation on a
+MapKit UInt-to-Int error-code conversion. Source `8b155ec` fixed the conversion.
+Each run's originals remain under `.build/artifacts/codemagic-<run-id>/`.
+The controlled log-capture check preserved stderr and exit 23; actual failed test
+and compiler steps also remained failed (exit 1 and 65). No failures were suppressed.
+
+The manual-only Codemagic configuration reuses the existing tests and packager;
+GitHub remains available when its account quota allows. No paid subscription,
+public release, release assets or deployments were created. Source remains on
+`codex/pins-search-69`; `main` is unchanged at `be810d7`.
+
+## Earlier build 69 GitHub attempts — blocked, 4 November 2026
 
 Private run [41970102369](https://github.com/N3moStudio/Elsepin/actions/runs/41970102369)
 for `1d12f675bfbfae72a6a94539587da79ffe9e842f` did not start any job. GitHub's
 annotation says recent account payments failed or the spending limit needs to
 be increased. No Swift tests, native build, package or IPA resulted. Subsequent
-review changes are on `codex/pins-search-69`; dispatch a **new run at its latest
-head** after the account block is resolved. Complete original run log archive
+review changes were kept on `codex/pins-search-69` and later validated in Codemagic
+as recorded above. Complete original run log archive
 and diagnostics are retained in `.build/artifacts/41970102369/`.
 
 Local appearance/identity/helper-package checks and 16 Python packaging tests
-pass. WSL startup is unresponsive, so the added Swift tests remain unexecuted.
+passed. WSL startup was unresponsive, so Swift tests could not run locally then.
 This entry does not replace the successful build 68 evidence below. No public
 release, release asset, helper deployment or website deployment was changed.
 
@@ -36,7 +66,7 @@ steps ran. Full annotation JSON and original logs are under
 `.build/artifacts/41971922423/`. Main stays at `be810d7`; select
 `codex/pins-search-69` when manually running Actions for this update.
 
-## Latest native build and private delivery: 2.6.1 (68) — 2 November 2026
+## Previous native build and private delivery: 2.6.1 (68) — 2 November 2026
 
 Native build 68 **passed** on attempt 3 of
 [run 41526208045](https://github.com/N3moStudio/Elsepin/actions/runs/41526208045),
