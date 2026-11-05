@@ -27,7 +27,7 @@ does not publish a release, configure Apple account signing or trigger on pushes
 Leave paid billing disabled to stay within the personal account's free allowance.
 
 1. Connect the private Elsepin repository in Codemagic and open its configuration.
-2. Select the intended branch and check for `codemagic.yaml`. For build 69 use
+2. Select the intended branch and check for `codemagic.yaml`. For builds 69/70 use
    `codex/pins-search-69`; `main` still contains the previous app build.
 3. Start **Build Elsepin IPA**. Download the IPA after all steps pass and sign it
    with the existing sideloading method, retaining the extension.
@@ -43,6 +43,20 @@ Leave other apps untouched; no checksum sidecars, ZIP bundles or diagnostic file
 The GitHub workflow remains available. Removing `codemagic.yaml` removes this
 alternative without changing app behavior. Account allowance and runner availability
 still apply; see [Codemagic pricing](https://docs.codemagic.io/billing/pricing/).
+
+## Current pause and alternate hosting
+
+On 5 November GitHub rejected the build-70 source push with an account suspension
+response. The owner then requested local-only completion: do not upload or start
+a build until asked again. Build 69 remains the latest validated IPA; build 70
+source is prepared locally on `codex/pins-search-69`.
+
+Codemagic supports GitLab, Bitbucket and other authenticated Git repositories.
+If the owner resumes migration, push the existing local history to an authorized
+private repository rather than trying to import the inaccessible GitHub repository.
+Update Codemagic's repository connection and keep the existing workflow unchanged.
+Do not enable paid billing or publish source. Reference: [Codemagic repository
+connections](https://docs.codemagic.io/getting-started/adding-apps/).
 
 ## Local Mac
 

@@ -1,6 +1,6 @@
 # Elsepin build history
 
-Updated **4 November 2026**, America/Los_Angeles. Read the [full changelog](../CHANGELOG.md)
+Updated **5 November 2026**, America/Los_Angeles. Read the [full changelog](../CHANGELOG.md)
 for feature details. This page separates compilation, test artifacts and published
 releases so a successful check is not mistaken for an available download.
 
@@ -13,6 +13,18 @@ remain. A verified empty Actions history was followed by fresh run
 `b4de4ff8`. It was rejected before any job started with the same failed-payment
 or spending-limit annotation. Deleting history did not resolve the billing block.
 No new IPA or release resulted.
+
+## Build 70 prepared locally - 5 November 2026
+
+Map-layer source commit `19c530b` is local. GitHub rejected the push with an account
+suspension message before upload. No Mac build 70 was dispatched. The owner asked
+to finish locally and stop before upload/build; a GitLab migration was discussed
+but not performed. Native compilation and the new Swift compatibility tests are
+pending. Successful checks from build 69 do not validate build 70.
+
+Build 69 was copied to `C:/Users/naith/Desktop/ipa/My Projects (N3mo Studio)/Elsepin 2.6.1 build 69.ipa`.
+Only the IPA was delivered; other apps were left intact. This supersedes the earlier
+Downloads destination. Keep complete diagnostics in ignored `.build/artifacts/`.
 
 ## Latest native build and private delivery: 2.6.1 (69) — 4 November 2026
 

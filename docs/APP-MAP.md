@@ -149,3 +149,16 @@ downtime as movement. See [lifecycle details](SESSION-CLOSURE.md).
 - `RoutePlaceSearchSheet.swift`: Home search and recent pin/route actions. `RouteStopSearchSheet.swift`: draft stop insertion or active-route browsing.
 - `MapLocationSearch.swift`, `NamedAreasView.swift`, `SketchMapView.swift`: camera-only area search; never clear existing corners.
 - `DisplayEnergyPolicy.swift`, `RouteLifecycle.swift`: display/wait scheduling. Movement clocks, connection verification and recovery cadence are separate safety requirements.
+
+## Map visibility (build 70)
+
+- `Locus/Features/Map/MapOptionsMenu.swift`: existing layers-button menu, map styles,
+  cached `MKPolygon` geometry. No new timer or location subscription.
+- `MapHomeView.swift`: area overlays and cached visible pins; selected destinations
+  must remain visible with saved pins hidden. Never change route movement here.
+- `SessionPreferences.swift`: visibility defaults and persistence. Backup display
+  flags are optional; absent legacy fields preserve current values. Review/import
+  and reset owners remain `BackupImportReview.swift`, `SpoofSession.swift`,
+  `AppResetRules.swift`; compatibility tests are in `BackupImportReviewTests.swift`.
+- [Energy review](ENERGY-REVIEW.md): lifecycle owners, audit evidence, and physical
+  device profiling still required before claiming battery savings.

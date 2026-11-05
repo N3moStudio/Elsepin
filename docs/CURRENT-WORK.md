@@ -1,6 +1,49 @@
 # Elsepin current handoff
 
-Updated 4 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
+Updated 5 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
+
+## 2.6.1 (70) - local changes ready; STOP before upload/build
+
+**Latest owner instruction: finish locally and stop at the build handoff.** Do not
+upload, create a replacement host/repository, dispatch a build, package an IPA or
+publish anything without a new request. Source commit `19c530b` is local only:
+the attempted GitHub push was rejected with HTTP 403, "Your account is suspended."
+No Codemagic build 70 was started. GitLab + the existing personal Codemagic account
+is a researched alternative, not a completed migration. Keep main unchanged.
+
+The existing layers button now opens Map options: Pins, Areas, and the three map
+styles. Both saved layers start visible. Pin names remain tap-only; hiding saved
+pins keeps the selected destination visible. These display choices never change
+stored items, area naming/overlap rules, route movement or connection settings.
+
+Visible-pin filtering refreshes on camera completion, library edits and visibility
+changes. Area polygons are cached on area edits. See [energy review](ENERGY-REVIEW.md)
+for source findings and remaining real-device profiling. No measured battery-saving
+percentage is claimed. Existing Axiom energy/location/UI skills cover this work.
+
+Both flags are optional settings-backup fields: older backups keep current choices;
+new backups support independent review/import. Settings reset clears both keys.
+Two new Swift tests cover old backup preservation and independent round-trip import;
+the existing reset test now verifies the two keys. These Swift changes still need
+the Mac test run. Local identity, appearance, helper integrity, 16 packaging tests
+and whitespace checks passed. This PC has no working local Swift/Xcode toolchain.
+
+Delivery target: `C:/Users/naith/Desktop/ipa/My Projects (N3mo Studio)`.
+`Elsepin 2.6.1 build 69.ipa` is the latest successfully built test app there. Do not
+rename it to 70. Replace older Elsepin IPAs only after a complete newer replacement;
+leave other apps untouched and add no checksum files, ZIPs, logs or extra files.
+
+When the owner requests building again: obtain an authorized private repository
+connection, upload this branch, select `codex/pins-search-69` in Codemagic and start
+a fresh `Build Elsepin IPA` run. Keep the personal M2/Xcode 27.1 workflow, all tests,
+raw logs and failure status. Verify both bundles are 2.6.1 (70), then deliver only
+the IPA. Expected Swift test count is 472 (not yet run); do not report a pass from
+build 69 as evidence for build 70. See [building](BUILDING.md).
+
+On-device acceptance: toggle Pins/Areas separately, reopen the app, switch all
+three map styles, rename/delete saved items, check selected-destination visibility
+with pins hidden, then retest route marker/skip/Stop and old backup import. Native
+compilation alone cannot verify gestures, layout or battery.
 
 ## 2.6.1 (69) — Pins, Favorites, search and energy — private test build
 
@@ -13,7 +56,7 @@ on this Windows PC. App and Live Activity extension compiled with zero warnings
 or errors under Xcode 27.1. Both bundles are 2.6.1 (69); SDK, thirteen icons,
 entitlements, helper resources and ZIP integrity passed artifact verification.
 
-Delivery: `C:/Users/naith/Downloads/Elsepin 2.6.1 build 69.ipa`. Full original logs,
+Original delivery was Downloads; re-delivered 5 November to the Desktop IPA folder above. Full original logs,
 build metadata, package and receipt are in
 `.build/artifacts/codemagic-6aec1824004ce28f20ee09d4/`. The first Codemagic run caught
 an invalid library-only backup test fixture and a test cleanup concurrency warning;

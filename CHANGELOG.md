@@ -16,6 +16,8 @@ is the official release. Earlier Shift entries retain their original names and r
   between library edits. No movement, connection-check or recovery cadence changes.
 - Move private IPA delivery to the owner's Desktop project IPA folder, with one latest
   Elsepin IPA and no extra delivered files. Native validation pending; no publication.
+- Build 70 remains local: GitHub rejected upload, then the owner requested stopping
+  before building. Build 69 is still the latest tested IPA; no host migration occurred.
 
 ## Unreleased — 2.6.1 build 69 (4 November 2026)
 
@@ -32,7 +34,8 @@ is the official release. Earlier Shift entries retain their original names and r
 - Correct the library-only backup test fixture, remove a test cleanup concurrency warning, and fix the native MapKit fallback error-code conversion.
 - Native app/extension compilation and IPA validation passed in Codemagic at
   `8b155ec`, with zero compiler warnings/errors and 609 distinct tests passed
-  across Mac and Windows checks. Build 69 is privately delivered in Downloads.
+  across Mac and Windows checks. Build 69 was originally delivered in Downloads
+  and re-delivered to the Desktop project IPA folder on 5 November.
   Device acceptance is pending; no release or deployment.
 
 ## 2.6.1 (68) — compact route card and automatic trip recovery — private test build

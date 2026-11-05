@@ -1,9 +1,24 @@
 # Elsepin Change Ledger
 
-Updated through **4 November 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
+Updated through **5 November 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
 is the last recorded public release. Earlier entries retain their original validation context.
 
 See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all recorded 2.5.x/2.6.0 native runs.
+
+## 2.6.1 (70) - map layers and rendering work - local only
+
+- Reuse the layers button for Map options: Pins, Areas, and all three map styles.
+- Draw saved area outlines on the main map; remember each layer independently.
+- Keep selected destinations visible, preserve tap-only pin labels and route controls.
+- Cache visible pins and polygon geometry instead of rebuilding on route ticks.
+- Preserve old backups through optional flags; support selective import and reset.
+- Record source-level battery findings in [energy review](ENERGY-REVIEW.md).
+- Source committed locally as `19c530b`; GitHub rejected upload with an account
+  suspension response. Owner then requested local-only completion, stopping before
+  building. No native build 70, host migration, release or deployment occurred.
+- Local resource/helper checks and 16 packaging tests passed. New Swift tests and
+  native compilation remain pending. Build 69 stays the latest tested IPA, now in
+  `C:/Users/naith/Desktop/ipa/My Projects (N3mo Studio)` with no extra delivered files.
 
 ## 2.6.1 (69) — Pins, Favorites, map search and energy — unreleased
 
