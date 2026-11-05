@@ -35,7 +35,10 @@ Leave paid billing disabled to stay within the personal account's free allowance
 Original stdout/stderr and test results are retained in `build/logs/` and as
 downloadable diagnostic artifacts. Every pipeline uses `pipefail`, so capturing
 logs does not turn a failed check/build into success. These logs stay outside
-source control; delivery to Downloads should contain the requested IPA only.
+source control. Since 5 November, the delivery folder is
+`C:/Users/naith/Desktop/ipa/My Projects (N3mo Studio)`: only the latest requested
+Elsepin test IPA, replacing older Elsepin IPAs after a complete replacement.
+Leave other apps untouched; no checksum sidecars, ZIP bundles or diagnostic files.
 
 The GitHub workflow remains available. Removing `codemagic.yaml` removes this
 alternative without changing app behavior. Account allowance and runner availability

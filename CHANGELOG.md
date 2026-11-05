@@ -1,9 +1,21 @@
 # Elsepin changelog
 
-Updated through **4 November 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
+Updated through **5 November 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
 is the official release. Earlier Shift entries retain their original names and release status.
 
 [App introduction](README.md) · [Build history](docs/BUILD-HISTORY.md) · [Detailed Change Ledger](docs/CHANGE-LEDGER.md)
+
+## Unreleased — 2.6.1 build 70 (5 November 2026)
+
+- Show saved area outlines on the main map. The existing layers button now opens
+  Map options with independent Pins/Areas toggles and Standard/Hybrid/Satellite choices.
+- Remember layer visibility and include it in selective settings backup import/export;
+  old backups preserve current layer choices. Hiding a layer never deletes it,
+  changes area naming, hides the active route or sends a location.
+- Cache pin filtering between camera/library changes and reuse area polygon geometry
+  between library edits. No movement, connection-check or recovery cadence changes.
+- Move private IPA delivery to the owner's Desktop project IPA folder, with one latest
+  Elsepin IPA and no extra delivered files. Native validation pending; no publication.
 
 ## Unreleased — 2.6.1 build 69 (4 November 2026)
 

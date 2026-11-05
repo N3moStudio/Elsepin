@@ -13,7 +13,10 @@ final class AppResetTests: XCTestCase {
         let kept = Array(AppResetRules.setupKeys) + ["locus.favorites", "locus.recents", "locus.namedAreas", "locus.checkpointAvailable", StableReleaseChecker.defaultsKey, ShiftAppearanceSelection.iconKey, "unrelated.app.setting"]
         for key in kept { defaults.set("keep", forKey: key) }
         for key in AppResetRules.settingKeys { defaults.set("changed", forKey: key) }
+        let mapLayerKeys = ["locus.showSavedPinsOnMap", "locus.showNamedAreasOnMap"]
+        for key in mapLayerKeys { defaults.set(false, forKey: key) }
         AppResetRules.clearPreferences(in: defaults, scope: .settings)
+        for key in mapLayerKeys { XCTAssertNil(defaults.object(forKey: key), key) }
         for key in kept { XCTAssertEqual(defaults.string(forKey: key), "keep", key) }
         for key in AppResetRules.settingKeys { XCTAssertNil(defaults.object(forKey: key), key) }
     }

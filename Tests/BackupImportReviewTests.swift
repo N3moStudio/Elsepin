@@ -2,6 +2,37 @@ import XCTest
 @testable import SessionPresentation
 
 final class BackupImportReviewTests: XCTestCase {
+    func testMapLayerChoicesRoundTripAndImportIndependently() throws {
+        var current = try context()
+        current.preferences.display?.showSavedPinsOnMap = true
+        current.preferences.display?.showNamedAreasOnMap = false
+        var backup = try sample("Shift-Settings-Test")
+        backup.preferences?.display?.showSavedPinsOnMap = false
+        backup.preferences?.display?.showNamedAreasOnMap = true
+        let decoded = try LibraryBackup.decode(backup.encoded())
+        XCTAssertEqual(decoded.preferences?.display?.showSavedPinsOnMap, false)
+        XCTAssertEqual(decoded.preferences?.display?.showNamedAreasOnMap, true)
+        let review = BackupImportReview(backup: decoded, current: current)
+        let result = try XCTUnwrap(review.plan(BackupImportSelection(settings: [.showSavedPinsOnMap])).preferences)
+        XCTAssertEqual(result.display?.showSavedPinsOnMap, false)
+        XCTAssertEqual(result.display?.showNamedAreasOnMap, false)
+        XCTAssertEqual(result.display?.mapStyle, current.preferences.display?.mapStyle)
+    }
+
+    func testOldBackupOmitsMapLayerChoicesAndKeepsCurrentValues() throws {
+        var current = try context()
+        current.preferences.display?.showSavedPinsOnMap = false
+        current.preferences.display?.showNamedAreasOnMap = true
+        let backup = try sample("Shift-Settings-Test")
+        XCTAssertNil(backup.preferences?.display?.showSavedPinsOnMap)
+        XCTAssertNil(backup.preferences?.display?.showNamedAreasOnMap)
+        let review = BackupImportReview(backup: backup, current: current)
+        XCTAssertFalse(review.changes.contains { $0.key == .showSavedPinsOnMap || $0.key == .showNamedAreasOnMap })
+        let result = try XCTUnwrap(review.plan(BackupImportSelection(settings: [.walkSpeed])).preferences)
+        XCTAssertEqual(result.display?.showSavedPinsOnMap, false)
+        XCTAssertEqual(result.display?.showNamedAreasOnMap, true)
+    }
+
     private func sample(_ name: String) throws -> LibraryBackup {
         let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
             .appendingPathComponent("docs/\(name).json")

@@ -13,6 +13,15 @@ backup contents. Widgets continue to offer all saved pins.
 
 The historical instructions and examples below retain their original names.
 
+## Map visibility choices (build 70)
+
+Settings exports include optional `display.showSavedPinsOnMap` and
+`display.showNamedAreasOnMap` flags. Review lists Pins on map and Areas on map
+independently. Missing flags in old backups preserve the phone's current choices;
+older versions ignore the added fields. These are display-only choices and never
+remove library data or stop area naming. Both default to on and settings reset
+restores them. File format/version and legacy fields are unchanged.
+
 Open **Settings → Import & export**. Choose a backup file, or copy its complete
 JSON text and use **Paste backup text**. The small [json.site](https://json.site)
 link opens an editor where you can open the file and copy its JSON. Shift never

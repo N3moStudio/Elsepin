@@ -9,6 +9,7 @@ struct MapHomeView: View {
     @Binding var incomingSearch: Bool
     @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var session: SpoofSession
+    @EnvironmentObject private var preferences: SessionPreferences
     @EnvironmentObject private var pairing: PairingStore
     @EnvironmentObject private var planner: RoutePlanner
     @EnvironmentObject private var library: TripLibrary
@@ -19,6 +20,8 @@ struct MapHomeView: View {
     @State private var selectedSavedPin: String?
     @State private var thermallyLimited = ProcessInfo.processInfo.thermalState.rawValue >= ProcessInfo.ThermalState.serious.rawValue
     @State private var visibleMapRect: MKMapRect?
+    @State private var visibleSavedPins: [SavedPlace] = []
+    @State private var savedMapAreas: [SavedMapArea] = []
     @State private var pendingBrowsePin: PinDraft?
     @State private var pinEditor: PinDraft?
     @State private var pendingDestination: RoutePlace?
@@ -117,9 +120,16 @@ struct MapHomeView: View {
     // Separate opaque view boundaries keep Xcode from solving the map,
     // every gesture and both overlays as one large SwiftUI expression.
     @MapContentBuilder private var mapAnnotations: some MapContent {
+        if preferences.showNamedAreasOnMap, !planner.isDrawing {
+            ForEach(savedMapAreas) { area in
+                MapPolygon(area.polygon)
+                    .foregroundStyle(LocusTheme.accent.opacity(0.10))
+                    .stroke(LocusTheme.accent.opacity(0.65), lineWidth: 2)
+            }
+        }
         if visualUpdatesEnabled { UserAnnotation() }
-        if !planner.isDrawing {
-            ForEach(session.savedPins.filter { visibleMapRect?.contains(MKMapPoint($0.coordinate)) ?? true }) { pin in
+        if preferences.showSavedPinsOnMap, !planner.isDrawing {
+            ForEach(visibleSavedPins) { pin in
                 Annotation("", coordinate: pin.coordinate, anchor: .center) {
                     SavedPinMapIcon(pin: pin, selected: selectedSavedPin == pin.id) {
                         selectedSavedPin = selectedSavedPin == pin.id ? nil : pin.id
@@ -137,7 +147,8 @@ struct MapHomeView: View {
                 Marker("Route start", systemImage: "circle", coordinate: route.origin.coordinate).tint(.secondary)
             }
         }
-        if let pin = shownPin, !session.savedPins.contains(where: { RoutePoint($0.coordinate).distance(to: RoutePoint(pin)) < 1 }), (session.pinIsPreview || (session.journey == nil && planner.preparedRoute == nil)), !planner.isDrawing {
+        // Hiding saved pins must never hide the currently selected destination.
+        if let pin = shownPin, (!preferences.showSavedPinsOnMap || !visibleSavedPins.contains(where: { RoutePoint($0.coordinate).distance(to: RoutePoint(pin)) < 1 })), (session.pinIsPreview || (session.journey == nil && planner.preparedRoute == nil)), !planner.isDrawing {
             Marker("", systemImage: pinStyle(at: pin)?.symbol.rawValue ?? "mappin",
                    coordinate: pin).tint(pinStyle(at: pin)?.tint.swatch ?? LocusTheme.accentSecondary)
         }
@@ -172,7 +183,10 @@ struct MapHomeView: View {
 
     private func homeMap(_ proxy: MapProxy) -> some View {
         mapWithGestures(proxy)
-            .onMapCameraChange(frequency: .onEnd) { context in visibleMapRect = context.rect }
+            .onMapCameraChange(frequency: .onEnd) { context in
+                visibleMapRect = context.rect
+                refreshSavedPins(session.savedPins)
+            }
             .onMapCameraChange(frequency: .continuous) { context in
                 mapCameraChanged(context.camera, proxy: proxy)
             }
@@ -191,6 +205,17 @@ struct MapHomeView: View {
         updateMarkerProjection(proxy)
         sketchViewport.camera = MKMapCamera(lookingAtCenter: camera.centerCoordinate,
             fromDistance: camera.distance, pitch: camera.pitch, heading: camera.heading)
+    }
+
+    private func refreshSavedPins(_ pins: [SavedPlace]) {
+        // Refresh only after a pan, library edit or visibility change. Movement
+        // ticks reuse this list instead of repeatedly scanning the whole library.
+        let visible = preferences.showSavedPinsOnMap
+            ? pins.filter { visibleMapRect?.contains(MKMapPoint($0.coordinate)) ?? true } : []
+        if visibleSavedPins != visible { visibleSavedPins = visible }
+        if let selectedSavedPin, !visible.contains(where: { $0.id == selectedSavedPin }) {
+            self.selectedSavedPin = nil
+        }
     }
 
     private func routeSelectionChanged(_ value: RouteSeek?, proxy: MapProxy) {
@@ -417,6 +442,11 @@ struct MapHomeView: View {
 
     var body: some View {
         timedMap
+        .onReceive(session.$savedPins) { pins in refreshSavedPins(pins) }
+        .onChange(of: session.namedAreas, initial: true) { _, areas in
+            savedMapAreas = areas.map(SavedMapArea.init)
+        }
+        .onChange(of: preferences.showSavedPinsOnMap) { _, _ in refreshSavedPins(session.savedPins) }
         .onReceive(NotificationCenter.default.publisher(for: .locusDrawRoute)) { _ in beginDrawing() }
         .onChange(of: incomingSearch, initial: true) { _, requested in
             guard requested else { return }
@@ -520,7 +550,7 @@ struct MapHomeView: View {
             } else if planner.preparedRoute != nil {
                 mapButton("point.topleft.down.to.point.bottomright.curvepath", label: "Edit prepared route") { planner.editPreparedRoute() }
             }
-            mapButton("square.3.layers.3d", label: "Change map style") { session.mapStyleIndex = (session.mapStyleIndex + 1) % 3 }
+            MapOptionsMenu()
             if displayedRoute != nil {
                 mapButton("arrow.up.left.and.arrow.down.right", label: "Route overview") { previewRoute() }
             } else {

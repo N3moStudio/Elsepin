@@ -11,7 +11,7 @@ enum BackupSettingValue: Equatable {
 }
 
 enum BackupSettingKey: String, CaseIterable, Identifiable {
-    case visualStyle, material, glassPanel, speedUnit, smoothMovement, preferWalkingPaths, shortcuts, walkSpeed, runSpeed, cycleSpeed, eBikeSpeed, driveSpeed, liveActivities, hideLocation, hideIslandLocation, lockScreenProgress, islandProgress, islandTimer, showFindMyStatus, showLife360Status, connectionAlerts, reminderMinutes, connectionCheckSeconds, saveRecentLocations, recentHistoryRetention, mapStyle
+    case visualStyle, material, glassPanel, speedUnit, smoothMovement, preferWalkingPaths, shortcuts, walkSpeed, runSpeed, cycleSpeed, eBikeSpeed, driveSpeed, liveActivities, hideLocation, hideIslandLocation, lockScreenProgress, islandProgress, islandTimer, showFindMyStatus, showLife360Status, connectionAlerts, reminderMinutes, connectionCheckSeconds, saveRecentLocations, recentHistoryRetention, mapStyle, showSavedPinsOnMap, showNamedAreasOnMap
     var id: String { rawValue }
     var title: String {
         switch self {
@@ -41,6 +41,8 @@ enum BackupSettingKey: String, CaseIterable, Identifiable {
         case .saveRecentLocations: return "Save recent locations"
         case .recentHistoryRetention: return "History retention"
         case .mapStyle: return "Map style"
+        case .showSavedPinsOnMap: return "Pins on map"
+        case .showNamedAreasOnMap: return "Areas on map"
         }
     }
     func value(in p: BackupPreferences) -> BackupSettingValue? {
@@ -71,6 +73,8 @@ enum BackupSettingKey: String, CaseIterable, Identifiable {
         case .saveRecentLocations: return (p.display?.saveRecentLocations).map { .boolean($0) }
         case .recentHistoryRetention: return p.display.map { .text($0.recentHistoryRetention.title) }
         case .mapStyle: return p.display.map { .text(["Standard", "Hybrid", "Satellite"].indices.contains($0.mapStyle) ? ["Standard", "Hybrid", "Satellite"][$0.mapStyle] : "Unknown") }
+        case .showSavedPinsOnMap: return (p.display?.showSavedPinsOnMap).map { .boolean($0) }
+        case .showNamedAreasOnMap: return (p.display?.showNamedAreasOnMap).map { .boolean($0) }
         }
     }
     func description(in p: BackupPreferences) -> String {
@@ -117,6 +121,8 @@ enum BackupSettingKey: String, CaseIterable, Identifiable {
             case .saveRecentLocations: target.saveRecentLocations = source.saveRecentLocations
             case .recentHistoryRetention: target.recentHistoryRetention = source.recentHistoryRetention
             case .mapStyle: target.mapStyle = source.mapStyle
+            case .showSavedPinsOnMap: target.showSavedPinsOnMap = source.showSavedPinsOnMap
+            case .showNamedAreasOnMap: target.showNamedAreasOnMap = source.showNamedAreasOnMap
             default: break
             }
             current.display = target

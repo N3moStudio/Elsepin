@@ -77,6 +77,7 @@ enum AppResetRules {
     static let settingKeys: Set<String> = Set([
         "liveActivities", "hideLocation", "hideIslandLocation", "lockScreenProgress", "islandProgress", "islandTimer",
         "showFindMyStatus", "showLife360Status", "glassPanel", "connectionAlerts", "reminderMinutes", "appearance",
+        "showSavedPinsOnMap", "showNamedAreasOnMap",
         "appLockEnabled", "hideInAppSwitcher", "saveRecentLocations", "recentHistoryRetention", "panelShortcuts",
         "modeSpeeds", "usualSpeeds", "eBikeSpeedMPH", "smoothMovement", "preferWalkingPaths", "tripRecovery", "tripRecoveryAutoResume",
         "keepTroubleshootingEvents", "developerLogEnabled", "widget.selected", "widget.primary", "remoteFindMy.enabled", "remoteFindMy.alerts"
