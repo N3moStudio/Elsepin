@@ -38,6 +38,12 @@ the longer wait interval, cancel abandoned native directions, and immediately
 revoke visibility of cleared route history. They still need a fresh Mac run at
 the latest branch head after the owner restores build access. Do not rerun the
 older commit or publish. Work is on **codex/pins-search-69**; main remains unchanged.
+At the user's request, a fresh run **41971922423** at final app source `9d188fb3`
+was attempted again and rejected with the same account billing annotation before
+any step ran. The browser automation profile was signed out; the authenticated
+GitHub API successfully dispatched the job. The dispatch path is not the blocker.
+Latest owner instruction permits Actions but still forbids publication. No need
+to ask for permission to retry once the owner confirms account access is fixed.
 
 New logic tests cover legacy favorite decoding, backup round trips, bounded
 history/retention, category intent, wait/camera budgets, stop countdowns and timed

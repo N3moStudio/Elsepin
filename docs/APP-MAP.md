@@ -140,10 +140,12 @@ downtime as movement. See [lifecycle details](SESSION-CLOSURE.md).
 ## Pins and search (build 69)
 
 - `PinEditor.swift`: naming, map placement and optional favorite. Does not send movement.
+- `SavedPinMapIcon.swift`: compact tap-only name bubble, centered marker and accessible hit target; changing the label must not shift its coordinate.
 - `SavedPlace.swift`, `LibraryBackup.swift`: optional favorite flag; nil means an old favorite. `SpoofSession.savedPins` owns all pins; `favorites` is filtered display only. Import/export/widgets must use all pins.
 - `SettingsView.swift` / `PlacesView`: Library categories and Favorites headings. `TripViews.swift`: saved route favorite action.
 - `RecentRoute.swift`, `RecentRouteStore.swift`: bounded, local-only route history. Keep privacy clear/reset/retention in `SpoofSession` in sync.
 - `PlaceSearchRequest.swift`, `PlaceSearchIntent.swift`: native cancellation, deadlines, category interpretation. Never choose or move to a result automatically.
+- `RouteDirectionsRequest.swift`: cancels the native directions operation when its owning draft is canceled; no changes to the returned route geometry.
 - `RoutePlaceSearchSheet.swift`: Home search and recent pin/route actions. `RouteStopSearchSheet.swift`: draft stop insertion or active-route browsing.
 - `MapLocationSearch.swift`, `NamedAreasView.swift`, `SketchMapView.swift`: camera-only area search; never clear existing corners.
 - `DisplayEnergyPolicy.swift`, `RouteLifecycle.swift`: display/wait scheduling. Movement clocks, connection verification and recovery cadence are separate safety requirements.
