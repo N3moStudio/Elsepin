@@ -261,7 +261,7 @@ struct RoutePlaceSearchSheet: View {
             if !general || !result.mapItems.isEmpty { return result }
         } catch { firstError = error }
         try Task.checkCancellation()
-        guard general else { throw firstError ?? NSError(domain: MKErrorDomain, code: MKError.Code.placemarkNotFound.rawValue) }
+        guard general else { throw firstError ?? NSError(domain: MKErrorDomain, code: Int(MKError.Code.placemarkNotFound.rawValue)) }
         let fallback: PlaceSearchRequest
         if let category = PlaceSearchIntent.category(for: query), request.region.span.latitudeDelta > 0 {
             let nearby = MKLocalPointsOfInterestRequest(center: request.region.center, radius: 12_000)
