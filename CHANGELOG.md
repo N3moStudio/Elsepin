@@ -15,9 +15,13 @@ is the official release. Earlier Shift entries retain their original names and r
 - Cache pin filtering between camera/library changes and reuse area polygon geometry
   between library edits. No movement, connection-check or recovery cadence changes.
 - Move private IPA delivery to the owner's Desktop project IPA folder, with one latest
-  Elsepin IPA and no extra delivered files. Native validation pending; no publication.
-- Build 70 remains local: GitHub rejected upload, then the owner requested stopping
-  before building. Build 69 is still the latest tested IPA; no host migration occurred.
+  Elsepin IPA and no extra delivered files. Native validation passed; no publication.
+- After the GitHub suspension, resume authorized private hosting on GitLab in the
+  existing local folder. Reuse the manual Codemagic personal M2 workflow with a
+  dedicated read-only repository key; no paid billing, release or deployment.
+- Native app/extension and IPA inspection passed at `0e098f2`, with 611 distinct
+  tests and zero compiler warnings/errors. Build 70 privately replaced build 69
+  in the Desktop project IPA folder. Device acceptance and measured energy remain pending.
 
 ## Unreleased — 2.6.1 build 69 (4 November 2026)
 

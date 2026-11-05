@@ -2,14 +2,24 @@
 
 Updated 5 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
 
-## 2.6.1 (70) - local changes ready; STOP before upload/build
+## 2.6.1 (70) - validated and privately delivered
 
-**Latest owner instruction: finish locally and stop at the build handoff.** Do not
-upload, create a replacement host/repository, dispatch a build, package an IPA or
-publish anything without a new request. Source commit `19c530b` is local only:
-the attempted GitHub push was rejected with HTTP 403, "Your account is suspended."
-No Codemagic build 70 was started. GitLab + the existing personal Codemagic account
-is a researched alternative, not a completed migration. Keep main unchanged.
+The owner resumed building on 5 November, authorizing private GitLab hosting and
+Codemagic's free personal M2 runner through CLI/API only. No desktop/browser control,
+paid billing, Tendelm changes/cancellation, public release or deployment is authorized.
+The existing local folder is unchanged. `gitlab` points to private
+`https://gitlab.com/gajula.naithik/elsepin` (project 88570064), with GitLab CI/Pages
+disabled. The current branch tracks GitLab; `remote.pushDefault=gitlab`. Keep the
+suspended GitHub `origin` and local `main` unchanged.
+
+Codemagic app `6aecefbde7e295d4f44f163e` uses personal owner
+`6aecdf671da16ae2cffff6c7` and an Elsepin-only read-only deploy key. Credentials are
+outside the repository and must never be printed. Build
+[6aeceff2ab17f8deb7533589](https://codemagic.io/app/6aecefbde7e295d4f44f163e/build/6aeceff2ab17f8deb7533589)
+passed at source `0e098f220e2ca6838e2df2ca33dbeedceaf15632` on `codex/pins-search-69`.
+Preflight reported 29,861 free seconds remaining, no metered subscription and no
+payment information. Tendelm's active build was left alone. After account builds,
+453.8 free minutes remained, still with no paid subscription/payment information.
 
 The existing layers button now opens Map options: Pins, Areas, and the three map
 styles. Both saved layers start visible. Pin names remain tap-only; hiding saved
@@ -24,21 +34,27 @@ percentage is claimed. Existing Axiom energy/location/UI skills cover this work.
 Both flags are optional settings-backup fields: older backups keep current choices;
 new backups support independent review/import. Settings reset clears both keys.
 Two new Swift tests cover old backup preservation and independent round-trip import;
-the existing reset test now verifies the two keys. These Swift changes still need
-the Mac test run. Local identity, appearance, helper integrity, 16 packaging tests
-and whitespace checks passed. This PC has no working local Swift/Xcode toolchain.
+the existing reset test now verifies the two keys. All 611 distinct tests passed:
+472 Swift, 104 cloud, 16 packaging, 18 Companion on Mac, plus its Windows-only
+encryption test locally. Native app/extension compiled with zero compiler warnings
+or errors. This PC still has no local native Apple toolchain.
 
 Delivery target: `C:/Users/naith/Desktop/ipa/My Projects (N3mo Studio)`.
-`Elsepin 2.6.1 build 69.ipa` is the latest successfully built test app there. Do not
-rename it to 70. Replace older Elsepin IPAs only after a complete newer replacement;
-leave other apps untouched and add no checksum files, ZIPs, logs or extra files.
+`Elsepin 2.6.1 build 70.ipa` (18,661,714 bytes) was delivered and compared with the
+inspected artifact before removing build 69. Other app IPAs were untouched; no extra
+files were delivered. Full logs and receipt remain in ignored
+`.build/artifacts/codemagic-6aeceff2ab17f8deb7533589/`.
 
-When the owner requests building again: obtain an authorized private repository
-connection, upload this branch, select `codex/pins-search-69` in Codemagic and start
-a fresh `Build Elsepin IPA` run. Keep the personal M2/Xcode 27.1 workflow, all tests,
-raw logs and failure status. Verify both bundles are 2.6.1 (70), then deliver only
-the IPA. Expected Swift test count is 472 (not yet run); do not report a pass from
-build 69 as evidence for build 70. See [building](BUILDING.md).
+Build via this branch and the manual `elsepin-ipa` workflow on M2/Xcode 27.1.
+Keep all tests, raw logs and failure status. Both bundles were verified as 2.6.1 (70),
+arm64, SDK 27.1, with correct entitlements, thirteen icons, helper files and ZIP
+integrity. No Apple provisioning profile is bundled: ad-hoc signatures preserve
+entitlement requests, and the owner must still sign for sideloading. The controlled
+exit-23 logging check passed. See [building](BUILDING.md).
+
+Post-build handoff changes are documentation only; do not rebuild just for them.
+No release was published. Source migration does not migrate public GitHub help,
+download or update endpoints.
 
 On-device acceptance: toggle Pins/Areas separately, reopen the app, switch all
 three map styles, rename/delete saved items, check selected-destination visibility

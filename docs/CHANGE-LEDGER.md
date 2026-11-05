@@ -5,7 +5,7 @@ is the last recorded public release. Earlier entries retain their original valid
 
 See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all recorded 2.5.x/2.6.0 native runs.
 
-## 2.6.1 (70) - map layers and rendering work - local only
+## 2.6.1 (70) - map layers and rendering work - private build
 
 - Reuse the layers button for Map options: Pins, Areas, and all three map styles.
 - Draw saved area outlines on the main map; remember each layer independently.
@@ -13,12 +13,14 @@ See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all re
 - Cache visible pins and polygon geometry instead of rebuilding on route ticks.
 - Preserve old backups through optional flags; support selective import and reset.
 - Record source-level battery findings in [energy review](ENERGY-REVIEW.md).
-- Source committed locally as `19c530b`; GitHub rejected upload with an account
-  suspension response. Owner then requested local-only completion, stopping before
-  building. No native build 70, host migration, release or deployment occurred.
-- Local resource/helper checks and 16 packaging tests passed. New Swift tests and
-  native compilation remain pending. Build 69 stays the latest tested IPA, now in
-  `C:/Users/naith/Desktop/ipa/My Projects (N3mo Studio)` with no extra delivered files.
+- Source commit `19c530b` was initially blocked by GitHub suspension. The owner
+  resumed private GitLab hosting in the existing folder and authorized Codemagic
+  M2/Xcode 27.1. Run `6aeceff2ab17f8deb7533589` passed at `0e098f2`: 611 distinct
+  tests, zero compiler warnings/errors, both app/extension and IPA inspection passed.
+- Read-only Elsepin-specific builder key, private GitLab source, no CI/Pages,
+  no paid billing, browser/desktop control, public release or deployment.
+- Delivered only build 70 to the Desktop project IPA folder, verified before
+  replacing build 69. Other apps unchanged; device and battery acceptance pending.
 
 ## 2.6.1 (69) — Pins, Favorites, map search and energy — unreleased
 

@@ -44,19 +44,34 @@ The GitHub workflow remains available. Removing `codemagic.yaml` removes this
 alternative without changing app behavior. Account allowance and runner availability
 still apply; see [Codemagic pricing](https://docs.codemagic.io/billing/pricing/).
 
-## Current pause and alternate hosting
+## Current private source and API build access
 
-On 5 November GitHub rejected the build-70 source push with an account suspension
-response. The owner then requested local-only completion: do not upload or start
-a build until asked again. Build 69 remains the latest validated IPA; build 70
-source is prepared locally on `codex/pins-search-69`.
+GitHub rejected uploads after an account suspension. On 5 November the owner
+resumed private builds with GitLab and Codemagic, without browser/desktop automation.
+Use the existing local folder and `gitlab` remote:
+`https://gitlab.com/gajula.naithik/elsepin.git`. GitLab CI/Pages are disabled.
+`codex/pins-search-69` tracks this remote; `remote.pushDefault=gitlab` prevents a
+normal push from targeting suspended GitHub. `origin` and local main are retained.
 
-Codemagic supports GitLab, Bitbucket and other authenticated Git repositories.
-If the owner resumes migration, push the existing local history to an authorized
-private repository rather than trying to import the inaccessible GitHub repository.
-Update Codemagic's repository connection and keep the existing workflow unchanged.
-Do not enable paid billing or publish source. Reference: [Codemagic repository
-connections](https://docs.codemagic.io/getting-started/adding-apps/).
+Codemagic app: `6aecefbde7e295d4f44f163e`, personal account owner
+`6aecdf671da16ae2cffff6c7`. A dedicated read-only repository deploy key gives the
+builder access; do not reuse another app's key or expose credentials in source/logs.
+The workflow is `elsepin-ipa`, `mac_mini_m2`, Xcode 27.1, maximum 30 minutes. Check
+free allowance before dispatch; leave paid billing disabled and allow queuing behind
+other apps. No push trigger, release publishing or Apple signing account is configured.
+
+On this Windows workstation, the authenticated CLI is
+`C:/Users/naith/.codex/tools/gitlab-cli/1.128.0/bin/glab.exe`. The owner-provided
+Codemagic credential is the account-encrypted
+`C:/Users/naith/.codex/credentials/codemagic-tendelm/api-token.clixml`; its directory
+name does not limit it to Tendelm. Import it locally only, never print its token,
+and never alter Tendelm. Elsepin's separate read-only deployment key is under
+`C:/Users/naith/.codex/credentials/codemagic-elsepin/`. These paths are local tooling,
+not application dependencies or files to upload. Git pushes use existing Git
+authentication; no credential extraction or browser interaction is needed.
+Build calls can use the [Codemagic API](https://docs.codemagic.io/rest-api/builds/).
+Inspect the exact commit, full logs and private artifact before delivery. Changing
+source hosting does not migrate the app's existing public help/update endpoints.
 
 ## Local Mac
 
@@ -119,10 +134,10 @@ IPA validator checks the compiled bundle IDs and URL scheme.
 
 ## Official versus prerelease builds
 
-The latest validated development source is Elsepin 2.6.1 (69) on
-`codex/pins-search-69`, privately built in Codemagic for owner testing. `main`
+The latest validated development source is Elsepin 2.6.1 (70) at `0e098f2` on
+`codex/pins-search-69`, privately built from GitLab in Codemagic for owner testing. `main`
 still contains build 68; select the branch intentionally.
-See [build history](BUILD-HISTORY.md) for native results and the artifact checksum.
+See [build history](BUILD-HISTORY.md) for native results and retained local evidence.
 Creating an IPA artifact does not publish a release or declare it stable. Verify both target
 versions and the resolved `ShiftReleaseChannel` metadata before distribution;
 that internal compatibility key intentionally retains its old name.

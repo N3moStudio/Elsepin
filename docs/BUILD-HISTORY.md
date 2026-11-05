@@ -14,19 +14,31 @@ remain. A verified empty Actions history was followed by fresh run
 or spending-limit annotation. Deleting history did not resolve the billing block.
 No new IPA or release resulted.
 
-## Build 70 prepared locally - 5 November 2026
+## Latest native build and private delivery: 2.6.1 (70) - 5 November 2026
 
-Map-layer source commit `19c530b` is local. GitHub rejected the push with an account
-suspension message before upload. No Mac build 70 was dispatched. The owner asked
-to finish locally and stop before upload/build; a GitLab migration was discussed
-but not performed. Native compilation and the new Swift compatibility tests are
-pending. Successful checks from build 69 do not validate build 70.
+GitHub rejected map-layer upload after the account suspension. The owner first
+paused at local source, then explicitly authorized private GitLab and Codemagic.
+The existing project folder now has a `gitlab` remote, with CI/Pages disabled and
+no source made public. The build uses the same workflow and original local history.
 
-Build 69 was copied to `C:/Users/naith/Desktop/ipa/My Projects (N3mo Studio)/Elsepin 2.6.1 build 69.ipa`.
-Only the IPA was delivered; other apps were left intact. This supersedes the earlier
-Downloads destination. Keep complete diagnostics in ignored `.build/artifacts/`.
+[Codemagic run 6aeceff2ab17f8deb7533589](https://codemagic.io/app/6aecefbde7e295d4f44f163e/build/6aeceff2ab17f8deb7533589)
+passed at `0e098f220e2ca6838e2df2ca33dbeedceaf15632` on personal M2/Xcode 27.1.
+Preflight found 29,861 free seconds remaining, no paid subscription/payment method.
+Other apps' builds were not cancelled or modified. All 611 distinct tests passed:
+472 Swift, 104 cloud, 16 packaging, 18 Companion on Mac and the remaining Windows-only
+encryption test locally. Native compilation passed with zero compiler warnings/errors.
+Both bundles are 2.6.1 (70), arm64, SDK 27.1. IPA integrity, thirteen icons, helper
+resources and requested entitlements passed inspection. The controlled exit-23 check
+preserved stderr and original failure status. Signing for sideloading is still needed.
 
-## Latest native build and private delivery: 2.6.1 (69) — 4 November 2026
+Only `Elsepin 2.6.1 build 70.ipa` (18,661,714 bytes) was delivered to
+`C:/Users/naith/Desktop/ipa/My Projects (N3mo Studio)`, verified before replacing
+build 69. Other apps were untouched. Full original logs/metadata and receipt remain
+under ignored `.build/artifacts/codemagic-6aeceff2ab17f8deb7533589/`.
+453.8 free minutes remained after account builds; paid billing was not enabled.
+No public release or deployment. Device/provider and energy acceptance is pending.
+
+## Native build and private delivery: 2.6.1 (69) — 4 November 2026
 
 [Codemagic run 6aec1824004ce28f20ee09d4](https://codemagic.io/app/6aec13aad70bff100bb5b859/build/6aec1824004ce28f20ee09d4)
 passed at `8b155ece426f557cb81725e4a19b9b66d6629087` on the personal Mac mini M2
