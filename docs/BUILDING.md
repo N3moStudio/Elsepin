@@ -18,6 +18,29 @@ your account’s Actions quota apply. It does not publish a release or deploy a 
 Start a **new run after pushing changes**. Re-running an older job uses its
 original commit. Runner reference: [GitHub’s supported images](https://github.com/actions/runner-images#available-images).
 
+## Codemagic — alternative private Mac builder
+
+Use a **personal account**, the **Mac mini M2** instance and the committed
+`codemagic.yaml`. The manual `elsepin-ipa` workflow pins Xcode 27.1 and runs the
+same resource, Python, Swift and native/package checks as GitHub Actions. It
+does not publish a release, configure Apple account signing or trigger on pushes.
+Leave paid billing disabled to stay within the personal account's free allowance.
+
+1. Connect the private Elsepin repository in Codemagic and open its configuration.
+2. Select the intended branch and check for `codemagic.yaml`. For build 69 use
+   `codex/pins-search-69`; `main` still contains the previous app build.
+3. Start **Build Elsepin IPA**. Download the IPA after all steps pass and sign it
+   with the existing sideloading method, retaining the extension.
+
+Original stdout/stderr and test results are retained in `build/logs/` and as
+downloadable diagnostic artifacts. Every pipeline uses `pipefail`, so capturing
+logs does not turn a failed check/build into success. These logs stay outside
+source control; delivery to Downloads should contain the requested IPA only.
+
+The GitHub workflow remains available. Removing `codemagic.yaml` removes this
+alternative without changing app behavior. Account allowance and runner availability
+still apply; see [Codemagic pricing](https://docs.codemagic.io/billing/pricing/).
+
 ## Local Mac
 
 Use Xcode 27 and XcodeGen. From the repository root:

@@ -1,0 +1,68 @@
+# Manual private builds only. The personal account's free minutes apply to M2.
+# Reuse the same checks and IPA packager as GitHub; no signing secrets or releases.
+workflows:
+  elsepin-ipa:
+    name: Build Elsepin IPA
+    instance_type: mac_mini_m2
+    max_build_duration: 30
+    environment:
+      xcode: "27.1"
+    scripts:
+      - name: Prepare Apple toolchain
+        script: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+          mkdir -p build/logs
+          {
+            if pgrep -lx xcodebuild; then
+              echo "Another Xcode build is active; refusing to overlap." >&2
+              exit 1
+            else
+              inventory_status=$?
+              test "$inventory_status" -eq 1 || exit "$inventory_status"
+            fi
+            xcodebuild -version
+            swift --version
+            command -v xcodegen >/dev/null || brew install xcodegen
+          } 2>&1 | tee build/logs/toolchain.log
+          # Verify that log capture keeps both stderr and a command's failure status.
+          set +e
+          bash -c 'set -euo pipefail; { echo "Expected capture check" >&2; exit 23; } 2>&1 | tee "$1"' _ build/logs/capture-check.log
+          capture_status=$?
+          set -e
+          test "$capture_status" -eq 23
+          grep -qx 'Expected capture check' build/logs/capture-check.log
+      - name: Verify identities, resources and IPA checks
+        script: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+          {
+            python3 scripts/check_app_identity.py
+            python3 scripts/check_appearance.py
+            python3 scripts/package_helpers.py --check
+            python3 -m unittest discover -s scripts/tests -p 'test_*.py' -v
+          } 2>&1 | tee build/logs/resources.log
+      - name: Test Windows and cloud helpers
+        script: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+          {
+            python3 -m venv .venv
+            .venv/bin/python -m pip install -r CloudFindMy/requirements.txt
+            .venv/bin/python -m unittest discover -s Companion -p 'test_*.py' -v
+            .venv/bin/python -m unittest discover -s CloudFindMy -p 'test_*.py' -v
+          } 2>&1 | tee build/logs/helpers.log
+      - name: Test status, privacy and route rules
+        script: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+          swift test 2>&1 | tee build/logs/swift-tests.log
+      - name: Build and verify app and Live Activity IPA
+        script: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+          bash scripts/build-ipa.sh 2>&1 | tee build/logs/native-build.log
+    artifacts:
+      - build/*.ipa
+      # Complete original diagnostics remain downloadable, including on failure.
+      - build/logs/*.log
