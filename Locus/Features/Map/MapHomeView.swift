@@ -12,7 +12,6 @@ struct MapHomeView: View {
     @EnvironmentObject private var pairing: PairingStore
     @EnvironmentObject private var planner: RoutePlanner
     @EnvironmentObject private var library: TripLibrary
-    @EnvironmentObject private var preferences: SessionPreferences
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var position: MapCameraPosition = .userLocation(fallback: .automatic)
     @State private var showSearch = false
@@ -121,18 +120,9 @@ struct MapHomeView: View {
         if visualUpdatesEnabled { UserAnnotation() }
         if !planner.isDrawing {
             ForEach(session.savedPins.filter { visibleMapRect?.contains(MKMapPoint($0.coordinate)) ?? true }) { pin in
-                Annotation("", coordinate: pin.coordinate, anchor: .bottom) {
-                    VStack(spacing: 3) {
-                        if selectedSavedPin == pin.id {
-                            Text(pin.displayName).font(.caption.weight(.semibold)).lineLimit(2)
-                                .padding(.horizontal, 9).padding(.vertical, 5)
-                                .background(ShiftPalette.color(.surface, style: preferences.visualStyle), in: Capsule())
-                                .fixedSize(horizontal: false, vertical: true).frame(maxWidth: 160)
-                        }
-                        Button { selectedSavedPin = selectedSavedPin == pin.id ? nil : pin.id } label: {
-                            Image(systemName: pin.symbol == .pin ? "mappin.circle.fill" : pin.symbol.rawValue).font(.title2)
-                                .foregroundStyle(pin.tint.swatch).frame(width: 44, height: 44)
-                        }.buttonStyle(.plain).accessibilityLabel(pin.displayName)
+                Annotation("", coordinate: pin.coordinate, anchor: .center) {
+                    SavedPinMapIcon(pin: pin, selected: selectedSavedPin == pin.id) {
+                        selectedSavedPin = selectedSavedPin == pin.id ? nil : pin.id
                     }
                 }.annotationTitles(.hidden)
             }

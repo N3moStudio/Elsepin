@@ -291,7 +291,7 @@ struct RoutePlaceSearchSheet: View {
         DeveloperLogStore.shared.record("place_search_started", ["kind": chooseSingleResult ? "suggestion" : "general"])
         searchTask = Task { @MainActor in
             do {
-                let response = try await response(search, request: request, general: !chooseSingleResult)
+                let response = try await self.response(search, request: request, general: !chooseSingleResult)
                 guard !Task.isCancelled, generation == searchGeneration else { return }
                 isResolving = false
                 activeSearch = nil
