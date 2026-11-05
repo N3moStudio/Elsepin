@@ -4,6 +4,16 @@ Updated **4 November 2026**, America/Los_Angeles. Read the [full changelog](../C
 for feature details. This page separates compilation, test artifacts and published
 releases so a successful check is not mistaken for an available download.
 
+**Workflow history cleanup, 4 November:** at the owner's request, all 15 previous
+GitHub workflow runs were deleted after archiving their metadata, annotations
+and complete logs locally (`.build/action-cleanup/archive-index.json`). Historical
+run links below no longer resolve; their recorded evidence and local artifacts
+remain. A verified empty Actions history was followed by fresh run
+[41972757451](https://github.com/N3moStudio/Elsepin/actions/runs/41972757451), source
+`b4de4ff8`. It was rejected before any job started with the same failed-payment
+or spending-limit annotation. Deleting history did not resolve the billing block.
+No new IPA or release resulted.
+
 ## Build 69 — native validation blocked, 4 November 2026
 
 Private run [41970102369](https://github.com/N3moStudio/Elsepin/actions/runs/41970102369)

@@ -45,6 +45,15 @@ GitHub API successfully dispatched the job. The dispatch path is not the blocker
 Latest owner instruction permits Actions but still forbids publication. No need
 to ask for permission to retry once the owner confirms account access is fixed.
 
+Owner-requested cleanup on 4 November: deleted all **15** previous workflow runs
+after preserving their metadata, annotations and original logs locally. Verified
+zero runs remained, then dispatched **41972757451** at `b4de4ff8`. GitHub rejected
+it before any step with the same billing/spending-limit message. Only that fresh
+failed run remains. Cleanup did not clear the account restriction. Archive index:
+`.build/action-cleanup/archive-index.json`; newest annotation/logs:
+`.build/artifacts/41972757451/`. Historical remote run links below may now be gone;
+their local evidence and prior IPAs remain. No release was changed or published.
+
 New logic tests cover legacy favorite decoding, backup round trips, bounded
 history/retention, category intent, wait/camera budgets, stop countdowns and timed
 wait cancellation. Physical map gestures, providers and energy need device
