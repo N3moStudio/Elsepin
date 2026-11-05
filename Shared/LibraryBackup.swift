@@ -7,6 +7,9 @@ struct BackupPlace: Codable, Equatable {
     var folder: String?
     var icon: String? = nil
     var color: String? = nil
+    // Missing in older backups: saved places were always favorites.
+    var favorite: Bool? = nil
+    var isFavorite: Bool { favorite ?? true }
     var id: String { "\(latitude),\(longitude)" }
     var isValid: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && name.count <= 120 &&

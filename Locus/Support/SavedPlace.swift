@@ -11,9 +11,11 @@ struct SavedPlace: Identifiable, Codable, Equatable {
     var folder: String? = nil
     var icon: String? = nil
     var color: String? = nil
+    var favorite: Bool? = nil
+    var isFavorite: Bool { favorite ?? true }
     var symbol: SavedPlaceSymbol { icon.flatMap(SavedPlaceSymbol.init(rawValue:)) ?? .pin }
     var tint: SavedPlaceTint { color.flatMap(SavedPlaceTint.init(rawValue:)) ?? .mint }
-    var backupPlace: BackupPlace { BackupPlace(name: name, latitude: latitude, longitude: longitude, folder: folder, icon: icon, color: color) }
+    var backupPlace: BackupPlace { BackupPlace(name: name, latitude: latitude, longitude: longitude, folder: folder, icon: icon, color: color, favorite: favorite) }
 
     var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)

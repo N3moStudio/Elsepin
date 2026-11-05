@@ -60,6 +60,7 @@ struct NamedAreaEditor: View {
     @State private var editingCorners = false
     @State private var confirmDiscard = false
     @State private var error: String?
+    @State private var cameraRequest: SketchCameraRequest?
     private var otherAreas: [NamedArea] { session.namedAreas.filter { $0.id != draft.id } }
     var body: some View {
         NavigationStack {
@@ -69,9 +70,13 @@ struct NamedAreaEditor: View {
                 Text("Map").font(.headline).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal)
                 Text("Tap corners around the edge. Use two fingers to move or zoom. Add at least 3 corners without crossing the outline.")
                     .font(.subheadline).foregroundStyle(.secondary).padding(.horizontal)
+                MapLocationSearch(center: draft.viewport.camera?.centerCoordinate ?? draft.center) { coordinate in
+                    cameraRequest = SketchCameraRequest(center: coordinate)
+                }.padding(.horizontal)
                 SketchMapView(points: draft.points, outline: .area,
                               referenceAreas: otherAreas,
                               initialCamera: draft.viewport.camera, initialCenter: draft.center,
+                              cameraRequest: cameraRequest,
                               onPoint: { coordinate in
                     guard draft.points.count < 200 else { return }
                     let point = RoutePoint(coordinate)

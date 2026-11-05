@@ -136,3 +136,14 @@ while an eligible launch recovery waits in the unlocked foreground; one attempt,
 then manual retry on failure. `restoreTripDisplay` restores the saved map/card
 without claiming a device confirmation. Do not bypass epoch/worker guards or count
 downtime as movement. See [lifecycle details](SESSION-CLOSURE.md).
+
+## Pins and search (build 69)
+
+- `PinEditor.swift`: naming, map placement and optional favorite. Does not send movement.
+- `SavedPlace.swift`, `LibraryBackup.swift`: optional favorite flag; nil means an old favorite. `SpoofSession.savedPins` owns all pins; `favorites` is filtered display only. Import/export/widgets must use all pins.
+- `SettingsView.swift` / `PlacesView`: Library categories and Favorites headings. `TripViews.swift`: saved route favorite action.
+- `RecentRoute.swift`, `RecentRouteStore.swift`: bounded, local-only route history. Keep privacy clear/reset/retention in `SpoofSession` in sync.
+- `PlaceSearchRequest.swift`, `PlaceSearchIntent.swift`: native cancellation, deadlines, category interpretation. Never choose or move to a result automatically.
+- `RoutePlaceSearchSheet.swift`: Home search and recent pin/route actions. `RouteStopSearchSheet.swift`: draft stop insertion or active-route browsing.
+- `MapLocationSearch.swift`, `NamedAreasView.swift`, `SketchMapView.swift`: camera-only area search; never clear existing corners.
+- `DisplayEnergyPolicy.swift`, `RouteLifecycle.swift`: display/wait scheduling. Movement clocks, connection verification and recovery cadence are separate safety requirements.

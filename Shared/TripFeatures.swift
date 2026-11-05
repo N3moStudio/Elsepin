@@ -223,6 +223,8 @@ struct SavedTrip: Identifiable, Codable, Equatable {
     var travelSections: [RouteTravelSection]? = nil
     var folder: String? = nil
     var arrival: ArrivalChoice? = nil
+    var favorite: Bool? = nil
+    var isFavorite: Bool { favorite ?? false }
 
     func duplicated(existingNames: Set<String>, now: Date = Date()) -> Self {
         var copy = self

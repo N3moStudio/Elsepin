@@ -91,7 +91,7 @@ struct RootView: View {
                 .environment(\.shiftEditorEmbedded, true)
         }
         .onAppear { DeveloperLogStore.shared.record("screen_opened", ["screen": "Map"]); publishWidgets(); openShortcutIfAllowed() }
-        .onChange(of: session.favorites) { _, _ in publishWidgets() }
+        .onChange(of: session.savedPins) { _, _ in publishWidgets() }
         .onChange(of: tripLibrary.trips) { _, _ in publishWidgets() }
         .sheet(isPresented: $showSessionDetails) {
             NavigationStack { ConnectionDetailsView().toolbar {
@@ -192,7 +192,7 @@ struct RootView: View {
             selectedTab = .map
             switch shortcut.kind {
             case .place:
-                guard let place = HomeWidgetPublisher.place(for: shortcut.id, among: session.favorites) else { showNotice("That saved place is no longer available."); return }
+                guard let place = HomeWidgetPublisher.place(for: shortcut.id, among: session.savedPins) else { showNotice("That saved place is no longer available."); return }
                 planner.discardPreparedRoute()
                 session.selectPin(place.coordinate, name: place.displayName)
                 mapPreview = RoutePlace(name: place.name, coordinate: place.coordinate)
@@ -216,7 +216,7 @@ struct RootView: View {
 
     private func publishWidgets() {
         guard !reset.isResetting else { return }
-        _ = HomeWidgetPublisher.publish(places: session.favorites, trips: tripLibrary.trips)
+        _ = HomeWidgetPublisher.publish(places: session.savedPins, trips: tripLibrary.trips)
     }
     private func showNotice(_ message: String) {
         DeveloperLogStore.shared.record("popup_requested", ["message": message])
@@ -830,7 +830,7 @@ struct SessionSpotNameButton: View {
             Button("Remove name", role: .destructive) { saveName("") }
             Button("Cancel", role: .cancel) { target = nil }
         } message: {
-            Text("Only for this session, within 5 meters of this spot. Beyond that, Elsepin uses the next matching place or named area. Turn off Hide location separately for the Lock Screen or Island to show names there.")
+            Text("A name saves this pin to Library. Favoriting is optional. Removing the session label does not delete a saved pin.")
         }
     }
 
@@ -838,6 +838,8 @@ struct SessionSpotNameButton: View {
         guard let target else { return }
         if !session.nameSpot(value, at: target.point, preview: target.preview, context: target.context) {
             session.lastError = "That spot or session changed. Choose Name again."
+        } else if !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            _ = session.savePin(name: value, coordinate: target.point.coordinate)
         }
         self.target = nil
     }

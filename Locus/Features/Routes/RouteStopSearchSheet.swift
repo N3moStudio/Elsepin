@@ -5,6 +5,7 @@ import SwiftUI
 /// redirects an active trip or sends a simulated location.
 struct RouteStopSearchSheet: View {
     let route: PlannedRoute
+    let browsing: Bool
     let onChoose: (RoutePlace, Bool) -> Void
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var session: SpoofSession
@@ -12,8 +13,9 @@ struct RouteStopSearchSheet: View {
     @State private var selectedID: UUID?
     @FocusState private var searchFocused: Bool
 
-    init(route: PlannedRoute, onChoose: @escaping (RoutePlace, Bool) -> Void) {
+    init(route: PlannedRoute, browsing: Bool = false, onChoose: @escaping (RoutePlace, Bool) -> Void) {
         self.route = route
+        self.browsing = browsing
         self.onChoose = onChoose
         _model = StateObject(wrappedValue: RouteStopSearchModel(track: route.track))
     }
@@ -32,7 +34,7 @@ struct RouteStopSearchSheet: View {
             }.shiftSettingsRows()
             if model.query.isEmpty {
                 Section("Find a stop") {
-                    ForEach(["Coffee", "Food", "Groceries", "Parks"], id: \.self) { category in
+                    ForEach(["Fast food", "Coffee", "Groceries", "Parks"], id: \.self) { category in
                         Button(category) { model.query = category; submit() }
                             .frame(minHeight: 44)
                     }
@@ -72,11 +74,11 @@ struct RouteStopSearchSheet: View {
                 } header: {
                     Text(model.scope == .alongRoute ? "Along your route" : "Search results")
                 } footer: {
-                    Text("Distance from the path isn't extra travel distance. Adding a stop recalculates your route preview.")
+                    Text(browsing ? "Tap a result to name and save its pin. Your current route keeps going unchanged." : "Distance from the path isn't extra travel distance. Adding a stop recalculates your route preview.")
                 }.shiftSettingsRows()
             }
         }
-        .shiftSettingsScreen().loggedNavigationTitle("Find a stop")
+        .shiftSettingsScreen().loggedNavigationTitle(browsing ? "Along your route" : "Find a stop")
         .navigationBarTitleDisplayMode(.inline)
         .searchable(text: $model.query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Place, address, or category")
         .searchFocused($searchFocused)
@@ -112,9 +114,9 @@ struct RouteStopSearchSheet: View {
                     }
                 }
                 Spacer(minLength: 4)
-                Image(systemName: "plus.circle.fill").foregroundStyle(LocusTheme.accent)
+                Image(systemName: browsing ? "mappin.circle.fill" : "plus.circle.fill").foregroundStyle(LocusTheme.accent)
             }.frame(maxWidth: .infinity, minHeight: 52, alignment: .leading).contentShape(Rectangle())
-        }.buttonStyle(.borderless).accessibilityHint("Add this stop to the route preview")
+        }.buttonStyle(.borderless).accessibilityHint(browsing ? "Name and save this pin without changing your route" : "Add this stop to the route preview")
     }
 
     private func choose(_ place: RoutePlace) {
@@ -143,7 +145,7 @@ private final class RouteStopSearchModel: ObservableObject {
     @Published private(set) var message: String?
     private let corridor: RouteSearchCorridor
     private var task: Task<Void, Never>?
-    private var activeSearch: MKLocalSearch?
+    private var activeSearch: PlaceSearchRequest?
     private var generation = UUID()
 
     init(track: RouteTrack) { corridor = RouteSearchCorridor(track: track) }
@@ -171,16 +173,15 @@ private final class RouteStopSearchModel: ObservableObject {
             for region in regions {
                 guard !Task.isCancelled, ticket == generation else { return }
                 let request = MKLocalSearch.Request()
-                request.naturalLanguageQuery = text
-                request.resultTypes = [.address, .pointOfInterest]
+                PlaceSearchRequest.configure(request, query: text)
                 if let region {
                     request.region = MKCoordinateRegion(center: region.center.coordinate,
                         latitudinalMeters: region.diameter, longitudinalMeters: region.diameter)
                 }
-                let search = MKLocalSearch(request: request)
+                let search = PlaceSearchRequest(request)
                 activeSearch = search
                 do {
-                    let response = try await search.start()
+                    let response = try await search.start(seconds: 5)
                     guard !Task.isCancelled, ticket == generation else { return }
                     for item in response.mapItems {
                         let point = RoutePoint(item.placemark.coordinate)
@@ -195,6 +196,7 @@ private final class RouteStopSearchModel: ObservableObject {
                         let address = [street, item.placemark.locality, item.placemark.administrativeArea].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: ", ")
                         found.append(Result(place: RoutePlace(name: name, coordinate: point.coordinate), address: address, match: match))
                     }
+                    results = Array(found.prefix(30))
                 } catch {
                     guard !Task.isCancelled, ticket == generation else { return }
                     failures += 1

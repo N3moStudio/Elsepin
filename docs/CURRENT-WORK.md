@@ -1,6 +1,38 @@
 # Elsepin current handoff
 
-Updated 2 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
+Updated 4 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
+
+## 2.6.1 (69) — Pins, Favorites, search and energy — in validation
+
+User scope: implement locally/private validation; **do not publish a release**.
+Pins are independent of favorites. Library has Favorites (Pins and Routes), Pins,
+Routes and Areas. Old saved-place records retain favorite status; unstarred pins
+are included in backup review/export, restoration and widget choices. The legacy
+`locus.favorites` key and v1/v2 backup fields remain compatible. Optional `favorite`
+fields carry the new distinction; older app versions may show all pins as favorites.
+
+Map pin names appear only on tap. Add/edit pins without sending a location.
+Area search changes its camera without changing corners. Home recents distinguish
+pin actions from route actions; naming saves to Library. Route history honors
+the existing retention, disable, clear and reset controls and is not exported.
+
+General MapKit searches use cancellation, a 7-second per-request deadline, one
+fallback, category interpretation and nearby POI fallback. Along-route search is
+also available while traveling, for browsing/saving a pin without changing the
+active route. Draft stop search remains the route-changing preview flow. Each
+corridor request has a 5-second deadline and shows partial results progressively.
+Cycling unavailable no longer silently substitutes walking: user must choose it.
+
+Battery: fewer idle stop-wait wakeups, immediate control-interrupt wake, no change
+to movement cadence or connection/verification/recovery settings; thermal camera
+throttling only; saved-pin rendering restricted to viewport. No measured battery
+or temperature reduction is claimed. No checkpoint-format migration was needed.
+
+Local checks: appearance/identity checks and 16 packaging tests passed. WSL is
+currently unresponsive even to `/bin/true`; Swift/native evidence is pending the
+private Mac workflow. New logic tests cover compatibility, history, category
+intent and wait/camera policies. Physical map gestures, providers and energy need
+device acceptance. Historical build 68 evidence below remains unchanged.
 
 ## 2.6.1 (68) — compact route card and automatic trip recovery — private test build
 

@@ -16,9 +16,16 @@ final class RouteWakeSignal {
         for continuation in pending { continuation.resume() }
     }
 
-    func wait(after observed: UInt64) async {
+    func wait(after observed: UInt64, timeout: TimeInterval? = nil) async {
         guard observed == revision, !Task.isCancelled else { return }
         let id = UUID()
+        let timer: Task<Void, Never>? = timeout.map { duration in
+            Task { @MainActor in
+                do { try await Task.sleep(for: .seconds(max(0, duration))) } catch { return }
+                self.waiters.removeValue(forKey: id)?.resume()
+            }
+        }
+        defer { timer?.cancel() }
         await withTaskCancellationHandler {
             await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
                 guard observed == revision, !Task.isCancelled else { continuation.resume(); return }

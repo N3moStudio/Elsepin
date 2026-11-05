@@ -130,12 +130,16 @@ enum RouteBuilder {
             let nsError = error as NSError
             let missing = error is MissingRoute || (nsError.domain == MKErrorDomain && nsError.code == MKError.Code.directionsNotFound.rawValue)
             guard mode.routeNetwork == .cycling, missing else { throw error }
-            return try await requestRoutes(from: start, to: end, network: .walking, source: .walkingForCycling(fallback: true))
+            throw CyclingUnavailable()
         }
     }
 
     private struct MissingRoute: LocalizedError {
         var errorDescription: String? { "No matching path was found. Try other endpoints or draw your own route." }
+    }
+
+    struct CyclingUnavailable: LocalizedError {
+        var errorDescription: String? { "Apple Maps couldn't find a cycling path here. Try other endpoints, draw a route, or explicitly choose a walking path. Walking paths may include steps or bike restrictions." }
     }
 
     private static func requestRoutes(from start: RoutePlace, to end: RoutePlace,

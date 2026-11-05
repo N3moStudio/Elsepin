@@ -12,9 +12,9 @@ struct PrivacySettingsSection: View {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .recents: return "Clear recent locations?"
-            case .stopSaving: return "Stop saving and clear recent locations?"
-            case .favorites: return "Delete all saved favorites?"
+            case .recents: return "Clear recent pins & routes?"
+            case .stopSaving: return "Stop saving and clear recent pins & routes?"
+            case .favorites: return "Delete all saved pins?"
             case .trips: return "Delete all saved trips?"
             }
         }
@@ -52,7 +52,7 @@ struct PrivacySettingsSection: View {
         }.shiftSettingsRows()
 
         Section {
-            Toggle("Don't save recent locations", isOn: Binding(
+            Toggle("Don't save recent pins & routes", isOn: Binding(
                 get: { !preferences.saveRecentLocations },
                 set: { stopSaving in
                     if stopSaving { deletion = .stopSaving }
@@ -62,21 +62,21 @@ struct PrivacySettingsSection: View {
             Picker("Delete recents", selection: $preferences.recentHistoryRetention) {
                 ForEach(RecentHistoryRetention.allCases) { option in Text(option.title).tag(option) }
             }.disabled(!preferences.saveRecentLocations)
-            Button("Clear recent locations", role: .destructive) { deletion = .recents }
-                .disabled(session.recents.isEmpty)
-            Button("Delete saved favorites…", role: .destructive) { deletion = .favorites }
-                .disabled(session.favorites.isEmpty)
+            Button("Clear recent pins & routes", role: .destructive) { deletion = .recents }
+                .disabled(session.recents.isEmpty && session.recentRoutes.isEmpty)
+            Button("Delete saved pins…", role: .destructive) { deletion = .favorites }
+                .disabled(session.savedPins.isEmpty)
             Button("Delete saved trips…", role: .destructive) { deletion = .trips }
                 .disabled(library.trips.isEmpty && library.error == nil)
             SettingsHelp(title: "About history", lines: [
                 "Your history stays on this phone. Old recents are removed when Elsepin is running or you reopen it.",
-                "Choosing a time limit also clears old entries that have no date. Saved favorites and trips are kept separately.",
+                "Choosing a time limit also clears old entries that have no date. Saved pins and trips are kept separately.",
                 "Elsepin has no account or analytics. Apple Maps uses Apple services for maps, search, and routes."
             ])
         } header: {
-            Text("History & saved places")
+            Text("History & saved pins")
         } footer: {
-            Text("Clearing recents keeps your saved places and trips.")
+            Text("Clearing recents keeps your saved pins and trips.")
         }.shiftSettingsRows()
         .loggedConfirmationDialog(deletion?.title ?? "Clear history?", isPresented: Binding(
             get: { deletion != nil }, set: { if !$0 { deletion = nil } }
@@ -86,9 +86,9 @@ struct PrivacySettingsSection: View {
             }
             Button("Cancel", role: .cancel) { deletion = nil }
         } message: {
-            if deletion == .favorites { Text("Permanently deletes saved favorites, including favorites in Recently Deleted. Recent locations, trips, and an active route are kept. This cannot be undone.") }
-            else if deletion == .trips { Text("Permanently deletes saved trips, including trips in Recently Deleted. Favorites, recent locations, and an active route are kept. This cannot be undone.") }
-            else { Text("This clears recent location history. Your saved favorites, saved trips, and an active route are kept.") }
+            if deletion == .favorites { Text("Permanently deletes saved pins, including favorites in Recently Deleted. Recent pins & routes, trips, and an active route are kept. This cannot be undone.") }
+            else if deletion == .trips { Text("Permanently deletes saved trips, including trips in Recently Deleted. Favorites, recent pins & routes, and an active route are kept. This cannot be undone.") }
+            else { Text("This clears recent location history. Your saved pins, saved trips, and an active route are kept.") }
         }
     }
 

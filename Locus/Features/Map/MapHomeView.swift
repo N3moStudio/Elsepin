@@ -12,9 +12,16 @@ struct MapHomeView: View {
     @EnvironmentObject private var pairing: PairingStore
     @EnvironmentObject private var planner: RoutePlanner
     @EnvironmentObject private var library: TripLibrary
+    @EnvironmentObject private var preferences: SessionPreferences
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var position: MapCameraPosition = .userLocation(fallback: .automatic)
     @State private var showSearch = false
+    @State private var showRouteSearch = false
+    @State private var selectedSavedPin: String?
+    @State private var thermallyLimited = ProcessInfo.processInfo.thermalState.rawValue >= ProcessInfo.ThermalState.serious.rawValue
+    @State private var visibleMapRect: MKMapRect?
+    @State private var pendingBrowsePin: PinDraft?
+    @State private var pinEditor: PinDraft?
     @State private var pendingDestination: RoutePlace?
     @State private var pendingSavedTrip: SavedTrip?
     @State private var pendingPin: RoutePlace?
@@ -44,7 +51,7 @@ struct MapHomeView: View {
     @State private var pinAdjustmentCamera: MKMapCamera?
 
     private var visualUpdatesEnabled: Bool {
-        isVisible && scenePhase == .active && !showSearch && !showPathEditor && !planner.isDrawing
+        isVisible && scenePhase == .active && !showSearch && !showRouteSearch && !showPathEditor && !planner.isDrawing
     }
 
     private enum DrawTool: String, CaseIterable, Identifiable {
@@ -85,7 +92,7 @@ struct MapHomeView: View {
     }
     private var shownPin: CLLocationCoordinate2D? { adjustedPin ?? session.pin }
     private func pinStyle(at coordinate: CLLocationCoordinate2D) -> SavedPlace? {
-        session.favorites.first { RoutePoint($0.coordinate).distance(to: RoutePoint(coordinate)) <= 5 }
+        session.savedPins.first { RoutePoint($0.coordinate).distance(to: RoutePoint(coordinate)) <= 5 }
     }
 
     private func pinAdjustmentGesture(_ proxy: MapProxy) -> MapPinAdjustmentGesture {
@@ -112,6 +119,24 @@ struct MapHomeView: View {
     // every gesture and both overlays as one large SwiftUI expression.
     @MapContentBuilder private var mapAnnotations: some MapContent {
         if visualUpdatesEnabled { UserAnnotation() }
+        if !planner.isDrawing {
+            ForEach(session.savedPins.filter { visibleMapRect?.contains(MKMapPoint($0.coordinate)) ?? true }) { pin in
+                Annotation("", coordinate: pin.coordinate, anchor: .bottom) {
+                    VStack(spacing: 3) {
+                        if selectedSavedPin == pin.id {
+                            Text(pin.displayName).font(.caption.weight(.semibold)).lineLimit(2)
+                                .padding(.horizontal, 9).padding(.vertical, 5)
+                                .background(ShiftPalette.color(.surface, style: preferences.visualStyle), in: Capsule())
+                                .fixedSize(horizontal: false, vertical: true).frame(maxWidth: 160)
+                        }
+                        Button { selectedSavedPin = selectedSavedPin == pin.id ? nil : pin.id } label: {
+                            Image(systemName: "mappin.circle.fill").font(.title2)
+                                .foregroundStyle(pin.tint.swatch).frame(width: 44, height: 44)
+                        }.buttonStyle(.plain).accessibilityLabel(pin.displayName)
+                    }
+                }.annotationTitles(.hidden)
+            }
+        }
         if let route = displayedRoute, !planner.isDrawing {
             if let activePolyline { MapPolyline(activePolyline).stroke(LocusTheme.accent, lineWidth: 6) }
             ForEach(route.stops) { stop in
@@ -122,8 +147,8 @@ struct MapHomeView: View {
                 Marker("Route start", systemImage: "circle", coordinate: route.origin.coordinate).tint(.secondary)
             }
         }
-        if let pin = shownPin, (session.pinIsPreview || (session.journey == nil && planner.preparedRoute == nil)), !planner.isDrawing {
-            Marker(session.suggestedFavoriteName(for: pin), systemImage: pinStyle(at: pin)?.symbol.rawValue ?? "mappin",
+        if let pin = shownPin, !session.savedPins.contains(where: { RoutePoint($0.coordinate).distance(to: RoutePoint(pin)) < 1 }), (session.pinIsPreview || (session.journey == nil && planner.preparedRoute == nil)), !planner.isDrawing {
+            Marker("", systemImage: pinStyle(at: pin)?.symbol.rawValue ?? "mappin",
                    coordinate: pin).tint(pinStyle(at: pin)?.tint.swatch ?? LocusTheme.accentSecondary)
         }
         if session.restoredRouteAwaitingConnection || session.recoveringRoute, let route = session.activeRoute, let progress = session.journey {
@@ -157,6 +182,7 @@ struct MapHomeView: View {
 
     private func homeMap(_ proxy: MapProxy) -> some View {
         mapWithGestures(proxy)
+            .onMapCameraChange(frequency: .onEnd) { context in visibleMapRect = context.rect }
             .onMapCameraChange(frequency: .continuous) { context in
                 mapCameraChanged(context.camera, proxy: proxy)
             }
@@ -189,6 +215,7 @@ struct MapHomeView: View {
             DeveloperLogStore.shared.record("map_pin_input", ["projection": nativeCoordinate == nil ? "global fallback" : "native map"])
             var transaction = Transaction(); transaction.disablesAnimations = true
             withTransaction(transaction) {
+                selectedSavedPin = nil
                 planner.discardPreparedRoute()
                 session.selectPin(coordinate)
             }
@@ -370,7 +397,7 @@ struct MapHomeView: View {
         }
         .onChange(of: session.journey?.travelledMetres) { _, _ in
             guard visualUpdatesEnabled, followMovement, session.routeActive,
-                  Date().timeIntervalSince(lastCameraUpdate) >= (session.lowPower ? 2 : 1) else { return }
+                  Date().timeIntervalSince(lastCameraUpdate) >= DisplayEnergyPolicy.cameraInterval(lowPower: session.lowPower, thermallyLimited: thermallyLimited) else { return }
             centerOnLocation()
         }
         .onChange(of: visualUpdatesEnabled) { _, enabled in
@@ -413,6 +440,25 @@ struct MapHomeView: View {
         .sheet(isPresented: $showPathEditor) {
             PathEditorSheet(title: "Edit drawing", points: drawing.points) { edited in drawing.replacePoints(edited); return nil }
         }
+        .sheet(item: $pinEditor) { draft in PinEditor(draft: draft) }
+        .onReceive(NotificationCenter.default.publisher(for: ProcessInfo.thermalStateDidChangeNotification)) { _ in
+            thermallyLimited = ProcessInfo.processInfo.thermalState.rawValue >= ProcessInfo.ThermalState.serious.rawValue
+        }
+        .sheet(isPresented: $showRouteSearch, onDismiss: {
+            if let draft = pendingBrowsePin { pendingBrowsePin = nil; pinEditor = draft }
+        }) {
+            if let route = session.activeRoute {
+                NavigationStack {
+                    RouteStopSearchSheet(route: route, browsing: true) { place, _ in
+                        let draft = PinDraft(place: session.savedPins.first { $0.id == "\(place.coordinate.latitude),\(place.coordinate.longitude)" }, center: place.coordinate)
+                        draft.name = place.name
+                        // Present the editor after the route-search sheet has dismissed.
+                        pendingBrowsePin = draft
+                    }
+                    .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Done") { showRouteSearch = false } } }
+                }
+            }
+        }
         .sheet(isPresented: $showSearch, onDismiss: finishPlaceSearch) {
             RoutePlaceSearchSheet(title: "Where to?", onPreviewTeleport: { place in
                 pendingPin = place
@@ -429,7 +475,7 @@ struct MapHomeView: View {
         } else if let trip = pendingSavedTrip {
             pendingSavedTrip = nil
             guard session.journey == nil, !session.isBusy else { return }
-            if let current = library.trips.first(where: { $0.id == trip.id }) { planner.useSaved(current) }
+            planner.useSaved(library.trips.first(where: { $0.id == trip.id }) ?? trip)
         } else if let destination = pendingDestination {
             planner.plan(to: destination, defaultOrigin: session.defaultRouteOrigin, mode: session.travelMode)
             pendingDestination = nil
@@ -453,6 +499,12 @@ struct MapHomeView: View {
             if !planner.isDrawing {
                 HStack {
                     controls
+                    if session.journey != nil {
+                        Button { showRouteSearch = true } label: {
+                            Image(systemName: "magnifyingglass").frame(width: 46, height: 46)
+                        }.buttonStyle(.plain).locusGlass(.interactive, in: Circle())
+                            .accessibilityLabel("Search along route")
+                    }
                     Spacer(minLength: 8)
                     undoJumpButton
                     Button { followMovement = true; selection = nil; centerOnLocation() } label: {
@@ -837,7 +889,7 @@ private struct MapPinTapGesture: UIGestureRecognizerRepresentable {
         func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
             var view = touch.view
             while let candidate = view {
-                if candidate is UIControl { return false }
+                if candidate is UIControl || candidate is MKAnnotationView { return false }
                 if candidate is MKMapView { break }
                 view = candidate.superview
             }
@@ -923,7 +975,7 @@ private struct RouteMapPressGesture: UIGestureRecognizerRepresentable {
         func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
             var ancestor = touch.view
             while let view = ancestor {
-                if view is UIControl { return false }
+                if view is UIControl || view is MKAnnotationView { return false }
                 if view is MKMapView { break }
                 ancestor = view.superview
             }

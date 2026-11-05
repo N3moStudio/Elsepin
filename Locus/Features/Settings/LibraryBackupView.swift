@@ -68,7 +68,7 @@ struct LibraryBackupView: View {
             }.shiftSettingsRows()
             Section {
                 SettingsHelp(title: "What's in a backup?", lines: [
-                    "Routes, saved places and named areas can be selected individually. Existing items keep their current versions.",
+                    "Routes, pins and named areas can be selected individually. Existing items keep their current versions.",
                     "Settings show current and imported values. Only checked settings change; unchanged settings are labeled Already the same.",
                     "Pairing, helper access keys, tunnel address, app lock, recent history entries and recovery points stay on this phone.",
                     "The file is readable and can contain saved locations. Nothing is uploaded automatically."
@@ -92,7 +92,7 @@ struct LibraryBackupView: View {
         .loggedConfirmationDialog("Export this backup?", isPresented: $confirmExport, titleVisibility: .visible) {
             Button("Export \(exportScope.title.lowercased())") {
                 do {
-                    let backup = LibraryBackup(places: session.favorites.map(\.backupPlace), trips: library.trips,
+                    let backup = LibraryBackup(places: session.savedPins.map(\.backupPlace), trips: library.trips,
                         preferences: session.backupPreferences, areas: session.namedAreas).selecting(exportScope.categories)
                     document = LibraryBackupDocument(data: try backup.encoded())
                     exportName = exportScope.filename
@@ -115,7 +115,7 @@ struct LibraryBackupView: View {
         .onChange(of: input.state.preview?.id) { _, id in
             guard id != nil, let backup = input.state.preview?.backup else { return }
             let current = BackupImportContext(preferences: session.backupPreferences,
-                places: session.favorites.map(\.backupPlace), trips: library.trips, areas: session.namedAreas)
+                places: session.savedPins.map(\.backupPlace), trips: library.trips, areas: session.namedAreas)
             selection = BackupImportReview(backup: backup, current: current).defaultSelection
             reviewing = true
         }

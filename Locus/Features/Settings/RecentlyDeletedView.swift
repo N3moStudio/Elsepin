@@ -93,7 +93,7 @@ struct RecentlyDeletedView: View {
                 guard !library.trips.contains(where: { $0.id == trip.id }) else { throw RestoreError.exists }
                 guard try library.merge([trip]) else { message = library.error; return }
             case .place(let place):
-                guard !session.favorites.contains(where: { $0.id == place.id }) else { throw RestoreError.exists }
+                guard !session.savedPins.contains(where: { $0.id == place.id }) else { throw RestoreError.exists }
                 guard session.restoreFavorite(place) else { message = session.lastError; return }
             case .area(let area):
                 guard !session.namedAreas.contains(where: { $0.id == area.id }) else { throw RestoreError.exists }

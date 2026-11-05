@@ -5,6 +5,19 @@ is the official release. Earlier Shift entries retain their original names and r
 
 [App introduction](README.md) · [Build history](docs/BUILD-HISTORY.md) · [Detailed Change Ledger](docs/CHANGE-LEDGER.md)
 
+## Unreleased — 2.6.1 build 69 (4 November 2026)
+
+- Separate named Pins from Favorites; favorites now group Pins and Routes. Name a pin without starring it, edit it on its own Library screen, and optionally favorite saved routes.
+- Show saved pin symbols on the main map; tap for a small name label. Keep movement confirmation separate.
+- Add area-editor search below the drawing instructions, preserving the outline while moving the camera.
+- Add recent-route history and separate pin/route actions. Naming saves to Library; history privacy controls cover both kinds.
+- Remove the Home search Saved places section, shorten the dropped-pin label, and improve general/category search with bounded waits, cancellation and a nearby fallback.
+- Search along an active route to browse/save places without redirecting it. Draft stop search retains route preview and shows partial results sooner.
+- Ask before using a walking path when a cycling/e-bike route is unavailable.
+- Reduce stop-wait wakeups and throttle camera following during thermal pressure without slowing simulated travel or changing connection checks.
+- Preserve legacy backup import, saved pin favorites, routes, areas, themes, icons, manual movement and recovery safeguards.
+- Private validation in progress. No release or deployment.
+
 ## 2.6.1 (68) — compact route card and automatic trip recovery — private test build
 
 - Collapse/expand the active-route card while retaining progress, remaining distance,

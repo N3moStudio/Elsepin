@@ -286,148 +286,97 @@ private struct LocusAboutSettingsView: View {
 struct PlacesView: View {
     var isRoot = false
     @Environment(\.dynamicTypeSize) private var typeSize
-    @State private var category = LibraryCategory.places
-    private enum LibraryCategory: String, CaseIterable { case places = "Places", routes = "Routes", areas = "Areas" }
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var session: SpoofSession
+    @EnvironmentObject private var library: TripLibrary
+    private enum Category: String, CaseIterable { case favorites = "Favorites", pins = "Pins", routes = "Routes", areas = "Areas" }
+    @State private var category = Category.favorites
+    @State private var search = ""
+    @State private var pinEditor: PinDraft?
+    @State private var areaEditor: NamedAreaDraft?
+    @State private var folderPlace: SavedPlace?
     var onTrip: (SavedTrip) -> Void = { _ in }
     var onPlace: (SavedPlace) -> Void = { _ in }
     var onFindPlace: (() -> Void)? = nil
     var onCreateRoute: (() -> Void)? = nil
-    @EnvironmentObject private var session: SpoofSession
-    @Environment(\.dismiss) private var dismiss
-
-    @EnvironmentObject private var library: TripLibrary
-    @State private var search = ""
-    @State private var selectedFolder: String?
-    @State private var folderPlace: SavedPlace?
-    @State private var placeToRename: SavedPlace?
-    @State private var areaEditor: NamedAreaDraft?
 
     var body: some View {
         NavigationStack {
-            List {
-                Section {
-                    if typeSize.isAccessibilitySize { categoryPicker.pickerStyle(.menu) }
-                    else { categoryPicker.pickerStyle(.segmented) }
-                }.listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
-                if category == .areas {
-                    NamedAreasSection(search: search) { area in
-                        areaEditor = NamedAreaDraft(area: area, center: session.pin ?? session.simulated ?? session.realCoordinate)
+            searchableContent
+                .shiftScreen().loggedNavigationTitle("Library")
+                .toolbar { if !isRoot { ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } } } }
+                .fullScreenCover(item: $pinEditor) { draft in PinEditor(draft: draft) }
+                .fullScreenCover(item: $areaEditor) { draft in
+                    NamedAreaEditor(draft: draft) { area in
+                        session.replaceNamedAreas(session.namedAreas.filter { $0.id != area.id } + [area])
                     }
                 }
-                if category != .areas && !folders.isEmpty {
-                    Section {
-                        Picker("Folder", selection: $selectedFolder) {
-                            Text("All saved items").tag(String?.none)
-                            ForEach(folders, id: \.self) { Text($0).tag(Optional($0)) }
-                        }
-                    }
+                .sheet(item: $folderPlace) { place in
+                    LibraryFolderSheet(current: place.folder, folders: folders) { session.moveFavorite(place, folder: $0) }
                 }
-                if category == .routes { SavedTripsSection(onChoose: onTrip, search: search, folder: selectedFolder, folders: folders, onCreate: onCreateRoute) }
-                if category == .places {
-                Section("Favorites") {
-                    if session.favorites.isEmpty {
-                        Text("Star a pin from the map to save it.")
-                            .foregroundStyle(.secondary)
-                        if let onFindPlace {
-                            Button("Find a place", systemImage: "magnifyingglass", action: onFindPlace)
-                                .frame(minHeight: 44)
-                        }
-                    }
-                    ForEach(session.favorites.filter { matches($0) && (selectedFolder == nil || $0.folder == selectedFolder) }) { place in
-                        HStack {
-                            placeButton(place)
-                            Button { placeToRename = place } label: {
-                                Image(systemName: "pencil").frame(width: 44, height: 44).contentShape(Rectangle())
-                            }.buttonStyle(.borderless).accessibilityLabel("Edit \(place.displayName)")
-                        }
-                            .contextMenu { Button("Move to folder…") { folderPlace = place } }
-                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                Button(role: .destructive) {
-                                    session.removeFavorite(place)
-                                } label: {
-                                    Label("Delete", systemImage: "trash.fill")
-                                }
-                                Button {
-                                    placeToRename = place
-                                } label: {
-                                    Label("Edit", systemImage: "pencil")
-                                }
-                                .tint(.gray)
-                            }
-                    }
-                }
-
-                if selectedFolder == nil { Section("Recents") {
-                    if session.recents.isEmpty {
-                        Text(session.preferences.saveRecentLocations ? "Locations you choose appear here." : "Recent locations are turned off in Settings.")
-                            .foregroundStyle(.secondary)
-                    }
-                    ForEach(session.recents.filter(matches)) { place in
-                        placeButton(place)
-                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                Button(role: .destructive) {
-                                    session.removeRecent(place)
-                                } label: {
-                                    Label("Delete", systemImage: "trash.fill")
-                                }
-                            }
-                    }
-                }
-            }
-                }
-                Section {
-                    NavigationLink { RecentlyDeletedView() } label: { Label("Recently Deleted", systemImage: "trash") }
-                }
-            }
-            .searchable(text: $search, prompt: category == .routes ? "Search routes" : category == .areas ? "Search areas" : "Search places")
-            .sheet(item: $folderPlace) { place in
-                LibraryFolderSheet(current: place.folder, folders: folders) { session.moveFavorite(place, folder: $0) }
-            }
-            .shiftScreen().loggedNavigationTitle("Library")
-            .fullScreenCover(item: $areaEditor) { draft in
-                NamedAreaEditor(draft: draft) { area in
-                    session.replaceNamedAreas(session.namedAreas.filter { $0.id != area.id } + [area])
-                }
-            }
-            .toolbar {
-                if !isRoot { ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } } }
-            }
-            .sheet(item: $placeToRename) { place in
-                SavedPlaceEditorSheet(place: place) { name, symbol, tint in
-                    guard session.renameFavorite(place, to: name, icon: symbol, tint: tint) else {
-                        return "This place is no longer saved. Close this editor and try again."
-                    }
-                    if name != place.name { library.renameLinkedPlace(place, to: name) }
-                    return nil
-                }
-            }
         }
     }
 
+    @ViewBuilder private var searchableContent: some View {
+        if category == .favorites { content }
+        else { content.searchable(text: $search, prompt: "Search \(category.rawValue.lowercased())") }
+    }
+    private var content: some View {
+        List {
+            Section {
+                if typeSize.isAccessibilitySize { categoryPicker.pickerStyle(.menu) }
+                else { categoryPicker.pickerStyle(.segmented) }
+            }.listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
+            if category == .favorites || category == .pins {
+                Section("Pins") {
+                    if category == .pins {
+                        Button("Add pin", systemImage: "mappin.and.ellipse") {
+                            pinEditor = PinDraft(place: nil, center: session.pin ?? session.simulated ?? session.realCoordinate)
+                        }
+                    }
+                    if shownPins.isEmpty { Text(category == .favorites ? "Star a pin to find it here." : "Name pins on the map, or add one here.").foregroundStyle(.secondary) }
+                    ForEach(shownPins) { place in pinRow(place) }
+                }
+            }
+            if category == .favorites || category == .routes {
+                SavedTripsSection(onChoose: onTrip, favoritesOnly: category == .favorites,
+                                  search: category == .favorites ? "" : search, folders: folders, onCreate: onCreateRoute)
+            }
+            if category == .areas {
+                NamedAreasSection(search: search) { area in
+                    areaEditor = NamedAreaDraft(area: area, center: session.pin ?? session.simulated ?? session.realCoordinate)
+                }
+            }
+            Section { NavigationLink { RecentlyDeletedView() } label: { Label("Recently Deleted", systemImage: "trash") } }
+        }
+    }
     private var categoryPicker: some View {
         Picker("Library category", selection: $category) {
-            ForEach(LibraryCategory.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+            ForEach(Category.allCases, id: \.self) { Text($0.rawValue).tag($0) }
         }.frame(minHeight: 44)
     }
-    private var folders: [String] {
-        Array(Set(session.favorites.compactMap(\.folder) + library.trips.compactMap(\.folder))).sorted()
+    private var folders: [String] { Array(Set(session.savedPins.compactMap(\.folder) + library.trips.compactMap(\.folder))).sorted() }
+    private var shownPins: [SavedPlace] {
+        category == .favorites ? session.favorites : session.savedPins.filter { SavedNameSearch.matches(search, fields: [$0.displayName, $0.folder ?? ""]) }
     }
-    private func matches(_ place: SavedPlace) -> Bool {
-        search.isEmpty || place.name.localizedCaseInsensitiveContains(search) || (place.folder?.localizedCaseInsensitiveContains(search) ?? false)
-    }
-    private func placeButton(_ place: SavedPlace) -> some View {
-        Button {
-            onPlace(place)
-            if !isRoot { dismiss() }
-        } label: {
-            HStack(spacing: 14) {
-                SavedPlaceBadge(symbol: place.symbol, tint: place.tint)
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(place.displayName).font(.body.weight(.medium)).foregroundStyle(.primary)
-                    Text(String(format: "%.5f, %.5f", place.latitude, place.longitude))
-                        .font(.footnote.monospaced()).foregroundStyle(.secondary)
-                }
-            }.frame(maxWidth: .infinity, minHeight: 52, alignment: .leading).contentShape(Rectangle())
-        }.buttonStyle(.borderless)
+    private func pinRow(_ place: SavedPlace) -> some View {
+        HStack {
+            Button { onPlace(place); if !isRoot { dismiss() } } label: {
+                HStack(spacing: 12) {
+                    SavedPlaceBadge(symbol: place.symbol, tint: place.tint)
+                    Text(place.displayName).foregroundStyle(.primary)
+                    Spacer()
+                }.frame(minHeight: 48).contentShape(Rectangle())
+            }.buttonStyle(.borderless)
+            Button { session.togglePinFavorite(place) } label: {
+                Image(systemName: place.isFavorite ? "star.fill" : "star").frame(width: 44, height: 44)
+            }.buttonStyle(.borderless).accessibilityLabel(place.isFavorite ? "Remove favorite" : "Favorite pin")
+            Menu {
+                Button("Edit pin", systemImage: "pencil") { pinEditor = PinDraft(place: place, center: place.coordinate) }
+                Button("Move to folder…", systemImage: "folder") { folderPlace = place }
+                Button("Delete pin", role: .destructive) { session.removeFavorite(place) }
+            } label: { Image(systemName: "ellipsis").frame(width: 44, height: 44) }
+                .buttonStyle(.borderless).accessibilityLabel("Options for \(place.displayName)")
+        }
     }
 }

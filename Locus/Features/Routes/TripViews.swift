@@ -33,6 +33,7 @@ struct SavedTripsSection: View {
     @EnvironmentObject private var library: TripLibrary
     @EnvironmentObject private var session: SpoofSession
     let onChoose: (SavedTrip) -> Void
+    var favoritesOnly = false
     var search = ""
     var folder: String?
     var folders: [String] = []
@@ -46,15 +47,15 @@ struct SavedTripsSection: View {
 
     var body: some View {
         Section {
-            if library.trips.isEmpty {
-                Text("Save a trip from the route planner to reuse its path, speed, and stops.").foregroundStyle(.secondary)
-                if let onCreate {
+            if library.trips.filter({ !favoritesOnly || $0.isFavorite }).isEmpty {
+                Text(favoritesOnly ? "Star a saved route to find it here." : "Name a route in the planner to save its path, speed, and stops.").foregroundStyle(.secondary)
+                if let onCreate, !favoritesOnly {
                     Button("Create a route", systemImage: "point.topleft.down.to.point.bottomright.curvepath", action: onCreate)
                         .frame(minHeight: 44)
                 }
             }
             ForEach(library.trips.filter {
-                (folder == nil || $0.folder == folder) && SavedNameSearch.matches(search, trip: $0)
+                (!favoritesOnly || $0.isFavorite) && (folder == nil || $0.folder == folder) && SavedNameSearch.matches(search, trip: $0)
             }) { trip in
                 HStack(spacing: 4) {
                 Button { onChoose(trip) } label: {
@@ -87,7 +88,7 @@ struct SavedTripsSection: View {
             }
             if let copyNotice { Label(copyNotice, systemImage: "checkmark.circle").font(.caption).foregroundStyle(.secondary) }
             if let error = library.error { Text(error).font(.caption).foregroundStyle(LocusTheme.statusWarn) }
-        } header: { Text("Saved trips") } footer: {
+        } header: { Text("Routes") } footer: {
             Text(session.journey == nil ? "Tap a trip to plan it. Use ••• to copy, edit, or view its history." : "Stop your current route before opening another trip.")
         }
         .sheet(item: $historyTrip) { trip in TripEditHistoryView(tripID: trip.id) }
@@ -112,6 +113,7 @@ struct SavedTripsSection: View {
     }
 
     @ViewBuilder private func tripActions(_ trip: SavedTrip) -> some View {
+        Button(trip.isFavorite ? "Remove favorite" : "Favorite route", systemImage: trip.isFavorite ? "star.slash" : "star") { library.toggleFavorite(trip) }
         Button("Duplicate", systemImage: "doc.on.doc") { duplicate(trip, edit: false) }
         Button("Duplicate and edit", systemImage: "square.and.pencil") { duplicate(trip, edit: true) }
             .disabled(session.journey != nil || session.isBusy)

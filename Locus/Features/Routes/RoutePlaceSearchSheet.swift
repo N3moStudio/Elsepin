@@ -15,8 +15,14 @@ struct RoutePlaceSearchSheet: View {
     @State private var isResolving = false
     @State private var error: String?
     @State private var searchTask: Task<Void, Never>?
-    @State private var activeSearch: MKLocalSearch?
+    @State private var activeSearch: PlaceSearchRequest?
     @State private var searchGeneration = UUID()
+    @State private var pinEditor: PinDraft?
+    @State private var selectedTrip: SavedTrip?
+    @State private var showTripActions = false
+    @State private var renameTrip = false
+    @State private var tripName = ""
+    @State private var resultNote: String?
     @State private var selectedPlace: RoutePlace?
     @State private var showPlaceActions = false
     @State private var showDeviceLocation = false
@@ -45,6 +51,7 @@ struct RoutePlaceSearchSheet: View {
                     }
                 }
                 if let error { Text(error).foregroundStyle(LocusTheme.statusWarn) }
+                if let resultNote { Text(resultNote).font(.caption).foregroundStyle(.secondary) }
                 if query.isEmpty {
                     ShiftScreenHeading(eyebrow: "Places", title: "Where to?", detail: "Find a place or return to a favorite.")
                     Section("Use a location") {
@@ -58,18 +65,20 @@ struct RoutePlaceSearchSheet: View {
                         }
                         if let pin = session.pin {
                             Button { choose(RoutePlace(name: session.suggestedFavoriteName(for: pin), coordinate: pin)) } label: {
-                                Label("Selected map pin · \(session.suggestedFavoriteName(for: pin))", systemImage: "mappin")
+                                Label("Currently dropped pin", systemImage: "mappin")
                             }
                         }
                     }
-                    Section("Saved places") {
-                        ForEach(session.favorites) { place in
-                            Button(place.displayName) { choose(RoutePlace(name: place.displayName, coordinate: place.coordinate)) }
-                        }
-                    }
-                    Section("Recent places") {
+                    Section("Recent pins & routes") {
                         ForEach(session.recents.prefix(8)) { place in
                             Button(place.displayName) { choose(RoutePlace(name: place.displayName, coordinate: place.coordinate)) }
+                        }
+                        if onChooseTrip != nil {
+                            ForEach(session.recentRoutes.prefix(8)) { recent in
+                                Button { chooseTrip(recent.trip) } label: {
+                                    Label(recent.trip.name, systemImage: "point.topleft.down.curvedto.point.bottomright.up")
+                                }
+                            }
                         }
                     }
                 } else {
@@ -104,6 +113,7 @@ struct RoutePlaceSearchSheet: View {
                 selectedPlace = nil
                 showPlaceActions = false
                 completer.query = value
+                resultNote = nil
                 error = nil
             }
             .onSubmit(of: .search, searchAll)
@@ -112,16 +122,38 @@ struct RoutePlaceSearchSheet: View {
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { cancelSearch(); dismiss() } } }
             .loggedConfirmationDialog(selectedPlace?.name ?? "Selected place", isPresented: $showPlaceActions, titleVisibility: .visible) {
                 if let place = selectedPlace, let onPreviewTeleport {
-                    Button("Teleport") {
+                    Button("Teleport here") {
                         session.pushNamedRecent(name: place.name, coordinate: place.coordinate)
                         onPreviewTeleport(place)
                         selectedPlace = nil
                         dismiss()
                     }
                     Button("Plan a route") { openPlanner(place) }
+                    Button("Name pin") {
+                        let saved = session.savedPins.first { $0.id == "\(place.coordinate.latitude),\(place.coordinate.longitude)" }
+                        let draft = PinDraft(place: saved, center: place.coordinate)
+                        draft.name = saved?.name ?? place.name
+                        pinEditor = draft
+                    }
                 }
                 Button("Cancel", role: .cancel) { selectedPlace = nil }
             } message: { Text("Teleport shows a pin first. Confirm on the map when you're ready.") }
+            .sheet(item: $pinEditor) { draft in PinEditor(draft: draft) }
+            .confirmationDialog(selectedTrip?.name ?? "Recent route", isPresented: $showTripActions, titleVisibility: .visible) {
+                if let trip = selectedTrip {
+                    Button("Plan a route") { onChooseTrip?(trip); dismiss() }
+                        .disabled(session.journey != nil || session.isBusy)
+                    Button("Name route") { tripName = trip.name; renameTrip = true }
+                }
+                Button("Cancel", role: .cancel) { }
+            }
+            .alert("Name route", isPresented: $renameTrip) {
+                TextField("Route name", text: $tripName)
+                Button("Save") {
+                    if let trip = selectedTrip, !library.saveRecent(trip, name: tripName) { error = library.error }
+                }
+                Button("Cancel", role: .cancel) { }
+            } message: { Text("Saves this route to Library. You can favorite it there.") }
             .sheet(isPresented: $showDeviceLocation, onDismiss: {
                 if let place = pendingDeviceOrigin { pendingDeviceOrigin = nil; choose(place) }
             }) {
@@ -149,19 +181,18 @@ struct RoutePlaceSearchSheet: View {
         // never opens a dialog or picks the first business/address implicitly.
         searchFocused = false
         let request = MKLocalSearch.Request()
-        request.naturalLanguageQuery = text
-        request.resultTypes = [.address, .pointOfInterest]
+        PlaceSearchRequest.configure(request, query: text)
         if let center = session.pin ?? session.defaultRouteOrigin?.coordinate ?? session.realCoordinate,
            CLLocationCoordinate2DIsValid(center) {
-            request.region = MKCoordinateRegion(center: center, latitudinalMeters: 50_000, longitudinalMeters: 50_000)
+            request.region = MKCoordinateRegion(center: center, latitudinalMeters: 12_000, longitudinalMeters: 12_000)
         }
         resolve(request, chooseSingleResult: false)
     }
 
     @ViewBuilder private var savedMatches: some View {
-        let places = session.favorites.filter { SavedNameSearch.matches(query, fields: [$0.displayName, $0.folder ?? ""]) }
+        let places = session.savedPins.filter { SavedNameSearch.matches(query, fields: [$0.displayName, $0.folder ?? ""]) }
         if !places.isEmpty {
-            Section("Your saved places") {
+            Section("Pins") {
                 ForEach(places.prefix(20)) { place in
                     Button { choose(RoutePlace(name: place.displayName, coordinate: place.coordinate)) } label: {
                         Label(place.displayName, systemImage: "star")
@@ -171,12 +202,12 @@ struct RoutePlaceSearchSheet: View {
                 if places.count > 20 { Text("More matches are available in Saved.").font(.caption).foregroundStyle(.secondary) }
             }
         }
-        if let onChooseTrip {
+        if onChooseTrip != nil {
             let trips = library.trips.filter { SavedNameSearch.matches(query, trip: $0) }
             if !trips.isEmpty {
                 Section {
                     ForEach(trips) { trip in
-                        Button { cancelSearch(); onChooseTrip(trip); dismiss() } label: {
+                        Button { chooseTrip(trip) } label: {
                             VStack(alignment: .leading, spacing: 4) {
                                 Label(trip.name, systemImage: "point.topleft.down.curvedto.point.bottomright.up")
                                 Text("\(trip.originName) → \(trip.destinationName)").font(.caption).foregroundStyle(.secondary)
@@ -189,6 +220,11 @@ struct RoutePlaceSearchSheet: View {
                 }
             }
         }
+    }
+
+    private func chooseTrip(_ trip: SavedTrip) {
+        cancelSearch(); searchFocused = false
+        selectedTrip = trip; showTripActions = true
     }
 
     private func choose(_ place: RoutePlace) {
@@ -216,18 +252,46 @@ struct RoutePlaceSearchSheet: View {
         isResolving = false
     }
 
+    /// Broad categories use a short nearby query first, then Apple's POI index.
+    /// The fallback explicitly labels broader results instead of claiming every restaurant is fast food.
+    @MainActor private func response(_ operation: PlaceSearchRequest, request: MKLocalSearch.Request, general: Bool) async throws -> MKLocalSearch.Response {
+        var firstError: Error?
+        do {
+            let result = try await operation.start()
+            if !general || !result.mapItems.isEmpty { return result }
+        } catch { firstError = error }
+        try Task.checkCancellation()
+        guard general else { throw firstError ?? NSError(domain: MKErrorDomain, code: MKError.Code.placemarkNotFound.rawValue) }
+        let fallback: PlaceSearchRequest
+        if let category = PlaceSearchIntent.category(for: query), request.region.span.latitudeDelta > 0 {
+            let nearby = MKLocalPointsOfInterestRequest(center: request.region.center, radius: 12_000)
+            nearby.pointOfInterestFilter = MKPointOfInterestFilter(including: category.mapCategories)
+            fallback = PlaceSearchRequest(pointsOfInterest: nearby)
+            resultNote = category == .food ? "Nearby restaurants. Check each place for its menu and opening hours." : "Nearby places in this category."
+        } else {
+            let wider = MKLocalSearch.Request()
+            PlaceSearchRequest.configure(wider, query: query)
+            if request.region.span.latitudeDelta > 0 {
+                wider.region = MKCoordinateRegion(center: request.region.center, latitudinalMeters: 40_000, longitudinalMeters: 40_000)
+            }
+            fallback = PlaceSearchRequest(wider)
+        }
+        activeSearch = fallback
+        return try await fallback.start()
+    }
+
     private func resolve(_ request: MKLocalSearch.Request, chooseSingleResult: Bool) {
         cancelSearch()
         let generation = searchGeneration
         let fallbackName = query
-        let search = MKLocalSearch(request: request)
+        let search = PlaceSearchRequest(request)
         activeSearch = search
         isResolving = true
         error = nil
         DeveloperLogStore.shared.record("place_search_started", ["kind": chooseSingleResult ? "suggestion" : "general"])
         searchTask = Task { @MainActor in
             do {
-                let response = try await search.start()
+                let response = try await response(search, request: request, general: !chooseSingleResult)
                 guard !Task.isCancelled, generation == searchGeneration else { return }
                 isResolving = false
                 activeSearch = nil
@@ -236,7 +300,7 @@ struct RoutePlaceSearchSheet: View {
                 let matches = response.mapItems.compactMap { item -> PlaceSearchResult? in
                     let coordinate = item.placemark.coordinate
                     guard CLLocationCoordinate2DIsValid(coordinate) else { return nil }
-                    let saved = session.favorites.first { RoutePoint($0.coordinate).distance(to: RoutePoint(coordinate)) <= 5 && !PlaceLabel.isCoordinate($0.name) }
+                    let saved = session.savedPins.first { RoutePoint($0.coordinate).distance(to: RoutePoint(coordinate)) <= 5 && !PlaceLabel.isCoordinate($0.name) }
                     let street = [item.placemark.subThoroughfare, item.placemark.thoroughfare].compactMap { $0 }.joined(separator: " ")
                     let address = [street, item.placemark.locality, item.placemark.administrativeArea]
                         .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: ", ")
@@ -255,7 +319,7 @@ struct RoutePlaceSearchSheet: View {
                 isResolving = false
                 activeSearch = nil
                 searchTask = nil
-                self.error = error.localizedDescription
+                self.error = PlaceSearchRequest.message(for: error)
                 DeveloperLogStore.shared.record("place_search_failed", ["domain": (error as NSError).domain, "code": String((error as NSError).code)])
             }
         }

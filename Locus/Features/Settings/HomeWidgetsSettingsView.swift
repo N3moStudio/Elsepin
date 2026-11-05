@@ -6,7 +6,7 @@ struct HomeWidgetsSettingsView: View {
     @State private var selected: [String] = []
     @State private var primary = ""
     @State private var message: String?
-    private var choices: [WidgetLibraryItem] { HomeWidgetPublisher.choices(places: session.favorites, trips: library.trips) }
+    private var choices: [WidgetLibraryItem] { HomeWidgetPublisher.choices(places: session.savedPins, trips: library.trips) }
     var body: some View {
         List {
             Section {
@@ -48,6 +48,6 @@ struct HomeWidgetsSettingsView: View {
     private func save() {
         UserDefaults.standard.set(selected, forKey: "locus.widget.selected")
         UserDefaults.standard.set(primary, forKey: "locus.widget.primary")
-        message = HomeWidgetPublisher.publish(places: session.favorites, trips: library.trips)
+        message = HomeWidgetPublisher.publish(places: session.savedPins, trips: library.trips)
     }
 }

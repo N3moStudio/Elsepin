@@ -575,6 +575,12 @@ struct RoutePlannerSheet: View {
                     Text(error).font(.caption).foregroundStyle(LocusTheme.statusWarn)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .lineLimit(4)
+                    if planner.cyclingUnavailable {
+                        Button("Use a walking path instead") {
+                            planner.preferWalkingPaths = true
+                            planner.rebuild(mode: displayMode)
+                        }.font(.subheadline.weight(.semibold)).frame(minHeight: 44)
+                    }
                 }
                 if let route {
                     if let note = route.source.playbackNote(mode: route.travelSections.first?.mode ?? displayMode) {

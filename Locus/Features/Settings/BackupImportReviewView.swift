@@ -14,7 +14,7 @@ struct BackupImportReviewView: View {
 
     private var current: BackupImportContext {
         BackupImportContext(preferences: session.backupPreferences,
-            places: session.favorites.map(\.backupPlace), trips: library.trips, areas: session.namedAreas)
+            places: session.savedPins.map(\.backupPlace), trips: library.trips, areas: session.namedAreas)
     }
 
     var body: some View {
@@ -57,7 +57,7 @@ struct BackupImportReviewView: View {
             }
             if !backup.places.isEmpty {
                 Section {
-                    DisclosureGroup("Saved places · \(selection.places.intersection(review.defaultSelection.places).count) selected") {
+                    DisclosureGroup("Pins · \(selection.places.intersection(review.defaultSelection.places).count) selected") {
                         selectionButtons(all: review.defaultSelection.places, values: $selection.places, name: "places")
                         ForEach(backup.places, id: \.id) { place in
                             let exists = review.existingPlaces.contains(place.id)

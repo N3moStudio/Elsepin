@@ -41,6 +41,7 @@ final class TripLibrary: ObservableObject {
         if let replacingIndex {
             trip.id = trips[replacingIndex].id
             trip.folder = trips[replacingIndex].folder
+            trip.favorite = trips[replacingIndex].favorite
             var updated = trips
             updated[replacingIndex] = trip
             let saved = write(updated)
@@ -75,6 +76,26 @@ final class TripLibrary: ObservableObject {
             }
         }
         if updated != trips { _ = write(updated, reason: .labels) }
+    }
+
+    func toggleFavorite(_ trip: SavedTrip) {
+        guard let index = trips.firstIndex(where: { $0.id == trip.id }) else { return }
+        var updated = trips
+        updated[index].favorite = !updated[index].isFavorite
+        _ = persist(TripLibraryDocument(trips: updated, revisions: revisions))
+    }
+
+    @discardableResult
+    func saveRecent(_ trip: SavedTrip, name: String) -> Bool {
+        var saved = trip
+        saved.name = String(name.trimmingCharacters(in: .whitespacesAndNewlines).prefix(120))
+        guard saved.isValid else { error = "Enter a name for this route."; return false }
+        if let current = trips.first(where: { $0.id == saved.id }) {
+            rename(current, to: saved.name)
+            return error == nil
+        }
+        guard trips.count < 50 else { error = "Remove a route before saving another."; return false }
+        return write([saved] + trips)
     }
 
     func remove(_ trip: SavedTrip) {

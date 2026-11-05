@@ -32,6 +32,7 @@ final class RoutePlanner: ObservableObject {
     @Published private(set) var selectedID: UUID?
     @Published private(set) var isLoading = false
     @Published var error: String?
+    @Published var cyclingUnavailable = false
     @Published var isPresented = false
     @Published var isDrawing = false
     @Published private(set) var waypoints: [TripWaypoint] = []
@@ -186,6 +187,7 @@ final class RoutePlanner: ObservableObject {
         syncPathStops()
         usesStoredPath = false
         error = nil
+        cyclingUnavailable = false
         alternatives = []
         selectedID = nil
         guard let origin, let destination else { return }
@@ -207,6 +209,7 @@ final class RoutePlanner: ObservableObject {
             } catch {
                 guard let self, !Task.isCancelled, self.generation == token else { return }
                 self.error = error.localizedDescription
+                self.cyclingUnavailable = error is RouteBuilder.CyclingUnavailable
                 self.isLoading = false
                 self.task = nil
             }

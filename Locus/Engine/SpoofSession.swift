@@ -96,7 +96,11 @@ final class SpoofSession: ObservableObject {
     @Published private(set) var startedAt: Date?
     @Published private(set) var lowPower = ProcessInfo.processInfo.isLowPowerModeEnabled
     @Published private(set) var notificationPermission = false
-    @Published var favorites: [SavedPlace] = []
+    // Legacy storage key is retained; nil favorite flags mean an older favorite.
+    @Published var savedPins: [SavedPlace] = []
+    @Published private(set) var recentRoutes: [RecentRoute] = []
+    private let recentRouteStore = RecentRouteStore()
+    var favorites: [SavedPlace] { savedPins.filter(\.isFavorite) }
     @Published var recents: [SavedPlace] = []
 
     let verification = LocationVerificationController()
@@ -155,8 +159,10 @@ final class SpoofSession: ObservableObject {
         for mode in TravelMode.allCases where mode != .eBike && modeSpeeds[mode.rawValue] == nil {
             modeSpeeds[mode.rawValue] = UsualSpeedRules.value(for: mode, stored: usualSpeeds)
         }
-        favorites = SavedPlace.load(key: favoritesKey)
+        savedPins = SavedPlace.load(key: favoritesKey)
         recents = SavedPlace.loadRecents(retention: preferences.recentHistoryRetention, saveEnabled: preferences.saveRecentLocations)
+        recentRoutes = RecentRoute.kept(recentRouteStore.load(), retention: preferences.recentHistoryRetention, enabled: preferences.saveRecentLocations)
+        recentRouteStore.save(recentRoutes)
         // Never adopt the old app process's green status after a crash/relaunch.
         if SessionLifetime.shared.previousLocationMayRemain {
             requiresClear = true
@@ -297,8 +303,8 @@ final class SpoofSession: ObservableObject {
             font: AppearanceFixed.font, textSize: AppearanceFixed.textSize)
     }
     func importLibraryPlaces(_ places: [BackupPlace], settings: BackupPreferences?) {
-        favorites = places.map { SavedPlace(name: $0.name, latitude: $0.latitude, longitude: $0.longitude, folder: $0.folder, icon: $0.icon, color: $0.color) }
-        SavedPlace.save(favorites, key: favoritesKey)
+        savedPins = places.map { SavedPlace(name: $0.name, latitude: $0.latitude, longitude: $0.longitude, folder: $0.folder, icon: $0.icon, color: $0.color, favorite: $0.favorite) }
+        SavedPlace.save(savedPins, key: favoritesKey)
         if let settings {
             usualSpeeds = settings.usualSpeeds
             if let material = settings.material { preferences.appearanceOverrides.material = material }
@@ -329,10 +335,10 @@ final class SpoofSession: ObservableObject {
         }
     }
     func moveFavorite(_ place: SavedPlace, folder: String) {
-        guard let index = favorites.firstIndex(where: { $0.id == place.id }) else { return }
+        guard let index = savedPins.firstIndex(where: { $0.id == place.id }) else { return }
         let value = String(folder.trimmingCharacters(in: .whitespacesAndNewlines).prefix(60))
-        favorites[index].folder = value.isEmpty ? nil : value
-        SavedPlace.save(favorites, key: favoritesKey)
+        savedPins[index].folder = value.isEmpty ? nil : value
+        SavedPlace.save(savedPins, key: favoritesKey)
     }
 
     var hasSession: Bool { sessionRequested || requiresClear || stopInFlight }
@@ -665,7 +671,13 @@ final class SpoofSession: ObservableObject {
         smoothMovement = prepared.smoothMovement
         arrivalChoice = prepared.arrival
         let started = followRoute(prepared.route, pairing: pairing)
-        if started { activeSavedTripID = prepared.editingTripID }
+        if started {
+            activeSavedTripID = prepared.editingTripID
+            var trip = prepared.route.savedTrip(name: prepared.route.name, mode: prepared.mode,
+                speed: prepared.speedMPH, smooth: prepared.smoothMovement, arrival: prepared.arrival)
+            trip.id = prepared.editingTripID ?? prepared.route.id
+            rememberRecentRoute(trip)
+        }
         return started
     }
 
@@ -818,10 +830,12 @@ final class SpoofSession: ObservableObject {
                         publishActivity(force: false)
                         let revision = waitRevision
                         let before = ProcessInfo.processInfo.systemUptime
-                        do { try await Task.sleep(nanoseconds: 500_000_000) } catch { return }
+                        let interval = DisplayEnergyPolicy.stopWaitInterval(remaining: stopProgress.remainingSeconds,
+                            foreground: appActive, constrained: lowPower)
+                        await routeControls.wait(after: controlRevision, timeout: interval)
                         let elapsed = ProcessInfo.processInfo.systemUptime - before
                         guard !Task.isCancelled, ticket == epoch, workerID == routeWorkerID else { return }
-                        if !routePaused, pendingSeek == nil, effectivePhase == .active, revision == waitRevision, elapsed <= 1 {
+                        if !routePaused, pendingSeek == nil, effectivePhase == .active, revision == waitRevision, elapsed <= interval + 0.25 {
                             stopProgress.tick(elapsed)
                         }
                     }
@@ -1323,6 +1337,7 @@ final class SpoofSession: ObservableObject {
 
     func becameActive(pairing: PairingStore) {
         appActive = true
+        routeControls.signal()
         reliability.setAppActive(true, configuration: reliabilityConfiguration)
         checkEvidence()
         RemoteFindMyController.shared.refreshLifecycle()
@@ -1340,6 +1355,7 @@ final class SpoofSession: ObservableObject {
     func becameInactive() {
         stopRecoveryMonitor()
         appActive = false
+        routeControls.signal()
         reliability.setAppActive(false, configuration: reliabilityConfiguration)
         updateLocationTracking()
     }
@@ -1481,6 +1497,12 @@ final class SpoofSession: ObservableObject {
     }
 
     func addFavorite(name: String, coordinate: CLLocationCoordinate2D) {
+        _ = savePin(name: name, coordinate: coordinate, favorite: true)
+    }
+
+    @discardableResult
+    func savePin(name: String, coordinate: CLLocationCoordinate2D, favorite: Bool? = nil) -> Bool {
+        guard CLLocationCoordinate2DIsValid(coordinate) else { return false }
         let trimmed = String(name.trimmingCharacters(in: .whitespacesAndNewlines).prefix(120))
         var place = SavedPlace(
             name: trimmed.isEmpty ? "Saved place" : trimmed,
@@ -1488,51 +1510,59 @@ final class SpoofSession: ObservableObject {
             longitude: coordinate.longitude
         )
         // Don't let a generic star overwrite a named favorite for the same spot.
-        if let existing = favorites.first(where: { $0.id == place.id }),
+        if let existing = savedPins.first(where: { $0.id == place.id }),
            Self.isGenericFavoriteName(place.name),
            !Self.isGenericFavoriteName(existing.name) {
-            return
+            place.name = existing.name
         }
-        place.folder = favorites.first(where: { $0.id == place.id })?.folder
-        place.icon = favorites.first(where: { $0.id == place.id })?.icon
-        place.color = favorites.first(where: { $0.id == place.id })?.color
-        if favorites.count >= 1000, !favorites.contains(where: { $0.id == place.id }) {
+        place.favorite = favorite ?? savedPins.first(where: { $0.id == place.id })?.isFavorite ?? false
+        place.folder = savedPins.first(where: { $0.id == place.id })?.folder
+        place.icon = savedPins.first(where: { $0.id == place.id })?.icon
+        place.color = savedPins.first(where: { $0.id == place.id })?.color
+        if savedPins.count >= 1000, !savedPins.contains(where: { $0.id == place.id }) {
             lastError = "You have 1,000 saved places. Remove one before saving another."
-            return
+            return false
         }
-        favorites.removeAll { $0.id == place.id }
-        favorites.insert(place, at: 0)
-        SavedPlace.save(favorites, key: favoritesKey)
+        savedPins.removeAll { $0.id == place.id }
+        savedPins.insert(place, at: 0)
+        SavedPlace.save(savedPins, key: favoritesKey)
+        return true
+    }
+
+    func togglePinFavorite(_ place: SavedPlace) {
+        guard let index = savedPins.firstIndex(where: { $0.id == place.id }) else { return }
+        savedPins[index].favorite = !savedPins[index].isFavorite
+        SavedPlace.save(savedPins, key: favoritesKey)
     }
 
     @discardableResult
     func renameFavorite(_ place: SavedPlace, to name: String, icon: SavedPlaceSymbol? = nil, tint: SavedPlaceTint? = nil) -> Bool {
         let trimmed = String(name.trimmingCharacters(in: .whitespacesAndNewlines).prefix(120))
         guard !trimmed.isEmpty,
-              let index = favorites.firstIndex(where: { $0.id == place.id }) else { return false }
-        favorites[index].name = trimmed
-        if let icon { favorites[index].icon = icon.rawValue }
-        if let tint { favorites[index].color = tint.rawValue }
+              let index = savedPins.firstIndex(where: { $0.id == place.id }) else { return false }
+        savedPins[index].name = trimmed
+        if let icon { savedPins[index].icon = icon.rawValue }
+        if let tint { savedPins[index].color = tint.rawValue }
         publishActivity(force: true)
-        SavedPlace.save(favorites, key: favoritesKey)
+        SavedPlace.save(savedPins, key: favoritesKey)
         return true
     }
 
     func removeFavorite(_ place: SavedPlace) {
-        guard let current = favorites.first(where: { $0.id == place.id }) else { return }
+        guard let current = savedPins.first(where: { $0.id == place.id }) else { return }
         guard RecentlyDeletedStore.shared.keep(.place(current.backupPlace)) != nil else {
             lastError = RecentlyDeletedStore.shared.error; return
         }
-        favorites.removeAll { $0.id == place.id }
-        SavedPlace.save(favorites, key: favoritesKey)
+        savedPins.removeAll { $0.id == place.id }
+        SavedPlace.save(savedPins, key: favoritesKey)
     }
 
     func restoreFavorite(_ place: BackupPlace) -> Bool {
-        guard place.isValid, favorites.count < 1000, !favorites.contains(where: { $0.id == place.id }) else {
+        guard place.isValid, savedPins.count < 1000, !savedPins.contains(where: { $0.id == place.id }) else {
             lastError = "Couldn't restore this place. Check your saved places and the 1,000-place limit."; return false
         }
-        favorites.insert(SavedPlace(name: place.name, latitude: place.latitude, longitude: place.longitude, folder: place.folder, icon: place.icon, color: place.color), at: 0)
-        SavedPlace.save(favorites, key: favoritesKey)
+        savedPins.insert(SavedPlace(name: place.name, latitude: place.latitude, longitude: place.longitude, folder: place.folder, icon: place.icon, color: place.color, favorite: place.favorite), at: 0)
+        SavedPlace.save(savedPins, key: favoritesKey)
         return true
     }
     func deleteNamedArea(_ area: NamedArea) {
@@ -1540,18 +1570,27 @@ final class SpoofSession: ObservableObject {
         guard let id = RecentlyDeletedStore.shared.keep(.area(current)) else { lastError = RecentlyDeletedStore.shared.error; return }
         if !replaceNamedAreas(namedAreas.filter { $0.id != area.id }) { _ = RecentlyDeletedStore.shared.remove(id) }
     }
+    private func rememberRecentRoute(_ trip: SavedTrip) {
+        recentRoutes = RecentRoute.kept([RecentRoute(trip: trip, visitedAt: Date())] + recentRoutes,
+            retention: preferences.recentHistoryRetention, enabled: preferences.saveRecentLocations)
+        recentRouteStore.save(recentRoutes)
+    }
     func refreshRecentHistory() {
+        recentRoutes = RecentRoute.kept(recentRoutes, retention: preferences.recentHistoryRetention, enabled: preferences.saveRecentLocations)
+        recentRouteStore.save(recentRoutes)
         let loaded = SavedPlace.loadRecents(retention: preferences.recentHistoryRetention, saveEnabled: preferences.saveRecentLocations)
         if loaded != recents { recents = loaded }
     }
     func clearRecentHistory() {
+        recentRoutes = []; recentRouteStore.save([])
         recents = []
         UserDefaults.standard.removeObject(forKey: recentsKey)
     }
     /// Called only by the confirmed reset coordinator after it verifies no session remains.
     func resetPlacesAndAreas() {
         precondition(!hasSession && !isBusy)
-        favorites = []; recents = []; namedAreas = []; chosenNames = []
+        clearRecentHistory()
+        savedPins = []; recents = []; namedAreas = []; chosenNames = []
         for key in [favoritesKey, recentsKey, "locus.namedAreas"] { UserDefaults.standard.removeObject(forKey: key) }
         pinSelectionID = UUID(); pin = nil; pinIsPreview = false
         previewSpotName = nil; sessionSpotName = nil; activeSavedTripID = nil
@@ -1572,8 +1611,8 @@ final class SpoofSession: ObservableObject {
     }
     func clearFavorites() {
         guard RecentlyDeletedStore.shared.clear(kind: "Saved place") else { lastError = RecentlyDeletedStore.shared.error; return }
-        favorites = []
-        SavedPlace.save(favorites, key: favoritesKey)
+        savedPins = []
+        SavedPlace.save(savedPins, key: favoritesKey)
     }
 
     func removeRecent(_ place: SavedPlace) {
@@ -1600,7 +1639,7 @@ final class SpoofSession: ObservableObject {
             }
             if let place = places.first(where: { RoutePoint($0.coordinate).distance(to: point) <= 5 && !Self.isGenericFavoriteName($0.name) }) { return place.name }
         }
-        if let place = favorites.first(where: { RoutePoint($0.coordinate).distance(to: point) <= 5 && !Self.isGenericFavoriteName($0.name) }) { return place.name }
+        if let place = savedPins.first(where: { RoutePoint($0.coordinate).distance(to: point) <= 5 && !Self.isGenericFavoriteName($0.name) }) { return place.name }
         if let name = chosenNames.first(where: { $0.point.distance(to: point) <= 5 }) { return name.name }
         if let place = recents.first(where: { RoutePoint($0.coordinate).distance(to: point) <= 5 && !Self.isGenericFavoriteName($0.name) }) { return place.name }
         return NamedArea.name(at: point, in: namedAreas)

@@ -2,6 +2,22 @@ import XCTest
 @testable import SessionPresentation
 
 final class RouteWakeSignalTests: XCTestCase {
+    @MainActor func testTimeoutWakesOnlyItsWaiterAndDoesNotChangeRevision() async {
+        let signal = RouteWakeSignal()
+        let revision = signal.revision
+        await signal.wait(after: revision, timeout: 0.01)
+        XCTAssertEqual(signal.waitingCount, 0)
+        XCTAssertEqual(signal.revision, revision)
+    }
+
+    @MainActor func testSignalInterruptsLongDeadline() async {
+        let signal = RouteWakeSignal()
+        let task = Task { await signal.wait(after: signal.revision, timeout: 60) }
+        await registered(1, on: signal)
+        signal.signal()
+        await task.value
+        XCTAssertEqual(signal.waitingCount, 0)
+    }
     @MainActor
     private func registered(_ count: Int, on signal: RouteWakeSignal) async {
         for _ in 0..<100 {

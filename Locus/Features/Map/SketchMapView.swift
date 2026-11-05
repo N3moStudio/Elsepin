@@ -3,6 +3,11 @@ import SwiftUI
 import UIKit
 import UIKit.UIGestureRecognizerSubclass
 
+struct SketchCameraRequest {
+    let id = UUID()
+    let center: CLLocationCoordinate2D
+}
+
 /// Drawing uses a native map so a touch and its coordinate conversion have the
 /// same origin. No safe-area correction is applied to point or corner taps.
 struct SketchMapView: UIViewRepresentable {
@@ -16,6 +21,7 @@ struct SketchMapView: UIViewRepresentable {
     var referenceAreas: [NamedArea] = []
     var initialCamera: MKMapCamera?
     var initialCenter: CLLocationCoordinate2D?
+    var cameraRequest: SketchCameraRequest?
     var mapStyleIndex = 0
     var selectedIndex: Int?
     var onPoint: (CLLocationCoordinate2D) -> Void
@@ -69,6 +75,11 @@ struct SketchMapView: UIViewRepresentable {
         let map = canvas.map
         if map.showsUserLocation != (scenePhase == .active) { map.showsUserLocation = scenePhase == .active }
         context.coordinator.parent = self
+        if let request = cameraRequest, context.coordinator.cameraRequestID != request.id {
+            context.coordinator.cameraRequestID = request.id
+            context.coordinator.needsFirstUserFix = false
+            map.setRegion(MKCoordinateRegion(center: request.center, latitudinalMeters: 1800, longitudinalMeters: 1800), animated: false)
+        }
         context.coordinator.updateTool(tool)
         let mapType: MKMapType = mapStyleIndex == 1 ? .hybrid : mapStyleIndex == 2 ? .satellite : .standard
         if map.mapType != mapType { map.mapType = mapType }
@@ -92,6 +103,7 @@ struct SketchMapView: UIViewRepresentable {
         private var panGesture: UIPanGestureRecognizer?
         private var pinchGesture: UIPinchGestureRecognizer?
         var needsFirstUserFix = false
+        var cameraRequestID: UUID?
         private var renderedPoints: [RoutePoint] = []
         private var renderedOutline: Outline?
         private var dragIndex: Int?
