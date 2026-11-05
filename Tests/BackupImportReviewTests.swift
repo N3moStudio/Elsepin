@@ -171,7 +171,7 @@ final class BackupImportReviewTests: XCTestCase {
         current.areas = [try XCTUnwrap(backup.areas?.first)]
         let review = BackupImportReview(backup: backup, current: current)
         XCTAssertEqual(review.title, "Settings & Library Import Overview")
-        XCTAssertTrue(review.overview.contains("1 new routes Â· 1 new saved places Â· 1 new areas Â· 19 different settings"))
+        XCTAssertTrue(review.overview.contains("1 new routes Â· 1 new pins Â· 1 new areas Â· 19 different settings"))
         XCTAssertEqual(review.changes.prefix(19).filter(\.changesValue).count, 19)
         XCTAssertTrue(review.changes.dropFirst(19).allSatisfy { !$0.changesValue })
     }

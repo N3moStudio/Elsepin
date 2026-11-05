@@ -464,8 +464,10 @@ struct RoutePlannerSheet: View {
             Section {
                 Toggle("Smooth route movement", isOn: $planner.draftSmoothMovement)
                 if !planner.usesStoredPath && planningCycling {
-                    Toggle("Prefer walking paths", isOn: $planner.preferWalkingPaths)
-                        .onChange(of: planner.preferWalkingPaths) { _, _ in planner.rebuild(mode: displayMode) }
+                    Toggle("Use walking paths", isOn: Binding(get: { planner.preferWalkingPaths }, set: {
+                        planner.preferWalkingPaths = $0
+                        planner.rebuild(mode: displayMode)
+                    }))
                 }
                 if !planner.usesStoredPath {
                     Toggle("Different mode for each section", isOn: Binding(

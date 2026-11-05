@@ -185,7 +185,7 @@ struct BackupImportReview {
     }
     var overview: String {
         let newItems = defaultSelection
-        return "Compared with your current data: \(newItems.trips.count) new routes Â· \(newItems.places.count) new saved places Â· \(newItems.areas.count) new areas Â· \(changedSettings.count) different settings. Counts include all available changes, before your selections."
+        return "Compared with your current data: \(newItems.trips.count) new routes Â· \(newItems.places.count) new pins Â· \(newItems.areas.count) new areas Â· \(changedSettings.count) different settings. Counts include all available changes, before your selections."
     }
     var changes: [BackupSettingChange] {
         guard let source = backup.preferences else { return [] }

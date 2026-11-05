@@ -155,7 +155,7 @@ enum RouteBuilder {
         request.requestsAlternateRoutes = true
         request.departureDate = Date()
 
-        let directions = MKDirections(request: request)
+        let directions = await RouteDirectionsRequest(request)
         let response = try await directions.calculate()
         try Task.checkCancellation()
         let matches = response.routes.filter { $0.transportType == request.transportType }

@@ -1,5 +1,18 @@
 # Import and export — official 2.5.7
 
+## Build 69 pin/favorite compatibility (unreleased)
+
+All named pins are exported and reviewed, including unstarred pins. Favorites
+are a flag on the saved item, not a second copy. Missing `favorite` on a legacy
+saved-place record means favorited; missing it on a saved route means unstarred.
+The optional flag round-trips in the existing v1/v2-compatible library shape.
+Older app versions can still read these backups but may show every pin as a
+favorite because they do not understand the new flag. Existing local identities
+still win during import. Recent pins/routes remain local history and are not
+backup contents. Widgets continue to offer all saved pins.
+
+The historical instructions and examples below retain their original names.
+
 Open **Settings → Import & export**. Choose a backup file, or copy its complete
 JSON text and use **Paste backup text**. The small [json.site](https://json.site)
 link opens an editor where you can open the file and copy its JSON. Shift never

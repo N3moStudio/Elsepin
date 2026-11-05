@@ -75,7 +75,9 @@ final class SpoofSession: ObservableObject {
     private var pendingSeek: (selection: AcceptedRouteSeek, wasPaused: Bool, restore: RouteJumpUndo?, trace: RouteDiagnosticAttempt)? {
         didSet { routeControls.signal() }
     }
-    private var waitRevision = 0
+    private var waitRevision = 0 {
+        didSet { routeControls.signal() }
+    }
     private var rerouteTask: Task<Void, Never>?
     private var rerouteGeneration = UUID()
     @Published private(set) var routeActive = false
@@ -836,7 +838,7 @@ final class SpoofSession: ObservableObject {
                         let elapsed = ProcessInfo.processInfo.systemUptime - before
                         guard !Task.isCancelled, ticket == epoch, workerID == routeWorkerID else { return }
                         if !routePaused, pendingSeek == nil, effectivePhase == .active, revision == waitRevision, elapsed <= interval + 0.25 {
-                            stopProgress.tick(elapsed)
+                            stopProgress.tick(elapsed, maximumElapsed: interval + 0.25)
                         }
                     }
                     continue

@@ -1,8 +1,23 @@
 # Elsepin build history
 
-Updated **2 November 2026**, America/Los_Angeles. Read the [full changelog](../CHANGELOG.md)
+Updated **4 November 2026**, America/Los_Angeles. Read the [full changelog](../CHANGELOG.md)
 for feature details. This page separates compilation, test artifacts and published
 releases so a successful check is not mistaken for an available download.
+
+## Build 69 — native validation blocked, 4 November 2026
+
+Private run [41970102369](https://github.com/N3moStudio/Elsepin/actions/runs/41970102369)
+for `1d12f675bfbfae72a6a94539587da79ffe9e842f` did not start any job. GitHub's
+annotation says recent account payments failed or the spending limit needs to
+be increased. No Swift tests, native build, package or IPA resulted. Subsequent
+review changes are on `codex/pins-search-69`; dispatch a **new run at its latest
+head** after the account block is resolved. Complete original run log archive
+and diagnostics are retained in `.build/artifacts/41970102369/`.
+
+Local appearance/identity/helper-package checks and 16 Python packaging tests
+pass. WSL startup is unresponsive, so the added Swift tests remain unexecuted.
+This entry does not replace the successful build 68 evidence below. No public
+release, release asset, helper deployment or website deployment was changed.
 
 ## Latest native build and private delivery: 2.6.1 (68) — 2 November 2026
 

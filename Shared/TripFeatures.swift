@@ -58,9 +58,12 @@ struct RouteStopProgress: Equatable, Codable {
         remainingSeconds = stop.waitSeconds
         if remainingSeconds <= 0 { finish() }
     }
-    mutating func tick(_ seconds: Double) {
-        guard currentID != nil, seconds.isFinite, seconds > 0 else { return }
-        remainingSeconds = max(0, remainingSeconds - min(0.5, seconds))
+    mutating func tick(_ seconds: Double, maximumElapsed: Double = 0.5) {
+        guard currentID != nil, seconds.isFinite, seconds > 0,
+              maximumElapsed.isFinite, maximumElapsed > 0 else { return }
+        // Legacy callers retain their half-second cap. The route worker may
+        // supply its known sleep budget after checking lifecycle/revision state.
+        remainingSeconds = max(0, remainingSeconds - min(maximumElapsed, seconds))
         if remainingSeconds <= 0 { finish() }
     }
     mutating func finish() {

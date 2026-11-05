@@ -130,7 +130,7 @@ struct MapHomeView: View {
                                 .fixedSize(horizontal: false, vertical: true).frame(maxWidth: 160)
                         }
                         Button { selectedSavedPin = selectedSavedPin == pin.id ? nil : pin.id } label: {
-                            Image(systemName: "mappin.circle.fill").font(.title2)
+                            Image(systemName: pin.symbol == .pin ? "mappin.circle.fill" : pin.symbol.rawValue).font(.title2)
                                 .foregroundStyle(pin.tint.swatch).frame(width: 44, height: 44)
                         }.buttonStyle(.plain).accessibilityLabel(pin.displayName)
                     }

@@ -32,6 +32,8 @@ import MapKit
         request.naturalLanguageQuery = PlaceSearchIntent.query(query)
         request.resultTypes = [.address, .pointOfInterest]
         if let category = PlaceSearchIntent.category(for: query) {
+            // Exact generic categories intentionally search businesses, not
+            // similarly named street addresses. Specific queries keep both.
             request.resultTypes = .pointOfInterest
             request.pointOfInterestFilter = MKPointOfInterestFilter(including: category.mapCategories)
         }

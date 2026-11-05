@@ -28,11 +28,21 @@ to movement cadence or connection/verification/recovery settings; thermal camera
 throttling only; saved-pin rendering restricted to viewport. No measured battery
 or temperature reduction is claimed. No checkpoint-format migration was needed.
 
-Local checks: appearance/identity checks and 16 packaging tests passed. WSL is
-currently unresponsive even to `/bin/true`; Swift/native evidence is pending the
-private Mac workflow. New logic tests cover compatibility, history, category
-intent and wait/camera policies. Physical map gestures, providers and energy need
-device acceptance. Historical build 68 evidence below remains unchanged.
+Local checks: appearance/identity checks, helper-package integrity, 16 packaging
+tests and whitespace checks passed. WSL is unresponsive even to `/bin/true`;
+Swift tests could not start locally. Private Mac run **41970102369** at `1d12f675`
+was rejected before any job started: GitHub reports failed account payments or a
+spending limit. This is **not** compilation/test evidence. No new IPA exists.
+Subsequent review fixes preserve folders, correct stop countdown advancement for
+the longer wait interval, cancel abandoned native directions, and immediately
+revoke visibility of cleared route history. They still need a fresh Mac run at
+the latest branch head after the owner restores build access. Do not rerun the
+older commit or publish. Work is on **codex/pins-search-69**; main remains unchanged.
+
+New logic tests cover legacy favorite decoding, backup round trips, bounded
+history/retention, category intent, wait/camera budgets, stop countdowns and timed
+wait cancellation. Physical map gestures, providers and energy need device
+acceptance. Historical build 68 evidence below remains unchanged.
 
 ## 2.6.1 (68) — compact route card and automatic trip recovery — private test build
 

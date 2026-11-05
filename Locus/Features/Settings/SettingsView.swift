@@ -292,6 +292,7 @@ struct PlacesView: View {
     private enum Category: String, CaseIterable { case favorites = "Favorites", pins = "Pins", routes = "Routes", areas = "Areas" }
     @State private var category = Category.favorites
     @State private var search = ""
+    @State private var selectedFolder: String?
     @State private var pinEditor: PinDraft?
     @State private var areaEditor: NamedAreaDraft?
     @State private var folderPlace: SavedPlace?
@@ -327,6 +328,14 @@ struct PlacesView: View {
                 if typeSize.isAccessibilitySize { categoryPicker.pickerStyle(.menu) }
                 else { categoryPicker.pickerStyle(.segmented) }
             }.listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
+            if (category == .pins || category == .routes) && !folders.isEmpty {
+                Section {
+                    Picker("Folder", selection: $selectedFolder) {
+                        Text("All saved items").tag(String?.none)
+                        ForEach(folders, id: \.self) { Text($0).tag(Optional($0)) }
+                    }
+                }
+            }
             if category == .favorites || category == .pins {
                 Section("Pins") {
                     if category == .pins {
@@ -340,7 +349,8 @@ struct PlacesView: View {
             }
             if category == .favorites || category == .routes {
                 SavedTripsSection(onChoose: onTrip, favoritesOnly: category == .favorites,
-                                  search: category == .favorites ? "" : search, folders: folders, onCreate: onCreateRoute)
+                                  search: category == .favorites ? "" : search,
+                                  folder: category == .favorites ? nil : selectedFolder, folders: folders, onCreate: onCreateRoute)
             }
             if category == .areas {
                 NamedAreasSection(search: search) { area in
@@ -357,7 +367,9 @@ struct PlacesView: View {
     }
     private var folders: [String] { Array(Set(session.savedPins.compactMap(\.folder) + library.trips.compactMap(\.folder))).sorted() }
     private var shownPins: [SavedPlace] {
-        category == .favorites ? session.favorites : session.savedPins.filter { SavedNameSearch.matches(search, fields: [$0.displayName, $0.folder ?? ""]) }
+        category == .favorites ? session.favorites : session.savedPins.filter {
+            (selectedFolder == nil || $0.folder == selectedFolder) && SavedNameSearch.matches(search, fields: [$0.displayName, $0.folder ?? ""])
+        }
     }
     private func pinRow(_ place: SavedPlace) -> some View {
         HStack {

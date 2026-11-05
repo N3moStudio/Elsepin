@@ -1,9 +1,29 @@
 # Elsepin Change Ledger
 
-Updated through **2 November 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
+Updated through **4 November 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
 is the last recorded public release. Earlier entries retain their original validation context.
 
 See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all recorded 2.5.x/2.6.0 native runs.
+
+## 2.6.1 (69) — Pins, Favorites, map search and energy — unreleased
+
+- Separate permanent Pins from favorite Pins/Routes, with optional starring, map
+  symbols and tap-only name bubbles. Preserve folders and all pins in widgets,
+  backups and deletion/restore. Historical defaults and formats remain readable.
+- Recent route snapshots share history privacy controls; recent pin/route actions
+  can plan or name/save, and only a pin offers Teleport preparation.
+- Area search moves the drawing camera without altering corners; Home search
+  removes Saved places and calls the selected map point Currently dropped pin.
+- General/category search uses bounded native requests and one fallback. Active
+  route search browses/saves results without redirecting travel; draft stop
+  searches still rebuild a preview and now show partial results sooner.
+- Cycling fallback requires explicit walking-path choice. Battery work limits
+  idle wait wakeups, cancels obsolete search/directions, limits pins to the map
+  viewport and slows optional camera updates during thermal pressure.
+- Review preserved actual wait duration, interruption wakeups, movement cadence,
+  Stop, privacy, compatibility, themes, icons and recovery timing.
+- Local checks passed; native run was blocked by GitHub account billing before
+  execution. No new IPA or release. See BUILD-HISTORY and CURRENT-WORK for next steps.
 
 ## 2.6.1 (68) — compact route card and automatic trip recovery — private test build
 

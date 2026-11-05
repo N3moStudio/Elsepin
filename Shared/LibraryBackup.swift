@@ -48,7 +48,7 @@ enum BackupCategory: String, Codable, CaseIterable, Identifiable {
     case places, trips, settings
     var id: String { rawValue }
     var title: String {
-        switch self { case .places: return "Saved places & named areas"; case .trips: return "Saved trips & routines"; case .settings: return "Settings" }
+        switch self { case .places: return "Pins & named areas"; case .trips: return "Saved trips & routines"; case .settings: return "Settings" }
     }
 }
 

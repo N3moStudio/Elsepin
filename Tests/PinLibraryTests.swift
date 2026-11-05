@@ -15,7 +15,8 @@ final class PinLibraryTests: XCTestCase {
 
     func testOlderRoutesAreSavedButNotFavorited() throws {
         var trip = fixtureTrip()
-        XCTAssertFalse(trip.isFavorite)
+        let legacy = try JSONDecoder().decode(SavedTrip.self, from: JSONEncoder().encode(trip))
+        XCTAssertFalse(legacy.isFavorite)
         trip.favorite = true
         let restored = try JSONDecoder().decode(SavedTrip.self, from: JSONEncoder().encode(trip))
         XCTAssertTrue(restored.isFavorite)
@@ -29,7 +30,11 @@ final class PinLibraryTests: XCTestCase {
         XCTAssertTrue(RecentRoute.kept([item], retention: .forever, enabled: false, now: now).isEmpty)
         XCTAssertEqual(RecentRoute.kept([item, item], retention: .forever, enabled: true, now: now).count, 1)
         let many = (0..<15).map { _ in RecentRoute(trip: fixtureTrip(), visitedAt: now) }
-        XCTAssertLessThanOrEqual(RecentRoute.kept(many, retention: .forever, enabled: true, now: now).count, 10)
+        XCTAssertEqual(RecentRoute.kept(many, retention: .forever, enabled: true, now: now).count, 10)
+        let expired = RecentRoute(trip: fixtureTrip(), visitedAt: now.addingTimeInterval(-172_800))
+        XCTAssertTrue(RecentRoute.kept([expired], retention: .oneDay, enabled: true, now: now).isEmpty)
+        let future = RecentRoute(trip: fixtureTrip(), visitedAt: now.addingTimeInterval(20))
+        XCTAssertTrue(RecentRoute.kept([future], retention: .forever, enabled: true, now: now).isEmpty)
     }
     func testCategorySearchPreservesSpecificAddresses() {
         XCTAssertEqual(PlaceSearchIntent.category(for: "  Fast Foods "), .food)
@@ -42,5 +47,22 @@ final class PinLibraryTests: XCTestCase {
         XCTAssertEqual(DisplayEnergyPolicy.stopWaitInterval(remaining: 3600, foreground: false, constrained: false), 5)
         XCTAssertEqual(DisplayEnergyPolicy.stopWaitInterval(remaining: 3600, foreground: true, constrained: false), 1)
         XCTAssertEqual(DisplayEnergyPolicy.cameraInterval(lowPower: false, thermallyLimited: true), 3)
+    }
+    func testLongerStopSleepConsumesActualAwakeTimeWithoutStretchingStop() {
+        var progress = RouteStopProgress()
+        progress.arrive(RouteStop(name: "Wait", metres: 0, waitSeconds: 10))
+        progress.tick(5, maximumElapsed: 5.25)
+        XCTAssertEqual(progress.remainingSeconds, 5)
+        progress.tick(5, maximumElapsed: 5.25)
+        XCTAssertNil(progress.currentID)
+        XCTAssertEqual(progress.remainingSeconds, 0)
+    }
+    func testLegacyWaitCapAndInvalidBudgetsRemainSafe() {
+        var progress = RouteStopProgress()
+        progress.arrive(RouteStop(name: "Wait", metres: 0, waitSeconds: 10))
+        progress.tick(300)
+        XCTAssertEqual(progress.remainingSeconds, 9.5)
+        progress.tick(1, maximumElapsed: .nan)
+        XCTAssertEqual(progress.remainingSeconds, 9.5)
     }
 }
