@@ -68,7 +68,7 @@ final class DeveloperIncidentTests: XCTestCase {
     func testStoreExportsRetainedMarkerWhileRecordingOffAndRejectsAfterClear() async throws {
         let name = "incident-test-" + UUID().uuidString
         let defaults = try XCTUnwrap(UserDefaults(suiteName: name))
-        addTeardownBlock { defaults.removePersistentDomain(forName: name) }
+        addTeardownBlock { UserDefaults(suiteName: name)?.removePersistentDomain(forName: name) }
         defaults.set(true, forKey: DeveloperLogStore.enabledKey)
         let time = moment
         let store = DeveloperLogStore(folder: try folder(), defaults: defaults, now: { time })

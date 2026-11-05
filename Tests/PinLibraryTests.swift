@@ -7,7 +7,9 @@ final class PinLibraryTests: XCTestCase {
         var pin = try JSONDecoder().decode(BackupPlace.self, from: old)
         XCTAssertTrue(pin.isFavorite)
         pin.favorite = false
-        let backup = LibraryBackup(places: [pin], trips: [], preferences: nil)
+        // A library-only backup must explicitly omit the settings category.
+        let backup = LibraryBackup(places: [pin], trips: [], preferences: nil).selecting([.places])
+        XCTAssertTrue(backup.isValid)
         let restored = try LibraryBackup.decode(backup.encoded())
         XCTAssertFalse(restored.places[0].isFavorite)
         XCTAssertEqual(restored.places[0].id, pin.id)
