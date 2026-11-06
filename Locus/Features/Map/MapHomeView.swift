@@ -8,6 +8,7 @@ struct MapHomeView: View {
     @Binding var incomingPlace: RoutePlace?
     @Binding var incomingSearch: Bool
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.elsepinReducedResources) private var reducedResources
     @EnvironmentObject private var session: SpoofSession
     @EnvironmentObject private var preferences: SessionPreferences
     @EnvironmentObject private var pairing: PairingStore
@@ -90,6 +91,10 @@ struct MapHomeView: View {
     private var canAdjustPin: Bool {
         session.pin != nil && session.journey == nil && planner.preparedRoute == nil && !planner.isDrawing && !session.isBusy
     }
+    private var canPlacePin: Bool {
+        MapPinPlacement.allowed(hasJourney: session.journey != nil, hasPreparedRoute: planner.preparedRoute != nil,
+                                drawing: planner.isDrawing, adjusting: pinAdjusting)
+    }
     private var shownPin: CLLocationCoordinate2D? { adjustedPin ?? session.pin }
     private func pinStyle(at coordinate: CLLocationCoordinate2D) -> SavedPlace? {
         session.savedPins.first { RoutePoint($0.coordinate).distance(to: RoutePoint(coordinate)) <= 5 }
@@ -130,6 +135,7 @@ struct MapHomeView: View {
             ForEach(visibleSavedPins) { pin in
                 Annotation("", coordinate: pin.coordinate, anchor: .center) {
                     SavedPinMapIcon(pin: pin, selected: selectedSavedPin == pin.id) {
+                        guard canPlacePin else { return }
                         selectedSavedPin = pin.id
                         selection = nil
                         followMovement = false
@@ -233,14 +239,14 @@ struct MapHomeView: View {
     }
 
     private func pinTapGesture(_ proxy: MapProxy) -> MapPinTapGesture {
-        MapPinTapGesture(enabled: session.journey == nil && !planner.isDrawing && !pinAdjusting) { nativeCoordinate, globalPoint in
+        MapPinTapGesture(enabled: canPlacePin) { nativeCoordinate, globalPoint in
+            guard canPlacePin else { return }
             guard let coordinate = nativeCoordinate ?? proxy.convert(globalPoint, from: .global) else { return }
             followMovement = false
             DeveloperLogStore.shared.record("map_pin_input", ["projection": nativeCoordinate == nil ? "global fallback" : "native map"])
             var transaction = Transaction(); transaction.disablesAnimations = true
             withTransaction(transaction) {
                 selectedSavedPin = nil
-                planner.discardPreparedRoute()
                 session.selectPin(coordinate)
             }
         }
@@ -413,7 +419,7 @@ struct MapHomeView: View {
         }
         .onChange(of: session.journey?.travelledMetres) { _, _ in
             guard visualUpdatesEnabled, followMovement, session.routeActive,
-                  Date().timeIntervalSince(lastCameraUpdate) >= DisplayEnergyPolicy.cameraInterval(lowPower: session.lowPower, thermallyLimited: thermallyLimited) else { return }
+                  Date().timeIntervalSince(lastCameraUpdate) >= DisplayEnergyPolicy.cameraInterval(lowPower: session.lowPower, thermallyLimited: thermallyLimited, reducedResources: reducedResources) else { return }
             centerOnLocation()
         }
         .onChange(of: visualUpdatesEnabled) { _, enabled in
@@ -496,7 +502,8 @@ struct MapHomeView: View {
         } else if let trip = pendingSavedTrip {
             pendingSavedTrip = nil
             guard session.journey == nil, !session.isBusy else { return }
-            planner.useSaved(library.trips.first(where: { $0.id == trip.id }) ?? trip)
+            if library.trips.contains(where: { $0.id == trip.id }) { planner.useSaved(trip) }
+            else { planner.useRecent(trip) }
         } else if let destination = pendingDestination {
             planner.plan(to: destination, defaultOrigin: session.defaultRouteOrigin, mode: session.travelMode)
             pendingDestination = nil

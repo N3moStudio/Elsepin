@@ -6,7 +6,7 @@ enum DisplayEnergyPolicy {
     static func stopWaitInterval(remaining: Double, foreground: Bool, constrained: Bool) -> Double {
         min(max(0, remaining), foreground ? (constrained ? 2 : 1) : 5)
     }
-    static func cameraInterval(lowPower: Bool, thermallyLimited: Bool) -> Double {
-        thermallyLimited ? 3 : lowPower ? 2 : 1
+    static func cameraInterval(lowPower: Bool, thermallyLimited: Bool, reducedResources: Bool = false) -> Double {
+        thermallyLimited ? 3 : (lowPower || reducedResources) ? 2 : 1
     }
 }

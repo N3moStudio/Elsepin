@@ -50,6 +50,26 @@ final class PinLibraryTests: XCTestCase {
         XCTAssertEqual(DisplayEnergyPolicy.stopWaitInterval(remaining: 3600, foreground: true, constrained: false), 1)
         XCTAssertEqual(DisplayEnergyPolicy.cameraInterval(lowPower: false, thermallyLimited: true), 3)
     }
+    func testResourcePressureOnlyReducesOptionalCameraUpdates() {
+        XCTAssertEqual(DisplayEnergyPolicy.cameraInterval(lowPower: false, thermallyLimited: false, reducedResources: true), 2)
+        XCTAssertEqual(DisplayEnergyPolicy.cameraInterval(lowPower: false, thermallyLimited: false, reducedResources: false), 1)
+        XCTAssertEqual(DisplayEnergyPolicy.cameraInterval(lowPower: true, thermallyLimited: true, reducedResources: true), 3)
+    }
+
+    func testPlannedRecentKeepsEditedLegsAndUpdatesOneHistoryItem() throws {
+        var trip = fixtureTrip()
+        let length = try XCTUnwrap(RouteTrack(trip.points)).length
+        trip.travelSections = [RouteTravelSection(id: UUID(), startMetres: 0, endMetres: length / 2, mode: .walk, speedMPH: 3),
+            RouteTravelSection(id: RouteLegChoice.destinationID, startMetres: length / 2, endMetres: length, mode: .eBike, speedMPH: 10)]
+        let old = RecentRoute(trip: trip, visitedAt: Date(timeIntervalSince1970: 1000))
+        trip.travelSections?[1].speedMPH = 12
+        let recent = RecentRoute(trip: trip, visitedAt: Date(timeIntervalSince1970: 1100))
+        let stored = try JSONDecoder().decode(RecentRoute.self, from: JSONEncoder().encode(recent))
+        let kept = RecentRoute.kept([old, stored], retention: .forever, enabled: true, now: Date(timeIntervalSince1970: 1200))
+        XCTAssertEqual(kept.count, 1)
+        XCTAssertEqual(kept.first?.trip.travelSections?.map(\.speedMPH), [3, 12])
+        XCTAssertEqual(kept.first?.trip.points, trip.points)
+    }
     func testLongerStopSleepConsumesActualAwakeTimeWithoutStretchingStop() {
         var progress = RouteStopProgress()
         progress.arrive(RouteStop(name: "Wait", metres: 0, waitSeconds: 10))

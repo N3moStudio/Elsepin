@@ -1,7 +1,7 @@
 import Foundation
 
 /// A choice belongs to the place being travelled to, so reordering stops keeps
-/// their incoming choices. No choices exist until Advanced is explicitly enabled.
+/// their incoming choices. A leg editor creates overrides without a hidden toggle.
 struct RouteLegChoice: Codable, Equatable {
     var mode: TravelMode
     var speedMPH: Double

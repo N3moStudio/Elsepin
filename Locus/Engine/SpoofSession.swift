@@ -696,7 +696,7 @@ final class SpoofSession: ObservableObject {
             activeSavedTripID = prepared.editingTripID
             var trip = prepared.route.savedTrip(name: prepared.route.name, mode: prepared.mode,
                 speed: prepared.speedMPH, smooth: prepared.smoothMovement, arrival: prepared.arrival)
-            trip.id = prepared.editingTripID ?? prepared.route.id
+            trip.id = prepared.editingTripID ?? prepared.historyID ?? prepared.route.id
             rememberRecentRoute(trip)
         }
         return started
@@ -1604,7 +1604,10 @@ final class SpoofSession: ObservableObject {
         guard let id = RecentlyDeletedStore.shared.keep(.area(current)) else { lastError = RecentlyDeletedStore.shared.error; return }
         if !replaceNamedAreas(namedAreas.filter { $0.id != area.id }) { _ = RecentlyDeletedStore.shared.remove(id) }
     }
+    func rememberPlannedRoute(_ trip: SavedTrip) { rememberRecentRoute(trip) }
     private func rememberRecentRoute(_ trip: SavedTrip) {
+        guard trip.isValid, preferences.saveRecentLocations else { return }
+        if let first = recentRoutes.first, first.trip == trip, Date().timeIntervalSince(first.visitedAt) < 10 { return }
         recentRoutes = RecentRoute.kept([RecentRoute(trip: trip, visitedAt: Date())] + recentRoutes,
             retention: preferences.recentHistoryRetention, enabled: preferences.saveRecentLocations)
         recentRouteStore.save(recentRoutes)

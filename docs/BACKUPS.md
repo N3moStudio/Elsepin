@@ -1,5 +1,15 @@
 # Import and export — official 2.5.7
 
+## Build 73 retired tray shortcut compatibility
+
+Keep the serialized `settings` and `batterySaver` shortcut enum cases so old
+settings files still decode. Validation accepts their former unique, at-most-three
+shape, then normalizes away the retired buttons; duplicate/malformed lists still
+fail. Re-exports use the current choices. Main Settings remains available.
+Route leg edits use existing travelSections/stop/speed fields, with interval and
+Codable tests; no format version bump or identifier migration. Planned Recents
+stay local and obey history opt-out/retention; they are not exported as library data.
+
 ## Build 69 pin/favorite compatibility (unreleased)
 
 All named pins are exported and reviewed, including unstarred pins. Favorites

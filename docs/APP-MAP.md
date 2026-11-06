@@ -1,7 +1,8 @@
 # Elsepin app map
 
-Cleanup and native progress are in build 67; see [review](CLEANUP-AND-ORBS-REVIEW.md)
-and [native progress](NATIVE-PROGRESS.md). The route-card collapse follow-up is local/unbuilt.
+Current status: [handoff](CURRENT-WORK.md) and [build history](BUILD-HISTORY.md).
+Build 73 is the current route/tray work; build 72 is the latest validated baseline.
+Historical cleanup: [review](CLEANUP-AND-ORBS-REVIEW.md) and [native progress](NATIVE-PROGRESS.md).
 
 Latest local presentation pass: [UI polish notes](UI-POLISH.md) maps the three-step
 pairing guide (`PairOnDeviceView.swift`) and visible draft mode grid
@@ -14,13 +15,15 @@ sampling. `LocationEngine` owns the durable write marker and fresh explicit-comm
 handshake; moving that marker before setup can create false recovery warnings.
 
 Maintained alongside the [Change Ledger](CHANGE-LEDGER.md). Source paths
-are relative to the repository. Latest verified private build is 2.6.1 (67); see [current work](CURRENT-WORK.md) for local changes, build evidence and publication boundaries. Historical entries below retain their original validation context.
+are relative to the repository. See [current work](CURRENT-WORK.md) for local changes, build evidence and publication boundaries. Historical entries below retain their original validation context.
 Build 66 incident export and helper audit are mapped below; current evidence is in CURRENT-WORK.md.
 This continues the original source/branding catalog without treating historical
 Locus identifiers as safe search-and-replace targets.
 
 | Area | Main owners | Responsibilities |
 | --- | --- | --- |
+| Leg movement / staged route / recents (73) | `Shared/RouteLegEditing.swift`, `RoutePlanner.swift`, `RoutePlannerSheet.swift`, `MapHomeView.swift`, `SpoofSession.swift`, `RoutePlaceSearchSheet.swift` | Incoming-stop intervals preserve other speeds; exact paths remain exact. MapPinPlacement rejects taps while staged/active. Stable history IDs retain the newest valid draft under existing privacy retention. Selecting a recent route only opens the editor. |
+| Resource pressure / preview cache (73) | `ResourceUsageEnvironment.swift`, `DisplayEnergyPolicy.swift`, `ElsepinProgressLabel.swift`, `RoutePlannerSheet.swift` | iOS 27 hint only affects discretionary visuals. Never use it to change location-write or Stop timing. Preview line cache assumes route ID changes with geometry. See ENERGY-REVIEW. |
 | Route-card collapse (local, unbuilt) | `RootView.swift`: `BottomControlsView`, `routeDetailsCollapsed`, `compactJourneyPanel` | Presentation-only toggle. Reset on route ID changes, not progress ticks. Keep command controls/warnings outside hidden detail; preserve overlay viewport and skip code. See UI-POLISH device checks. |
 | Incident diagnostics (66) | `Shared/DeveloperIncident.swift`, `DeveloperLogStore.swift`, `SessionTimeline.swift`; `SessionTimelineView.swift`; `Tests/DeveloperIncidentTests.swift` | Bounded off-main JSONL slice around retained marker; preserve full log and notes, report truncation/gaps, expire with original batch. RouteDiagnosticAttempt IDs only observe map/engine transitions; never gate movement. Do not log per-frame drag coordinates or credentials. |
 | Combined Nearby/check polling (66) | `CloudFindMy/render_server.py` (`Owner.read_report`), `nearby_web.py`, `test_polling.py` | One short-lived per-target cooldown cache; preserve original timestamps and observer identity. Distinguish permanent auth failures from transient unavailable; one provider failure must not sign out the other. |

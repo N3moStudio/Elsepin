@@ -34,8 +34,8 @@ struct TripCheckpoint: Codable, Equatable {
 
 enum PanelShortcut: String, Codable, CaseIterable, Identifiable {
     case saved, joystick, settings, speed, pause
-    case batterySaver // Decode old backups only; never offered as a control.
-    static let allCases: [Self] = [.saved, .joystick, .settings, .speed, .pause]
+    case batterySaver // Retired controls still decode from old backups.
+    static let allCases: [Self] = [.saved, .joystick, .speed, .pause]
     var id: String { rawValue }
     var title: String {
         switch self {
@@ -57,10 +57,10 @@ enum PanelShortcut: String, Codable, CaseIterable, Identifiable {
         case .batterySaver: return "battery.25percent"
         }
     }
-    static let defaults: [Self] = [.saved, .joystick, .settings]
+    static let defaults: [Self] = [.saved, .joystick]
     static func normalized(_ values: [Self]) -> [Self] {
         var result: [Self] = []
-        for value in values where value != .batterySaver && !result.contains(value) { result.append(value) }
+        for value in values where value != .batterySaver && value != .settings && !result.contains(value) { result.append(value) }
         return result.isEmpty ? defaults : Array(result.prefix(3))
     }
 }

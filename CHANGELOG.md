@@ -1,9 +1,29 @@
 # Elsepin changelog
 
-Updated through **5 November 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
+Updated through **6 November 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
 is the official release. Earlier Shift entries retain their original names and release status.
 
 [App introduction](README.md) · [Build history](docs/BUILD-HISTORY.md) · [Detailed Change Ledger](docs/CHANGE-LEDGER.md)
+
+## Unreleased — 2.6.1 build 73 (6 November 2026)
+
+- Tap the movement row between stops to change only that leg's mode and speed.
+  Saved and custom paths support this too. Speed-only edits reuse their path;
+  automatic routes recalculate when a different road/path network is needed.
+- A ready route ignores map pin taps until you close it with X. Planned routes
+  now appear in Recents before starting; tapping a recent route opens the planner.
+- Smaller map tray with inline shortcuts; remove its duplicate Settings and More
+  controls. Main Settings, explicit Start/Stop, collapse and touch targets remain.
+- Simplify planning into Stops, Whole route, Summary and one indented Options
+  group. Remove redundant timing paragraphs; retain stops, arrival behavior,
+  rehearsal, route warnings, drawing, GPX and saving.
+- Clarify Hybrid as Satellite + labels. Satellite remains imagery-only; old
+  map-style settings and backups keep their meaning. Old tray Settings choices
+  import successfully without restoring the removed button.
+- Cache the planner preview path and honor iOS 27's reduced-resource hint for
+  optional camera refresh/loading motion. Movement timing and Stop are unchanged.
+- Validation pending; no public release. Device UI and battery benefit are not
+  established by source checks or compilation.
 
 ## Unreleased — 2.6.1 build 72 (5 November 2026)
 

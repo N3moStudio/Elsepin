@@ -245,13 +245,15 @@ struct RouteSectionChoiceSheet: View {
     let title: String
     let original: RouteLegChoice
     let onSave: (RouteLegChoice) -> Void
+    let keepsExactPath: Bool
     @Environment(\.dismiss) private var dismiss
     @State private var mode: TravelMode
     @State private var speed: Double
     @State private var confirmRoadChange = false
 
-    init(title: String, choice: RouteLegChoice, onSave: @escaping (RouteLegChoice) -> Void) {
+    init(title: String, choice: RouteLegChoice, keepsExactPath: Bool = false, onSave: @escaping (RouteLegChoice) -> Void) {
         self.title = title; original = choice; self.onSave = onSave
+        self.keepsExactPath = keepsExactPath
         _mode = State(initialValue: choice.mode); _speed = State(initialValue: choice.speedMPH)
     }
     var body: some View {
@@ -264,21 +266,21 @@ struct RouteSectionChoiceSheet: View {
                     }
                     LabeledContent("Target speed", value: preferences.speedUnit.formatted(mph: speed))
                     SpeedSlider(mph: $speed, mode: mode)
-                } footer: { Text("Only this section changes. Done recalculates directions before you can start. Bike and e-bike use the same cycling network; walking fallback stays labeled.") }
+                } footer: { Text(keepsExactPath ? "Only this leg changes. Your drawn or imported path stays the same." : "Only this leg changes.") }
             }
-            .shiftScreen().loggedNavigationTitle("Section settings").navigationBarTitleDisplayMode(.inline)
+            .shiftScreen().loggedNavigationTitle("Leg movement").navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
-                        if original.mode.needsRouteChoice(changingTo: mode) { confirmRoadChange = true }
+                        if !keepsExactPath && original.mode.needsRouteChoice(changingTo: mode) { confirmRoadChange = true }
                         else { save() }
                     }
                 }
             }
             .onChange(of: mode) { _, new in speed = new.defaultSpeedMPH }
             .loggedConfirmationDialog("Find matching directions?", isPresented: $confirmRoadChange, titleVisibility: .visible) {
-                Button("Recalculate this section") { save() }
+                Button("Recalculate directions") { save() }
                 Button("Cancel", role: .cancel) { }
             } message: { Text("Changing between a car and other modes needs a different path. The old route cannot start while new directions are loading.") }
         }

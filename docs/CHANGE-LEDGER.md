@@ -1,9 +1,29 @@
 # Elsepin Change Ledger
 
-Updated through **5 November 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
+Updated through **6 November 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
 is the last recorded public release. Earlier entries retain their original validation context.
 
 See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all recorded 2.5.x/2.6.0 native runs.
+
+## 2.6.1 (73) - editable legs, staged-route protection and compact planning - unreleased
+
+Owner supplied six screenshots and reported per-leg editing was inaccessible,
+map taps destroyed ready routes, planned routes were missing from Recents and
+the tray/planner were too bulky. Direct leg controls now preserve unaffected
+speeds/path sections, use deferred navigation handoff and respect active-route
+hold confirmation. Previewed routes enter local opt-in history; taps reopen the
+snapshot without starting movement. The explicit X owns staged-route dismissal.
+
+Retire the tray Settings/More affordances; keep Settings tab and existing features
+under compact planner groups. Remove the selected timing prose. Hybrid is renamed
+Satellite + labels rather than removing a distinct map layer. Compatibility tests
+retain old backup, shortcut and travel-section fields. Remove only unreachable
+UI/state from this scope; retain vendor resources, notices and historical evidence.
+
+Use the installed Axiom performance/location and Apple Design guidance. Follow
+Apple's iOS 27 reduced-resource signal only for optional visual work; cache preview
+geometry and avoid new direction requests for speed-only changes. No extra polling
+or high-rate diagnostic capture. Native validation is pending. No public release.
 
 ## 2.6.1 (72) - connection, route handoff and diagnostic follow-up - unreleased
 

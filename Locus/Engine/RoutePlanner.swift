@@ -9,6 +9,7 @@ struct PreparedRoute: Identifiable {
     var arrival: ArrivalChoice = .stay
     var editingTripID: UUID? = nil
     var continuationNote: String? = nil
+    var historyID: UUID? = nil
     let waypoints: [TripWaypoint]
     let usesStoredPath: Bool
     let sectionChoices: [UUID: RouteLegChoice]
@@ -26,6 +27,7 @@ final class RoutePlanner: ObservableObject {
     @Published var draftSpeedMPH = 3.0
     @Published var draftSmoothMovement = false
     private var draftSettingsInitialized = false
+    private var draftHistoryID = UUID()
     @Published private(set) var origin: RoutePlace?
     @Published private(set) var destination: RoutePlace?
     @Published private(set) var alternatives: [PlannedRoute] = []
@@ -57,7 +59,7 @@ final class RoutePlanner: ObservableObject {
     func prepareSelectedRoute(mode: TravelMode, speedMPH: Double, smoothMovement: Bool) -> Bool {
         guard !isLoading, let route = selectedRoute, route.supports(mode) else { return false }
         preparedRoute = PreparedRoute(route: route, mode: mode, speedMPH: mode.clampedSpeedMPH(speedMPH), smoothMovement: smoothMovement,
-            arrival: draftArrival, editingTripID: editingTripID, continuationNote: draftContinuationNote,
+            arrival: draftArrival, editingTripID: editingTripID, continuationNote: draftContinuationNote, historyID: draftHistoryID,
             waypoints: waypoints, usesStoredPath: usesStoredPath, sectionChoices: sectionChoices)
         return true
     }
@@ -115,6 +117,7 @@ final class RoutePlanner: ObservableObject {
         sectionChoices = preparedRoute.sectionChoices
         usesStoredPath = preparedRoute.usesStoredPath
         editingTripID = preparedRoute.editingTripID
+        draftHistoryID = preparedRoute.historyID ?? route.id
         draftContinuationNote = preparedRoute.continuationNote
         draftArrival = preparedRoute.arrival
         draftMode = preparedRoute.mode
@@ -179,6 +182,7 @@ final class RoutePlanner: ObservableObject {
         draftArrival = .stay
         editingTripID = nil
         draftContinuationNote = nil
+        draftHistoryID = UUID()
     }
     func cancel() {
         generation = UUID()
@@ -238,6 +242,7 @@ final class RoutePlanner: ObservableObject {
         cancel()
         waypoints = []
         editingTripID = nil
+        draftHistoryID = route.id
         sectionChoices = [:]
         usesStoredPath = true
         origin = route.origin
@@ -252,6 +257,7 @@ final class RoutePlanner: ObservableObject {
         guard let route = trip.plannedRoute else { error = "The saved trip is invalid."; return }
         cancel()
         editingTripID = trip.id
+        draftHistoryID = trip.id
         draftArrival = trip.arrival ?? .stay
         draftMode = trip.mode
         draftSpeedMPH = trip.speedMPH
@@ -266,6 +272,20 @@ final class RoutePlanner: ObservableObject {
         sectionChoices = Dictionary(uniqueKeysWithValues: route.travelSections.map { ($0.id, RouteLegChoice(mode: $0.mode, speedMPH: $0.speedMPH)) })
         error = nil
         isPresented = true
+    }
+
+    func useRecent(_ trip: SavedTrip) {
+        useSaved(trip)
+        // A history entry is not a saved Library item until the user saves it.
+        editingTripID = nil
+    }
+
+    func rememberDraft(in session: SpoofSession) {
+        guard !isLoading, let route = selectedRoute, route.supports(draftMode) else { return }
+        var trip = route.savedTrip(name: route.name, mode: draftMode, speed: draftSpeedMPH,
+                                  smooth: draftSmoothMovement, arrival: draftArrival)
+        trip.id = editingTripID ?? draftHistoryID
+        session.rememberPlannedRoute(trip)
     }
 
     func addWaypoint(_ place: RoutePlace, mode: TravelMode, speedMPH: Double? = nil, insertAlongRoute: Bool = false) {
@@ -330,26 +350,55 @@ final class RoutePlanner: ObservableObject {
 
     var hasSectionSettings: Bool { !sectionChoices.isEmpty }
 
-    func setSectionSettings(_ enabled: Bool, mode: TravelMode, speedMPH: Double) {
+    func useSingleMovement(mode: TravelMode) {
+        sectionChoices = [:]
         if usesStoredPath {
-            guard !enabled else { return }
-            sectionChoices = [:]
             for index in alternatives.indices {
                 alternatives[index].travelSections = []
                 alternatives[index].storedMode = mode
             }
-            return
-        }
-        if enabled {
-            let choice = RouteLegChoice(mode: mode, speedMPH: mode.clampedSpeedMPH(speedMPH))
-            sectionChoices = Dictionary(uniqueKeysWithValues: (waypoints.map(\.id) + [RouteLegChoice.destinationID]).map { ($0, choice) })
-        } else { sectionChoices = [:] }
-        rebuild(mode: mode)
+        } else { rebuild(mode: mode) }
     }
     func setSectionChoice(_ choice: RouteLegChoice, for id: UUID, defaultMode: TravelMode) {
-        guard !usesStoredPath, hasSectionSettings, choice.isValid else { return }
-        sectionChoices[id] = choice
-        rebuild(mode: defaultMode)
+        guard !isLoading, choice.isValid else { return }
+        syncPathStops()
+        let targets = waypoints.map(\.id) + [RouteLegChoice.destinationID]
+        guard targets.contains(id) else { return }
+        let fallback = RouteLegChoice(mode: defaultMode, speedMPH: defaultMode.clampedSpeedMPH(draftSpeedMPH))
+        var choices = sectionChoices
+        for target in targets where choices[target] == nil {
+            if let route = selectedRoute,
+               let range = RouteLegEditing.range(to: target, stops: route.stops, length: route.track.length),
+               let section = RouteTravelSection.current(in: route.travelSections, at: range.lowerBound) {
+                choices[target] = RouteLegChoice(mode: section.mode, speedMPH: section.speedMPH)
+            } else { choices[target] = fallback }
+        }
+        let previous = choices[id] ?? fallback
+        choices[id] = choice
+        let keepsExactPath = selectedRoute?.source.isAutomatic == false
+        // Speed changes (and Walk/Run or Cycle/E-bike switches) don't require
+        // MapKit. Preserve the path, other legs and old mixed-section backups.
+        if let route = selectedRoute,
+           keepsExactPath || previous.mode.routeNetwork == choice.mode.routeNetwork {
+            var updated = alternatives
+            for index in updated.indices {
+                guard let range = RouteLegEditing.range(to: id, stops: updated[index].stops, length: updated[index].track.length),
+                      let sections = RouteLegEditing.replacing(updated[index].travelSections, in: range,
+                        length: updated[index].track.length, id: id, choice: choice, fallback: fallback) else {
+                    error = "This route has too many movement sections. Use one mode for the route, then edit its legs."
+                    return
+                }
+                updated[index].travelSections = sections
+            }
+            alternatives = updated
+            sectionChoices = choices
+            error = nil
+            DeveloperLogStore.shared.record("route_leg_updated", ["leg": id.uuidString, "mode": choice.mode.rawValue,
+                "speed_mph": String(choice.speedMPH), "directions_requested": "false", "route": route.id.uuidString])
+        } else {
+            sectionChoices = choices
+            rebuild(mode: defaultMode)
+        }
     }
     func applyMapEdit(origin start: RoutePoint, destination end: RoutePoint, stops: [TripWaypoint], mode: TravelMode, speedMPH: Double? = nil) {
         guard start.isValid, end.isValid, stops.count <= 20, stops.allSatisfy({ $0.point.isValid }),

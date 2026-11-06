@@ -1,4 +1,31 @@
-# Elsepin energy review — 5 November 2026
+# Elsepin energy review — 6 November 2026
+
+## Build 73: targeted optional-work reduction
+
+Owner reports much less warmth with build 72, but supplied no controlled power
+trace for this pass. The installed Axiom performance/energy/location guidance was
+reviewed alongside Apple's current documentation. This is source-level evidence,
+not a measured battery improvement or a reason to reduce route-update accuracy.
+
+- `RoutePlanner.setSectionChoice` keeps geometry for speed-only/same-network
+  edits and all explicit drawn/GPX paths. A real network change still requests
+  matching directions. Section tests preserve unaffected speeds and ETA inputs.
+- `RoutePlannerSheet` caches its `MKPolyline` by route identity, so changing speed,
+  waits or options does not reallocate it. New route geometry gets a new identity.
+- `ElsepinResourceUsage` maps iOS 27's
+  [systemPrefersReducedResourceUsage](https://developer.apple.com/documentation/swiftui/environmentvalues/systemprefersreducedresourceusage)
+  to optional camera following (at most every two seconds under pressure) and
+  pauses decorative loading motion. Older systems keep the existing behavior.
+  Thermal limits still take priority. No new polling timer or background work.
+- The root already hides map/GPS browsing work while the planner is presented;
+  this was verified and preserved, not claimed as a new fix. Location commands,
+  connection recovery, route cadence and Stop do not consume the new UI hint.
+
+References: Apple's [SwiftUI performance guidance](https://developer.apple.com/documentation/xcode/understanding-and-improving-swiftui-performance),
+[battery guidance](https://developer.apple.com/documentation/xcode/reducing-your-app-s-battery-use)
+and [Power Profiler](https://developer.apple.com/documentation/xcode/measuring-your-app-s-power-use-with-power-profiler).
+Actual CPU/GPU/display power and heat still need a repeatable phone comparison;
+do not infer wattage or battery percentages from nominal thermal state or CPU logs.
 
 ## Build 72: observed feedback and expanded evidence
 

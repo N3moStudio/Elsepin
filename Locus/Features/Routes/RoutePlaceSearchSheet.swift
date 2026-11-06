@@ -19,7 +19,6 @@ struct RoutePlaceSearchSheet: View {
     @State private var searchGeneration = UUID()
     @State private var pinEditor: PinDraft?
     @State private var selectedTrip: SavedTrip?
-    @State private var showTripActions = false
     @State private var renameTrip = false
     @State private var tripName = ""
     @State private var resultNote: String?
@@ -77,6 +76,14 @@ struct RoutePlaceSearchSheet: View {
                             ForEach(session.recentRoutes.prefix(8)) { recent in
                                 Button { chooseTrip(recent.trip) } label: {
                                     Label(recent.trip.name, systemImage: "point.topleft.down.curvedto.point.bottomright.up")
+                                }
+                                .disabled(session.journey != nil || session.isBusy)
+                                .contextMenu {
+                                    Button("Name route", systemImage: "pencil") {
+                                        selectedTrip = recent.trip
+                                        tripName = recent.trip.name
+                                        renameTrip = true
+                                    }
                                 }
                             }
                         }
@@ -139,14 +146,6 @@ struct RoutePlaceSearchSheet: View {
                 Button("Cancel", role: .cancel) { selectedPlace = nil }
             } message: { Text("Teleport shows a pin first. Confirm on the map when you're ready.") }
             .sheet(item: $pinEditor) { draft in PinEditor(draft: draft) }
-            .confirmationDialog(selectedTrip?.name ?? "Recent route", isPresented: $showTripActions, titleVisibility: .visible) {
-                if let trip = selectedTrip {
-                    Button("Plan a route") { onChooseTrip?(trip); dismiss() }
-                        .disabled(session.journey != nil || session.isBusy)
-                    Button("Name route") { tripName = trip.name; renameTrip = true }
-                }
-                Button("Cancel", role: .cancel) { }
-            }
             .alert("Name route", isPresented: $renameTrip) {
                 TextField("Route name", text: $tripName)
                 Button("Save") {
@@ -223,8 +222,11 @@ struct RoutePlaceSearchSheet: View {
     }
 
     private func chooseTrip(_ trip: SavedTrip) {
+        guard session.journey == nil, !session.isBusy, let onChooseTrip else { return }
         cancelSearch(); searchFocused = false
-        selectedTrip = trip; showTripActions = true
+        DeveloperLogStore.shared.record("recent_route_opened", ["route": trip.id.uuidString])
+        onChooseTrip(trip)
+        dismiss()
     }
 
     private func choose(_ place: RoutePlace) {

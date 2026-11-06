@@ -14,6 +14,17 @@ final class LibraryBackupTests: XCTestCase {
         XCTAssertEqual(restored.trips, backup.trips)
         XCTAssertEqual(restored.preferences, backup.preferences)
     }
+    func testLegacySettingsShortcutImportsWithoutRestoringRetiredButton() throws {
+        var backup = fixture()
+        backup.preferences?.shortcuts = [.saved, .settings, .joystick]
+        let restored = try LibraryBackup.decode(backup.encoded())
+        XCTAssertEqual(restored.preferences?.shortcuts, [.saved, .joystick])
+        XCTAssertEqual(restored.places, backup.places)
+        XCTAssertEqual(restored.trips, backup.trips)
+        XCTAssertEqual(try LibraryBackup.decode(restored.encoded()).preferences, restored.preferences)
+        backup.preferences?.shortcuts = [.settings, .settings]
+        XCTAssertFalse(backup.isValid)
+    }
     func testRetiredAppearanceBackupKeepsLibraryAndMapsAbyssToBloom() throws {
         var backup = fixture()
         backup.preferences?.visualStyle = .bloom
@@ -158,7 +169,7 @@ final class LibraryBackupTests: XCTestCase {
         settings["display"] = display
         object["preferences"] = settings
         let restored = try LibraryBackup.decode(JSONSerialization.data(withJSONObject: object))
-        XCTAssertEqual(restored.preferences?.shortcuts, [.saved, .settings])
+        XCTAssertEqual(restored.preferences?.shortcuts, [.saved])
         XCTAssertEqual(restored.preferences?.glassPanel, true)
         XCTAssertEqual(restored.preferences?.display?.liveActivities, true)
         XCTAssertEqual(restored.preferences?.display?.mapStyle, 2)

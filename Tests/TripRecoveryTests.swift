@@ -52,8 +52,14 @@ final class TripRecoveryTests: XCTestCase {
     }
     func testRemovedSaverNeverAppearsInPanelChoices() {
         XCTAssertFalse(PanelShortcut.allCases.contains(.batterySaver))
-        XCTAssertEqual(PanelShortcut.normalized([.saved, .batterySaver, .settings]), [.saved, .settings])
+        XCTAssertEqual(PanelShortcut.normalized([.saved, .batterySaver, .settings]), [.saved])
         XCTAssertEqual(PanelShortcut.normalized([.batterySaver]), PanelShortcut.defaults)
+        XCTAssertFalse(PanelShortcut.allCases.contains(.settings))
+        XCTAssertEqual(PanelShortcut.normalized([.settings]), PanelShortcut.defaults)
+    }
+    func testLegacySettingsShortcutStillDecodesBeforeNormalization() throws {
+        let previous = try JSONDecoder().decode([PanelShortcut].self, from: Data(#"["saved","settings","joystick"]"#.utf8))
+        XCTAssertEqual(PanelShortcut.normalized(previous), [.saved, .joystick])
     }
 }
 

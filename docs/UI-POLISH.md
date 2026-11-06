@@ -3,6 +3,25 @@
 Read this before applying new design skills or continuing the video-inspired
 polish. Current implementation and device evidence are in [CURRENT-WORK](CURRENT-WORK.md).
 
+## Build 73 owner-directed planner/tray changes
+
+The supplied screenshots approve a smaller map tray and removal of its Settings
+and More buttons. Main Settings remains a tab; Saved/Joystick default shortcuts
+stay, with Speed/Pause still available in shortcut customization. The collapse
+handle shares the compact header row and retains drag/interruption handling.
+Decorative sizing/text is smaller; actionable targets remain at least 44pt.
+
+Planner order is preview, Stops (each incoming leg edits mode/speed), Whole route,
+Summary, then one Options disclosure with indented Behavior, Edit route and Files
+& drawing groups. Remove the circled timing explanations, retaining meaningful
+errors, walking-path provenance and Start confirmation. Saved/custom paths keep
+their geometry for speed edits; active edits require explicit hold confirmation.
+
+Prepared-route map taps must do nothing until X. Recent-route taps open planning,
+never start movement. Hybrid's distinct label/road overlay is named Satellite +
+labels; keep its stored value. Physical compact/accessibility layout, navigation
+interruption and gestures remain phone acceptance checks after native validation.
+
 ## Product constraints
 
 Keep the established Elsepin identity, eight themes, thirteen icons, Bloom/Solid

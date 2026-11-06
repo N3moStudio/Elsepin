@@ -1,6 +1,34 @@
 # Elsepin current handoff
 
-Updated 5 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
+Updated 6 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
+
+## 2.6.1 (73) - route legs, recents and compact controls - validation pending
+
+Each incoming stop/destination leg now opens its own movement editor directly,
+including saved/drawn/GPX paths. Speed changes and switches on the same route
+network preserve geometry; automatic network changes recalculate directions.
+`Shared/RouteLegEditing.swift` preserves untouched sections, validates interval
+coverage/limits and handles co-located stops. Active travel requires the existing
+explicit hold-and-edit confirmation. No selection starts movement automatically.
+
+Prepared routes ignore map pin taps until their explicit X. Valid planned routes
+enter existing opt-in Recents before Start; tapping one opens its exact snapshot
+in the planner. Stable history IDs prevent repeated edits creating duplicates.
+The tray removes Settings/More and uses smaller header/inline shortcuts with 44pt
+targets. Settings remains a tab. Stops, Whole route, Summary and one Options group
+replace scattered planner controls. Removed redundant summary prose, not timing
+calculation, warnings, path provenance or import/export/drawing features.
+
+Hybrid is retained as Satellite + labels, because it differs from imagery-only
+Satellite. Existing serialized map-style values remain compatible. Retired tray
+Settings identifiers still decode; old backups normalize them away after validation.
+
+The iOS 27 reduced-resource hint slows discretionary camera following and pauses
+decorative loading motion; route/connection/Stop cadence is unchanged. The planner
+preview caches its polyline. No new timer, telemetry upload or dependency. Owner
+reports only slight warmth after build 72, but no controlled energy trace was sent.
+Native validation and physical route/UI/heat acceptance are still pending for 73.
+No public release or deployment. Keep the delivered build 72 until 73 is verified.
 
 ## 2.6.1 (72) - privately validated and delivered
 

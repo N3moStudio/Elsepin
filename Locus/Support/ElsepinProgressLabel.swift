@@ -10,6 +10,7 @@ struct ElsepinProgressLabel: View {
     let lowPower: Bool
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.elsepinReducedResources) private var reducedResources
     @ScaledMetric(relativeTo: .body) private var orbSize = 20.0
     @State private var visible = false
 
@@ -25,7 +26,7 @@ struct ElsepinProgressLabel: View {
             ThinkingOrb(state: state, size: .px20, theme: .auto,
                         paused: ProgressMotion.isPaused(visible: visible,
                             active: scenePhase == .active, reduceMotion: reduceMotion,
-                            lowPower: lowPower), displaySize: orbSize)
+                            lowPower: lowPower || reducedResources), displaySize: orbSize)
                 .accessibilityHidden(true)
             Text(title).fixedSize(horizontal: false, vertical: true)
         }

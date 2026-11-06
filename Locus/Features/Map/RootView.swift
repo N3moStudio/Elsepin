@@ -18,7 +18,6 @@ struct RootView: View {
     private enum RootTab: String { case map, library, settings }
     @SceneStorage("shift.selectedTab") private var selectedTab = RootTab.map
     @State private var drawAfterPlanner = false
-    @State private var showSettings = false
     @State private var showPlaces = false
     @State private var notice: String?
     @State private var noticeID = UUID()
@@ -32,7 +31,7 @@ struct RootView: View {
         // an empty map frame and also moves its gesture coordinate space.
         .overlay(alignment: .bottom) {
             if !planner.isDrawing {
-                BottomControlsView(showSettings: $showSettings, showPlaces: $showPlaces, showNotice: showNotice,
+                BottomControlsView(showPlaces: $showPlaces, showNotice: showNotice,
                                    controlsEnabled: selectedTab == .map && !planner.isPresented && !showSessionDetails && privacy.canOpenContent)
                     .padding(.horizontal, 16)
                     // Keep a strip of the map visible below the tray for its
@@ -78,9 +77,9 @@ struct RootView: View {
         .tint(ShiftPalette.color(.accent, style: visualStyle))
         .environmentObject(planner)
         .environmentObject(tripLibrary)
-        .onChange(of: showSettings) { _, show in if show { selectedTab = .settings; showSettings = false } }
         .onChange(of: showPlaces) { _, show in if show { selectedTab = .library; showPlaces = false } }
         .fullScreenCover(isPresented: $planner.isPresented, onDismiss: {
+            if session.journey == nil { planner.rememberDraft(in: session) }
             planner.discardDraft()
             if drawAfterPlanner {
                 drawAfterPlanner = false
@@ -328,7 +327,6 @@ struct BottomControlsView: View {
     @EnvironmentObject private var pairing: PairingStore
     @EnvironmentObject private var planner: RoutePlanner
     @EnvironmentObject private var preferences: SessionPreferences
-    @Binding var showSettings: Bool
     @Binding var showPlaces: Bool
     let showNotice: (String) -> Void
     var controlsEnabled = true
@@ -362,11 +360,11 @@ struct BottomControlsView: View {
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
             VStack(spacing: 0) {
-                panelHandle
+                HStack(alignment: .top, spacing: 4) {
                 // Keep the same details in the tree throughout the drag. Only their
                 // visible height changes; the map and its coordinate space never resize.
                 expandedDetails
-                    .padding(.bottom, 8)
+                    .padding(.vertical, 4)
                     .fixedSize(horizontal: false, vertical: true)
                     .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
                         guard height.isFinite, height >= 0, height != detailHeight else { return }
@@ -378,6 +376,8 @@ struct BottomControlsView: View {
                     .clipped()
                     .allowsHitTesting(!collapsed && !handleTouchActive)
                     .accessibilityHidden(collapsed)
+                panelHandle
+                }
                 VStack(spacing: 6) {
                     primaryActions
                     if session.effectivePhase == .disconnected || session.effectivePhase == .unverified {
@@ -386,9 +386,9 @@ struct BottomControlsView: View {
                     HStack(spacing: 4) { trayItems }
                         .padding(.top, 0)
                 }
-                .padding(.bottom, 6)
+                .padding(.bottom, 4)
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, 12).padding(.top, 4)
             .modifier(ControlPanelStyle(useGlass: preferences.glassPanel))
             .shadow(color: .black.opacity(0.12), radius: 20, y: 8)
             }
@@ -528,11 +528,9 @@ struct BottomControlsView: View {
 
     private var panelHandle: some View {
         Button { setCollapsed(!collapsed) } label: {
-            ZStack {
-                Capsule().fill(Color.secondary.opacity(0.35)).frame(width: 36, height: 4).opacity(collapsed ? 0 : 1)
-                if collapsed { Image(systemName: "chevron.up").font(.caption.weight(.bold)) }
-            }
-            .frame(maxWidth: .infinity, minHeight: 44).contentShape(Rectangle())
+            Image(systemName: collapsed ? "chevron.up" : "chevron.down")
+                .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                .frame(width: 44, height: 44).contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .disabled(!interactionsAvailable)
@@ -558,15 +556,14 @@ struct BottomControlsView: View {
     }
 
     @ViewBuilder private var expandedDetails: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 8) {
             if session.journey != nil {
                 JourneyCard(showsControls: false)
             } else if let prepared = planner.preparedRoute {
-                HStack(spacing: 12) {
-                    ShiftRowIcon(symbol: prepared.mode.icon)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("READY TO START").font(.footnote.weight(.semibold)).tracking(1.6).foregroundStyle(.secondary)
-                        Text(prepared.route.destination.name).font(.title3.weight(.semibold)).lineLimit(2)
+                HStack(spacing: 8) {
+                    traySymbol((prepared.route.travelSections.first?.mode ?? prepared.mode).icon)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(prepared.route.destination.name).font(.subheadline.weight(.semibold)).lineLimit(2)
                         Text(JourneyText.distance(prepared.route.track.length)).font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer(minLength: 0)
@@ -575,16 +572,16 @@ struct BottomControlsView: View {
                     }.buttonStyle(.plain).accessibilityLabel("Edit route preview")
                 }
             } else if !session.joystickActive {
-                HStack(alignment: .center, spacing: 12) {
-                    ShiftRowIcon(symbol: session.pinIsPreview ? "mappin" : session.hasSession ? "location.fill" : "map")
-                    VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .center, spacing: 8) {
+                    traySymbol(session.pinIsPreview ? "mappin" : session.hasSession ? "location.fill" : "map")
+                    VStack(alignment: .leading, spacing: 2) {
                         Text(session.isStopping ? "Stopping session" : session.pinIsPreview ? "Selected place" : session.isSpoofing ? "Holding location" : session.hasSession || session.lastError != nil ? session.statusTitle : "Where to next?")
-                            .font(.headline)
+                            .font(.subheadline.weight(.semibold))
                         if let point = session.pinIsPreview ? session.pin : session.simulated {
-                            Text(session.suggestedFavoriteName(for: point)).font(.subheadline).foregroundStyle(.secondary)
+                            Text(session.suggestedFavoriteName(for: point)).font(.caption).foregroundStyle(.secondary)
                                 .lineLimit(2)
                         } else {
-                            Text("Search for a place or draw a route.").font(.subheadline).foregroundStyle(.secondary)
+                            Text("Search or draw a route.").font(.caption).foregroundStyle(.secondary)
                         }
                     }
                     Spacer(minLength: 0)
@@ -608,6 +605,13 @@ struct BottomControlsView: View {
                 }
             }
         }
+    }
+
+    private func traySymbol(_ symbol: String) -> some View {
+        Image(systemName: symbol).font(.subheadline.weight(.semibold))
+            .foregroundStyle(LocusTheme.accent).frame(width: 32, height: 32)
+            .background(LocusTheme.accent.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+            .accessibilityHidden(true)
     }
 
     private var speedButton: some View {
@@ -653,19 +657,6 @@ struct BottomControlsView: View {
         ForEach(preferences.panelShortcuts) { item in
             trayItem(shortcutTitle(item), icon: shortcutIcon(item), selected: (item == .joystick && session.joystickActive)) { activate(item) }
         }
-        Menu {
-            ForEach(PanelShortcut.allCases.filter { !preferences.panelShortcuts.contains($0) }) { item in
-                Button { activate(item) } label: { Label(shortcutTitle(item), systemImage: shortcutIcon(item)) }
-            }
-            if session.journey != nil {
-                Button { planner.isPresented = true } label: { Label("Route details", systemImage: "list.bullet") }
-            }
-        } label: {
-            VStack(spacing: 4) {
-                Image(systemName: "ellipsis").font(.body.weight(.medium))
-                Text("More").font(.footnote.weight(.medium))
-            }.frame(maxWidth: .infinity, minHeight: 44).foregroundStyle(.secondary).contentShape(Rectangle())
-        }.accessibilityLabel("More controls")
     }
 
     private func shortcutTitle(_ item: PanelShortcut) -> String {
@@ -676,9 +667,8 @@ struct BottomControlsView: View {
     }
     private func activate(_ item: PanelShortcut) {
         switch item {
-        case .batterySaver: break // Legacy shortcut is removed during normalization.
+        case .batterySaver, .settings: break // Legacy shortcuts are removed during normalization.
         case .saved: showPlaces = true
-        case .settings: showSettings = true
         case .joystick:
             if session.joystickActive { session.stopJoystick() }
             else if let message = session.startJoystick(pairing: pairing) { showNotice(message) }
@@ -735,9 +725,9 @@ struct BottomControlsView: View {
     }
     private func trayItem(_ title: String, icon: String, selected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            VStack(spacing: 4) {
-                Image(systemName: icon).font(.body.weight(.medium))
-                Text(title).font(.footnote.weight(.medium))
+            HStack(spacing: 6) {
+                Image(systemName: icon).font(.subheadline.weight(.medium))
+                Text(title).font(.caption.weight(.medium))
             }
             .frame(maxWidth: .infinity, minHeight: 44)
             .foregroundStyle(selected ? LocusTheme.accent : .secondary).contentShape(Rectangle())
@@ -777,7 +767,7 @@ private struct PreparedRouteControls: View {
                         .font(.subheadline.weight(.semibold)).frame(maxWidth: .infinity, minHeight: 44)
                         .contentShape(Rectangle())
                 }
-                .buttonStyle(ShiftActionStyle(immediatePress: true))
+                .buttonStyle(ShiftActionStyle(immediatePress: true, compact: compact))
                 .disabled(session.isBusy || session.routeActive || session.status == .stopping)
                 Button { planner.discardPreparedRoute() } label: {
                     Image(systemName: "xmark").frame(width: 44, height: 44).contentShape(Rectangle())

@@ -29,10 +29,13 @@ struct RoutePlannerSheet: View {
     @State private var pendingEdit: SavedTrip?
     @State private var pendingEditID: UUID?
     @State private var editingSection: SectionEdit?
+    @State private var pendingSectionChoice: (id: UUID, choice: RouteLegChoice)?
+    @State private var pendingLiveSection: SectionEdit?
     @State private var liveMovementExpanded = false
     @State private var draftMovementExpanded = false
     @State private var editingStop: StopEdit?
     @State private var advancedExpanded = false
+    @State private var previewLine: (id: UUID, line: MKPolyline)?
     private struct SectionEdit: Identifiable, Hashable {
         let id: UUID; let title: String; let choice: RouteLegChoice
         static func == (lhs: Self, rhs: Self) -> Bool { lhs.id == rhs.id }
@@ -71,25 +74,30 @@ struct RoutePlannerSheet: View {
                         .listRowBackground(Color.clear)
                 }
                 if !hasJourney && planner.alternatives.count > 1 { alternatives.shiftSettingsRows() }
-                if hasJourney {
-                    arrivalOptions.shiftSettingsRows()
-                } else { advancedOptions }
                 if let route { routeSummary(route).shiftSettingsRows() }
-                moreOptions.shiftSettingsRows()
+                routeOptions
             }
             .shiftSettingsScreen().textCase(nil)
             .loggedNavigationTitle(hasJourney ? "Your route" : "Plan a route")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(hasJourney ? "Done" : "Cancel") { dismiss() } } }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(hasJourney ? "Done" : "Cancel") {
+                if !hasJourney { planner.rememberDraft(in: session) }
+                dismiss()
+            } } }
             .safeAreaInset(edge: .bottom, spacing: 0) { routeActions }
             .onAppear {
                 applyPendingSearchChoice()
+                applyPendingSectionChoice()
                 if !hasJourney {
                     planner.initializeDraftIfNeeded(mode: session.travelMode, speedMPH: session.speedMPH(for: session.travelMode), smoothMovement: session.smoothMovement)
                 }
                 if !hasJourney, planner.origin == nil, let current = session.defaultRouteOrigin {
                     planner.setOrigin(current, mode: displayMode)
                 }
+                if !hasJourney { planner.rememberDraft(in: session) }
+            }
+            .onChange(of: planner.selectedID) { _, _ in
+                if !hasJourney { planner.rememberDraft(in: session) }
             }
             .navigationDestination(item: $searchEndpoint) { endpoint in
                 // Freeze the route for this navigation visit. Rebuilding the
@@ -126,6 +134,7 @@ struct RoutePlannerSheet: View {
                     session.stopRoute()
                     finishLiveEditIfReady()
                 }
+                Button("Cancel", role: .cancel) { pendingLiveSection = nil }
             } message: {
                 Text("This ends travel and holds your last sent location while you edit. Show route previews the changes. Start route begins again at the chosen start.")
             }
@@ -148,9 +157,13 @@ struct RoutePlannerSheet: View {
                 }
             }
             .navigationDestination(item: $editingSection) { item in
-                RouteSectionChoiceSheet(title: item.title, choice: item.choice) { choice in
-                    planner.setSectionChoice(choice, for: item.id, defaultMode: displayMode)
+                RouteSectionChoiceSheet(title: item.title, choice: item.choice,
+                                        keepsExactPath: route?.source.isAutomatic == false) { choice in
+                    pendingSectionChoice = (item.id, choice)
                 }
+            }
+            .onChange(of: editingSection) { _, item in
+                if item == nil { applyPendingSectionChoice() }
             }
             .navigationDestination(isPresented: $showPathStop) {
                 if let route {
@@ -194,7 +207,10 @@ struct RoutePlannerSheet: View {
         planner.useSaved(trip)
         planner.editingTripID = pendingEditID
         pendingEditID = nil
-        showPlaceEditor = true
+        if let section = pendingLiveSection {
+            pendingLiveSection = nil
+            editingSection = section
+        } else { showPlaceEditor = true }
     }
 
     private var timelineStops: [TripWaypoint] {
@@ -283,7 +299,7 @@ struct RoutePlannerSheet: View {
                     Image(systemName: "ellipsis").frame(width: 44, height: 44).contentShape(Rectangle())
                 }.accessibilityLabel("Route place options")
             }
-        } header: { Text("Route timeline") }
+        } header: { Text("Stops") }
         .buttonStyle(.borderless)
         .disabled(!hasJourney && planner.isLoading)
     }
@@ -318,11 +334,14 @@ struct RoutePlannerSheet: View {
         return HStack(spacing: 12) {
             Rectangle().fill(LocusTheme.accent.opacity(0.3)).frame(width: 2).frame(width: 28)
             Button {
-                if !hasJourney, !planner.usesStoredPath, planner.hasSectionSettings, let choice = choices.first {
+                if !hasJourney, let choice = choices.first {
                     editingSection = SectionEdit(id: place.id, title: "To \(place.name)", choice: choice)
-                } else if hasJourney { liveMovementExpanded = true }
-                else { draftMovementExpanded = true }
+                } else if hasJourney, let choice = choices.first {
+                    pendingLiveSection = SectionEdit(id: place.id, title: "To \(place.name)", choice: choice)
+                    confirmLiveEdit = true
+                }
             } label: {
+                HStack(spacing: 8) {
                 VStack(alignment: .leading, spacing: 4) {
                     if choices.count > 1 {
                         Label("Mixed travel · \(choices.count) sections", systemImage: "point.topleft.down.to.point.bottomright.curvepath")
@@ -331,14 +350,19 @@ struct RoutePlannerSheet: View {
                         Label("\(choice.mode.title) · \(preferences.speedUnit.formatted(mph: choice.speedMPH))", systemImage: choice.mode.icon)
                             .font(.subheadline).foregroundStyle(.secondary)
                     }
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right").font(.caption2).foregroundStyle(.tertiary)
                 }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
-            }.accessibilityHint("Edit movement settings")
+            }.accessibilityLabel("Movement to \(place.name)")
+                .accessibilityHint(hasJourney ? "Hold the current location before editing this leg" : "Change only this leg's mode and speed")
         }
         .fixedSize(horizontal: false, vertical: true)
     }
 
     private func timelineLegChoices(to place: TimelinePlace, previousMetres: Double?) -> [RouteLegChoice] {
         if !hasJourney, !planner.usesStoredPath, let choice = planner.sectionChoices[place.id] { return [choice] }
+        if !hasJourney, place.metres == previousMetres, let choice = planner.sectionChoices[place.id] { return [choice] }
         if let route, let end = place.metres, let start = previousMetres {
             let sections = route.travelSections.filter { $0.endMetres > start && $0.startMetres < end }
             if !sections.isEmpty {
@@ -363,21 +387,15 @@ struct RoutePlannerSheet: View {
             }
         } else {
             Section {
-                DisclosureGroup("Mode & speed", isExpanded: $draftMovementExpanded) {
+                DisclosureGroup("Whole route", isExpanded: $draftMovementExpanded) {
                 if planner.hasSectionSettings {
-                    Label("Using optional section settings", systemImage: "slider.horizontal.3")
+                    Label("Individual leg settings", systemImage: "slider.horizontal.3")
                         .font(.subheadline.weight(.semibold))
-                    Text(planner.usesStoredPath
-                        ? "This saved path keeps its section settings. Turn them off to use one mode and speed for the whole route."
-                        : "Tap a travel section in the timeline to edit it. More settings are in Advanced options.")
-                        .font(.caption).foregroundStyle(.secondary)
-                    if planner.usesStoredPath {
                         Button {
-                            planner.setSectionSettings(false, mode: displayMode, speedMPH: displaySpeed)
+                            planner.useSingleMovement(mode: displayMode)
                         } label: {
-                            Text("Turn off section settings").frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
+                            Text("Use one mode & speed").frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
                         }.buttonStyle(.borderless)
-                    }
                 } else {
                     // Keep every mode discoverable without a hidden horizontal
                     // scroll. Accessibility text gets full-width wrapping rows.
@@ -434,89 +452,50 @@ struct RoutePlannerSheet: View {
             ForEach(ArrivalChoice.allCases) { choice in Text(choice.title).tag(choice) }
         }
     }
-    private var arrivalOptions: some View {
-        Section { arrivalPicker } footer: { Text("Return and repeat offer a preview at arrival. The next trip starts only when you tap Start route.") }
-    }
-
-    @ViewBuilder private var advancedOptions: some View {
+    @ViewBuilder private var routeOptions: some View {
         Section {
             Button {
                 withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) { advancedExpanded.toggle() }
             } label: {
-                HStack(spacing: 12) {
+                HStack(spacing: 10) {
                     Image(systemName: "slider.horizontal.3").foregroundStyle(LocusTheme.accent)
-                    Text("Advanced options").font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
+                    Text("Options").font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
                     Spacer()
-                    Text("Optional").font(.caption).foregroundStyle(.secondary)
                     Image(systemName: advancedExpanded ? "chevron.up" : "chevron.down")
                         .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
-                }.frame(maxWidth: .infinity, minHeight: 48).contentShape(Rectangle())
+                }.frame(maxWidth: .infinity, minHeight: 44).contentShape(Rectangle())
             }.buttonStyle(.plain)
                 .accessibilityValue(advancedExpanded ? "Expanded" : "Collapsed")
-        }.listRowBackground(Color.clear)
+        }.shiftSettingsRows()
         if advancedExpanded {
             Section {
-                Button { showPlaceEditor = true } label: {
-                    Label("Edit names & places", systemImage: "pencil")
-                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
-                }.disabled(route == nil)
-                if !planner.usesStoredPath {
-                    Button { showMapEditor = true } label: {
-                        Label("Move places on the map", systemImage: "hand.draw")
-                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
-                    }.disabled(route == nil)
+                arrivalPicker
+                if !hasJourney {
+                    Toggle("Smooth route movement", isOn: $planner.draftSmoothMovement)
+                    if !planner.usesStoredPath && planningCycling {
+                        Toggle("Use walking paths", isOn: Binding(get: { planner.preferWalkingPaths }, set: {
+                            planner.preferWalkingPaths = $0
+                            planner.rebuild(mode: displayMode)
+                        }))
+                    }
                 }
-            } header: { Label("Stops & places", systemImage: "mappin.and.ellipse").padding(.leading, 16) }
-                .shiftSettingsRows().modifier(RouteNestedOptions()).buttonStyle(.borderless).disabled(planner.isLoading)
-            Section { arrivalPicker } header: { Label("When you arrive", systemImage: "flag.checkered").padding(.leading, 16) }
+            } header: { Text("Behavior").padding(.leading, 16) }
                 .shiftSettingsRows().modifier(RouteNestedOptions()).disabled(planner.isLoading)
             Section {
-                Toggle("Smooth route movement", isOn: $planner.draftSmoothMovement)
-                if !planner.usesStoredPath && planningCycling {
-                    Toggle("Use walking paths", isOn: Binding(get: { planner.preferWalkingPaths }, set: {
-                        planner.preferWalkingPaths = $0
-                        planner.rebuild(mode: displayMode)
-                    }))
+                Button {
+                    if hasJourney { confirmLiveEdit = true }
+                    else { showPlaceEditor = true }
+                } label: { Label("Edit names & places", systemImage: "pencil").frame(minHeight: 44) }
+                    .disabled(route == nil || session.isBusy || session.routeStopping)
+                if !hasJourney && !planner.usesStoredPath {
+                    Button { showMapEditor = true } label: {
+                        Label("Move places on map", systemImage: "hand.draw").frame(minHeight: 44)
+                    }.disabled(route == nil)
                 }
-                if !planner.usesStoredPath {
-                    Toggle("Different mode for each section", isOn: Binding(
-                        get: { planner.hasSectionSettings },
-                        set: { planner.setSectionSettings($0, mode: displayMode, speedMPH: displaySpeed) }
-                    )).disabled(planner.origin == nil || planner.destination == nil)
-                    if planner.hasSectionSettings {
-                        ForEach(sectionRows) { row in
-                            Button { editingSection = row } label: {
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(row.title).font(.subheadline).foregroundStyle(.primary)
-                                        Label("\(row.choice.mode.title) · \(preferences.speedUnit.formatted(mph: row.choice.speedMPH))", systemImage: row.choice.mode.icon)
-                                            .font(.caption).foregroundStyle(.secondary)
-                                    }
-                                    Spacer()
-                                    Image(systemName: "chevron.right").font(.caption)
-                                }.frame(maxWidth: .infinity, minHeight: 44).contentShape(Rectangle())
-                            }
-                        }
-                    }
-                } else if let route, !route.travelSections.isEmpty {
-                    ForEach(route.travelSections) { section in
-                        Label("\(section.mode.title) · \(preferences.speedUnit.formatted(mph: section.speedMPH)) · \(JourneyText.distance(section.startMetres))–\(JourneyText.distance(section.endMetres))", systemImage: section.mode.icon)
-                            .font(.caption)
-                    }
-                }
-            } header: { Label("Movement extras", systemImage: "speedometer").padding(.leading, 16) }
+            } header: { Text("Edit route").padding(.leading, 16) }
                 .shiftSettingsRows().modifier(RouteNestedOptions()).buttonStyle(.borderless).disabled(planner.isLoading)
-        }
-    }
-
-    private var sectionRows: [SectionEdit] {
-        let targets = planner.waypoints.map { ($0.id, $0.name) } + [(RouteLegChoice.destinationID, planner.destination?.name ?? "Destination")]
-        var from = planner.origin?.name ?? "Start"
-        return targets.enumerated().map { index, target in
-            let title = "\(index + 1). \(from) → \(target.1)"
-            from = target.1
-            let choice = planner.sectionChoices[target.0] ?? RouteLegChoice(mode: displayMode, speedMPH: displaySpeed)
-            return SectionEdit(id: target.0, title: title, choice: choice)
+            routeFiles
+                .shiftSettingsRows().modifier(RouteNestedOptions()).buttonStyle(.borderless)
         }
     }
 
@@ -543,7 +522,9 @@ struct RoutePlannerSheet: View {
     private func routePreview(_ route: PlannedRoute) -> some View {
         Section {
             Map(initialPosition: .automatic, interactionModes: [.pan, .zoom]) {
-                MapPolyline(coordinates: route.coordinates).stroke(LocusTheme.accent, lineWidth: 5)
+                if let previewLine, previewLine.id == route.id {
+                    MapPolyline(previewLine.line).stroke(LocusTheme.accent, lineWidth: 5)
+                }
                 ForEach(Array(route.stops.enumerated()), id: \.element.id) { index, stop in
                     Annotation(stop.name, coordinate: route.track.point(at: stop.metres).coordinate) {
                         Text("\(index + 2)").font(.caption.weight(.bold)).foregroundStyle(LocusTheme.onAccent)
@@ -561,7 +542,7 @@ struct RoutePlannerSheet: View {
             .mapStyle(.standard(elevation: .flat))
             .mapControlVisibility(.hidden)
             .id(route.id)
-            .frame(height: 170)
+            .frame(height: typeSize.isAccessibilitySize ? 170 : 140)
             .overlay(alignment: .topTrailing) {
                 Button { showPractice = true } label: {
                     Label("Preview", systemImage: "play.fill").font(.caption.weight(.semibold))
@@ -574,11 +555,18 @@ struct RoutePlannerSheet: View {
         }
         .listRowInsets(EdgeInsets())
         .listRowBackground(Color.clear)
+        .onAppear { updatePreviewLine(route) }
+        .onChange(of: route.id) { _, _ in updatePreviewLine(route) }
+    }
+
+    private func updatePreviewLine(_ route: PlannedRoute) {
+        guard previewLine?.id != route.id else { return }
+        previewLine = (route.id, MKPolyline(coordinates: route.coordinates, count: route.coordinates.count))
     }
 
     // Outside the scrolling list so choosing a mode never hides Show route.
     private var routeActions: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 6) {
             if hasJourney {
                 RoutePlaybackControls(onStop: { dismiss() })
             } else {
@@ -600,9 +588,9 @@ struct RoutePlannerSheet: View {
                 }
                 Button(action: showRoute) {
                     Label(planner.isLoading ? "Finding route…" : "Show route", systemImage: "map")
-                        .font(.headline).frame(maxWidth: .infinity, minHeight: 50).contentShape(Rectangle())
+                        .font(.subheadline.weight(.semibold)).frame(maxWidth: .infinity, minHeight: 44).contentShape(Rectangle())
                 }
-                .buttonStyle(ShiftActionStyle())
+                .buttonStyle(ShiftActionStyle(compact: true))
                 .disabled(!canShowRoute)
                 Text(planner.isLoading ? "Building your preview. No movement has started."
                      : planner.cyclingUnavailable ? "Choose Walking path above or change your endpoints."
@@ -610,8 +598,8 @@ struct RoutePlannerSheet: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
-        .padding(16).frame(maxWidth: .infinity)
-        .locusGlass(.regular, in: RoundedRectangle(cornerRadius: 28))
+        .padding(12).frame(maxWidth: .infinity)
+        .locusGlass(.regular, in: RoundedRectangle(cornerRadius: 22))
         .padding(.horizontal, 16).padding(.vertical, 8)
     }
 
@@ -640,7 +628,22 @@ struct RoutePlannerSheet: View {
 
     private func showRoute() {
         guard canShowRoute else { return }
-        if planner.prepareSelectedRoute(mode: displayMode, speedMPH: displaySpeed, smoothMovement: displaySmooth) { dismiss() }
+        if planner.prepareSelectedRoute(mode: displayMode, speedMPH: displaySpeed, smoothMovement: displaySmooth) {
+            planner.rememberDraft(in: session)
+            dismiss()
+        }
+    }
+
+    private func applyPendingSectionChoice() {
+        guard let pending = pendingSectionChoice else { return }
+        pendingSectionChoice = nil
+        editingSection = nil
+        Task { @MainActor in
+            await Task.yield()
+            guard planner.isPresented, !hasJourney else { return }
+            planner.setSectionChoice(pending.choice, for: pending.id, defaultMode: displayMode)
+            planner.rememberDraft(in: session)
+        }
     }
 
     private func routeSummary(_ route: PlannedRoute) -> some View {
@@ -656,23 +659,11 @@ struct RoutePlannerSheet: View {
                     Text(JourneyText.duration(route.estimate(mode: displayMode, speed: SpeedConversion.metresPerSecond(mph: displaySpeed), smooth: displaySmooth))).font(.title3.weight(.semibold))
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }.padding(.vertical, 5)
-            let waiting = route.stops.reduce(0) { $0 + $1.waitSeconds }
-            let moving = route.movingEstimate(mode: displayMode, speed: SpeedConversion.metresPerSecond(mph: displaySpeed), smooth: displaySmooth)
-            Text("Travel \(JourneyText.duration(moving)) · Stops \(StopDuration.formatted(waiting))")
-                .font(.caption).foregroundStyle(.secondary)
-            if let appleTime = route.appleTravelTime, let network = route.source.pathNetwork {
-                Text("Apple Maps: \(JourneyText.duration(appleTime)) · \(network.title)")
-                    .font(.caption).foregroundStyle(.secondary)
-            }
-            Text(route.travelSections.isEmpty
-                 ? "Elsepin uses \(preferences.speedUnit.formatted(mph: displaySpeed))\(displaySmooth ? ", including corner slowing" : ""). Real travel can take longer."
-                 : "Elsepin uses each section's speed and stop time. Real travel can take longer.")
-                .font(.caption).foregroundStyle(.secondary)
             Button {
                 tripName = library.trips.first(where: { $0.id == (hasJourney ? session.activeSavedTripID : planner.editingTripID) })?.name ?? route.name
                 showSaveTrip = true
             } label: {
-                Label((hasJourney ? session.activeSavedTripID : planner.editingTripID) != nil ? "Save changes to trip" : "Save this trip", systemImage: "star")
+                Label((hasJourney ? session.activeSavedTripID : planner.editingTripID) != nil ? "Save changes" : "Save route", systemImage: "star")
                     .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
             }.buttonStyle(.borderless)
             if let savedNotice { Text(savedNotice).font(.caption).foregroundStyle(.secondary) }
@@ -684,30 +675,28 @@ struct RoutePlannerSheet: View {
                     }
                 }
             }
-        } header: { Text("Trip details") }
+        } header: { Text("Summary") }
     }
 
-    private var moreOptions: some View {
+    private var routeFiles: some View {
         Section {
-            DisclosureGroup("More options") {
-                Group {
-                    Button {
-                        onDraw()
-                        dismiss()
-                    } label: { Label("Draw an exact path", systemImage: "pencil.tip") }
-                        .disabled(hasJourney)
-                    Button { showImporter = true } label: { Label("Import GPX", systemImage: "square.and.arrow.down") }
-                        .disabled(hasJourney)
-                    Button {
-                        guard let route else { return }
-                        exportDocument = GPXRouteDocument(text: GPXCodec.export(route.coordinates, name: route.name))
-                        showExporter = true
-                    } label: { Label("Export selected route", systemImage: "square.and.arrow.up") }
-                        .disabled(route == nil)
-                }.padding(.leading, 16).frame(minHeight: 44, alignment: .leading)
-            }
-        }
+            Button {
+                onDraw()
+                dismiss()
+            } label: { Label("Draw an exact path", systemImage: "pencil.tip").frame(minHeight: 44) }
+                .disabled(hasJourney)
+            Button { showImporter = true } label: {
+                Label("Import GPX", systemImage: "square.and.arrow.down").frame(minHeight: 44)
+            }.disabled(hasJourney)
+            Button {
+                guard let route else { return }
+                exportDocument = GPXRouteDocument(text: GPXCodec.export(route.coordinates, name: route.name))
+                showExporter = true
+            } label: { Label("Export route", systemImage: "square.and.arrow.up").frame(minHeight: 44) }
+                .disabled(route == nil)
+        } header: { Text("Files & drawing").padding(.leading, 16) }
     }
+
 }
 
 private struct GPXRouteDocument: FileDocument {

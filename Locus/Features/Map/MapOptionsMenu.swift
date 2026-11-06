@@ -14,8 +14,8 @@ struct MapOptionsMenu: View {
             }
             Picker("Map style", selection: $session.mapStyleIndex) {
                 Text("Standard").tag(0)
-                Text("Hybrid").tag(1)
                 Text("Satellite").tag(2)
+                Text("Satellite + labels").tag(1)
             }
         } label: {
             Image(systemName: "square.3.layers.3d")

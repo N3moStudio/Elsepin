@@ -36,6 +36,7 @@ struct LocusApp: App {
                 }
             }
             .id(reset.revision)
+            .modifier(ElsepinResourceUsage())
             .onAppear { lifecycle.session = session }
             .disabled(reset.isResetting)
             .overlay {

@@ -36,7 +36,8 @@ struct BackupPreferences: Codable, Equatable {
     var isValid: Bool {
         (display?.isValid ?? true) && ["theme", "system", "light", "dark"].contains(appearance) &&
         (shortcuts == PanelShortcut.normalized(shortcuts) ||
-            (shortcuts.contains(.batterySaver) && shortcuts.count <= 3 && Set(shortcuts).count == shortcuts.count)) &&
+            (shortcuts.contains(where: { $0 == .batterySaver || $0 == .settings }) &&
+                shortcuts.count <= 3 && Set(shortcuts).count == shortcuts.count)) &&
         usualSpeeds.count <= TravelMode.allCases.count && usualSpeeds.allSatisfy { key, value in
             guard let mode = TravelMode(rawValue: key) else { return false }
             return value.isFinite && mode.speedRangeMPH.contains(value)

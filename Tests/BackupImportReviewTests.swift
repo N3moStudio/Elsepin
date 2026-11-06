@@ -74,7 +74,7 @@ final class BackupImportReviewTests: XCTestCase {
         XCTAssertEqual(p.appearance, "light")
         XCTAssertEqual(p.speedUnit, .mph)
         XCTAssertEqual(p.usualSpeeds, ["walk": 4, "run": 6.5, "cycle": 12, "eBike": 18, "drive": 32])
-        XCTAssertEqual(p.shortcuts, [.joystick, .saved, .settings])
+        XCTAssertEqual(p.shortcuts, [.joystick, .saved])
         XCTAssertEqual(p.display?.connectionCheckSeconds, 15)
         XCTAssertEqual(p.display?.reminderMinutes, 60)
         XCTAssertEqual(p.display?.recentHistoryRetention, .forever)
