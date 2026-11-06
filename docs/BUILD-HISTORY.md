@@ -1,6 +1,6 @@
 # Elsepin build history
 
-Updated **5 November 2026**, America/Los_Angeles. Read the [full changelog](../CHANGELOG.md)
+Updated **6 November 2026**, America/Los_Angeles. Read the [full changelog](../CHANGELOG.md)
 for feature details. This page separates compilation, test artifacts and published
 releases so a successful check is not mistaken for an available download.
 
@@ -14,7 +14,29 @@ remain. A verified empty Actions history was followed by fresh run
 or spending-limit annotation. Deleting history did not resolve the billing block.
 No new IPA or release resulted.
 
-## Latest native build and private delivery: 2.6.1 (72) - 5 November 2026
+## Latest native build and private delivery: 2.6.1 (73) - 6 November 2026
+
+[Codemagic run 6aee4fc824e1ec237556f9c4](https://codemagic.io/app/6aecefbde7e295d4f44f163e/build/6aee4fc824e1ec237556f9c4)
+passed at source `567e6c5726c3d7c7bffd6e0e4b66d154864ed3d6`, private GitLab branch
+`codex/pins-search-69`, personal M2/Xcode 27.1. All 631 checks passed: 492 Swift,
+104 cloud, 18 Companion, 17 packaging. The Mac skipped one Windows-only helper
+test, excluded from the pass count. Native app and extension compiled with zero
+warnings/errors. Both bundles are 2.6.1 (73), arm64/device SDK 27.1. Archive
+integrity, thirteen icons, helper archives, notices and requested entitlements
+passed. Complete stderr/stdout and failure status are retained; the controlled
+exit-23 capture check passed. Evidence and receipt remain in ignored
+`.build/artifacts/codemagic-6aee4fc824e1ec237556f9c4/`.
+
+The free M2 had 323.8 minutes available before dispatch and no paid subscription
+or payment information. The run queued behind other projects without interrupting
+them, then ran from 14:24:26 to 14:28:59 local time. Paid billing was not changed.
+Only `Elsepin 2.6.1 build 73.ipa` (18,716,109 bytes) was delivered to
+`C:/Users/naith/Desktop/ipa/My Projects (N3mo Studio)`, checked before removing
+build 72 there. The previous build remains archived internally. No extra delivery
+files, public release or deployment. Per-leg interaction, ready-route map taps,
+recent-route reopening, final layout and actual heat still need phone acceptance.
+
+## Native build and private delivery: 2.6.1 (72) - 5 November 2026
 
 [Codemagic run 6aed7105ab17f8deb75355d1](https://codemagic.io/app/6aecefbde7e295d4f44f163e/build/6aed7105ab17f8deb75355d1)
 passed at source `50467da4bd2aeb16218cadae0f044f8cb3ba453f`, private GitLab branch

@@ -23,7 +23,12 @@ UI/state from this scope; retain vendor resources, notices and historical eviden
 Use the installed Axiom performance/location and Apple Design guidance. Follow
 Apple's iOS 27 reduced-resource signal only for optional visual work; cache preview
 geometry and avoid new direction requests for speed-only changes. No extra polling
-or high-rate diagnostic capture. Native validation is pending. No public release.
+or high-rate diagnostic capture. Private Codemagic run `6aee4fc824e1ec237556f9c4`
+passed at `567e6c5`: 631 checks (492 Swift, 104 cloud, 18 Companion, 17 packaging),
+native app/extension and IPA inspection, zero compiler warnings/errors. The single
+Windows-only helper skip is excluded. Delivered build 73 after verification and
+removed only the older Elsepin IPA from the delivery folder. Full logs and receipt
+are preserved internally. No public release; phone UI/heat acceptance is pending.
 
 ## 2.6.1 (72) - connection, route handoff and diagnostic follow-up - unreleased
 

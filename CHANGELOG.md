@@ -22,8 +22,10 @@ is the official release. Earlier Shift entries retain their original names and r
   import successfully without restoring the removed button.
 - Cache the planner preview path and honor iOS 27's reduced-resource hint for
   optional camera refresh/loading motion. Movement timing and Stop are unchanged.
-- Validation pending; no public release. Device UI and battery benefit are not
-  established by source checks or compilation.
+- Private build passed at `567e6c5`: 631 automated checks, native app/extension,
+  zero compiler warnings/errors, both bundles 2.6.1 (73). Delivered the IPA to
+  the Desktop project IPA folder, replacing build 72. No public release; device
+  UI and battery benefit are not established by compilation.
 
 ## Unreleased — 2.6.1 build 72 (5 November 2026)
 

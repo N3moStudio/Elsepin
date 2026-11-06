@@ -1,10 +1,10 @@
 # Elsepin app map
 
 Current status: [handoff](CURRENT-WORK.md) and [build history](BUILD-HISTORY.md).
-Build 73 is the current route/tray work; build 72 is the latest validated baseline.
+Build 73 is the latest privately validated and delivered route/tray update.
 Historical cleanup: [review](CLEANUP-AND-ORBS-REVIEW.md) and [native progress](NATIVE-PROGRESS.md).
 
-Latest local presentation pass: [UI polish notes](UI-POLISH.md) maps the three-step
+Earlier presentation pass: [UI polish notes](UI-POLISH.md) maps the three-step
 pairing guide (`PairOnDeviceView.swift`) and visible draft mode grid
 (`RoutePlannerSheet.swift`). Build 62 passed native validation; device UI checks remain pending.
 
@@ -24,7 +24,7 @@ Locus identifiers as safe search-and-replace targets.
 | --- | --- | --- |
 | Leg movement / staged route / recents (73) | `Shared/RouteLegEditing.swift`, `RoutePlanner.swift`, `RoutePlannerSheet.swift`, `MapHomeView.swift`, `SpoofSession.swift`, `RoutePlaceSearchSheet.swift` | Incoming-stop intervals preserve other speeds; exact paths remain exact. MapPinPlacement rejects taps while staged/active. Stable history IDs retain the newest valid draft under existing privacy retention. Selecting a recent route only opens the editor. |
 | Resource pressure / preview cache (73) | `ResourceUsageEnvironment.swift`, `DisplayEnergyPolicy.swift`, `ElsepinProgressLabel.swift`, `RoutePlannerSheet.swift` | iOS 27 hint only affects discretionary visuals. Never use it to change location-write or Stop timing. Preview line cache assumes route ID changes with geometry. See ENERGY-REVIEW. |
-| Route-card collapse (local, unbuilt) | `RootView.swift`: `BottomControlsView`, `routeDetailsCollapsed`, `compactJourneyPanel` | Presentation-only toggle. Reset on route ID changes, not progress ticks. Keep command controls/warnings outside hidden detail; preserve overlay viewport and skip code. See UI-POLISH device checks. |
+| Route-card collapse | `RootView.swift`: `BottomControlsView`, `routeDetailsCollapsed`, `compactJourneyPanel` | Presentation-only toggle. Reset on route ID changes, not progress ticks. Keep command controls/warnings outside hidden detail; preserve overlay viewport and skip code. Build 73 compiles the smaller shared header/handle; see UI-POLISH device checks. |
 | Incident diagnostics (66) | `Shared/DeveloperIncident.swift`, `DeveloperLogStore.swift`, `SessionTimeline.swift`; `SessionTimelineView.swift`; `Tests/DeveloperIncidentTests.swift` | Bounded off-main JSONL slice around retained marker; preserve full log and notes, report truncation/gaps, expire with original batch. RouteDiagnosticAttempt IDs only observe map/engine transitions; never gate movement. Do not log per-frame drag coordinates or credentials. |
 | Combined Nearby/check polling (66) | `CloudFindMy/render_server.py` (`Owner.read_report`), `nearby_web.py`, `test_polling.py` | One short-lived per-target cooldown cache; preserve original timestamps and observer identity. Distinguish permanent auth failures from transient unavailable; one provider failure must not sign out the other. |
 | Search / route crash follow-up (63) | `RoutePlaceSearchSheet.swift`, `MapHomeView.swift` | General search results stay in the picker; cancellation generations reject stale results. Native route-hold coordinates, matching route/index guards, interrupted-touch cleanup. Device crash cause/retest pending. |

@@ -24,7 +24,8 @@ not a measured battery improvement or a reason to reduce route-update accuracy.
 References: Apple's [SwiftUI performance guidance](https://developer.apple.com/documentation/xcode/understanding-and-improving-swiftui-performance),
 [battery guidance](https://developer.apple.com/documentation/xcode/reducing-your-app-s-battery-use)
 and [Power Profiler](https://developer.apple.com/documentation/xcode/measuring-your-app-s-power-use-with-power-profiler).
-Actual CPU/GPU/display power and heat still need a repeatable phone comparison;
+The iOS 27 integration compiled successfully on Xcode 27.1 in private build 73;
+optional-camera policy tests passed. Actual CPU/GPU/display power and heat still need a repeatable phone comparison;
 do not infer wattage or battery percentages from nominal thermal state or CPU logs.
 
 ## Build 72: observed feedback and expanded evidence

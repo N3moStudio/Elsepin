@@ -2,7 +2,7 @@
 
 Updated 6 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
 
-## 2.6.1 (73) - route legs, recents and compact controls - validation pending
+## 2.6.1 (73) - route legs, recents and compact controls - privately validated/delivered
 
 Each incoming stop/destination leg now opens its own movement editor directly,
 including saved/drawn/GPX paths. Speed changes and switches on the same route
@@ -27,8 +27,21 @@ The iOS 27 reduced-resource hint slows discretionary camera following and pauses
 decorative loading motion; route/connection/Stop cadence is unchanged. The planner
 preview caches its polyline. No new timer, telemetry upload or dependency. Owner
 reports only slight warmth after build 72, but no controlled energy trace was sent.
-Native validation and physical route/UI/heat acceptance are still pending for 73.
-No public release or deployment. Keep the delivered build 72 until 73 is verified.
+Private Codemagic run `6aee4fc824e1ec237556f9c4` passed at source
+`567e6c5726c3d7c7bffd6e0e4b66d154864ed3d6`: 631 checks (492 Swift,
+104 cloud, 18 Companion, 17 packaging), native app/extension compilation and IPA
+inspection with zero compiler warnings/errors. One Windows-only helper test is
+skipped on the Mac, not counted as a pass. Both bundles are 2.6.1 (73), arm64,
+device SDK 27.1. Full logs, metadata and receipt remain under ignored
+`.build/artifacts/codemagic-6aee4fc824e1ec237556f9c4/`.
+
+Delivered only `Elsepin 2.6.1 build 73.ipa` (18,716,109 bytes) to the Desktop
+project IPA folder; verified the new copy before removing only build 72 there.
+The prior IPA remains archived internally. Other projects were untouched.
+No public release or deployment. Physical route/UI/heat acceptance remains pending.
+Phone retest: plan two stops with different leg speeds/modes, show the route,
+verify map taps do nothing until X, then reopen it from Recents. Check smaller
+tray/Options layout and compare idle warmth under the same conditions.
 
 ## 2.6.1 (72) - privately validated and delivered
 
