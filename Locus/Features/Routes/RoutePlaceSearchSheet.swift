@@ -228,6 +228,8 @@ struct RoutePlaceSearchSheet: View {
     }
 
     private func choose(_ place: RoutePlace) {
+        DeveloperLogStore.shared.record("route_search_choice", ["screen": title, "place": place.name,
+            "latitude": String(place.coordinate.latitude), "longitude": String(place.coordinate.longitude)])
         cancelSearch()
         searchFocused = false
         if onPreviewTeleport != nil {
@@ -237,6 +239,7 @@ struct RoutePlaceSearchSheet: View {
     }
 
     private func openPlanner(_ place: RoutePlace) {
+        DeveloperLogStore.shared.record("route_search_handoff", ["screen": title])
         session.pushNamedRecent(name: place.name, coordinate: place.coordinate)
         onChoose(place)
         selectedPlace = nil

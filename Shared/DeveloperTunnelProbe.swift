@@ -25,7 +25,9 @@ enum DeveloperTunnelProbe {
         if result == 0 { return true }
         guard errno == EINPROGRESS else { return false }
         var descriptor = pollfd(fd: fd, events: Int16(POLLOUT), revents: 0)
-        guard poll(&descriptor, 1, 2_000) > 0 else { return false }
+        // The local endpoint completed in 0–3 ms in the build-71 device log.
+        // Keep a bounded grace period without a two-second missing-VPN delay.
+        guard poll(&descriptor, 1, 750) > 0 else { return false }
         var socketError: Int32 = 0
         var length = socklen_t(MemoryLayout<Int32>.size)
         return getsockopt(fd, SOL_SOCKET, SO_ERROR, &socketError, &length) == 0 && socketError == 0

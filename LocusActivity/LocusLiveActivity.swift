@@ -24,10 +24,10 @@ struct LocusLiveActivity: Widget {
                 DynamicIslandExpandedRegion(.trailing) {
                     if context.state.pairing != nil {
                         Text("Setup").font(.caption).foregroundStyle(.secondary).padding(.trailing, 6)
-                    } else if let last = context.state.lastConfirmedAt, context.state.islandShowsTimer != false {
-                        Text(last, style: .timer)
+                    } else if let last = context.state.lastConfirmedAt, context.state.islandShowsTimer != false, phase == .active {
+                        Text("Sent \(last, style: .timer)")
                             .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
-                            .frame(width: 54, alignment: .trailing).lineLimit(1)
+                            .frame(width: 84, alignment: .trailing).lineLimit(1)
                             .accessibilityLabel("Time since the last location update was sent")
                             .padding(.trailing, 6)
                     } else {
@@ -58,7 +58,7 @@ struct LocusLiveActivity: Widget {
                 } else if context.state.remoteFindMy != nil || context.state.remoteLife360 != nil {
                     ServiceActivityIcons(state: context.state, systemIsStale: context.isStale)
                 } else if let last = context.state.lastConfirmedAt, context.state.islandShowsTimer != false,
-                   phase == .active || phase == .unverified {
+                   phase == .active {
                     Text(last, style: .timer).monospacedDigit()
                         .font(.caption2).foregroundStyle(.secondary).frame(width: 48)
                         .accessibilityLabel("Time since last update; this is not a connection check")
@@ -93,10 +93,10 @@ private struct ActivityLockScreen: View {
                     Image(systemName: "battery.25percent").foregroundStyle(.yellow)
                         .accessibilityLabel("Low Power Mode")
                 }
-                if let last = context.state.lastConfirmedAt {
-                    Text(last, style: .timer)
+                if let last = context.state.lastConfirmedAt, phase == .active {
+                    Text("Sent \(last, style: .timer)")
                         .font(.caption.monospacedDigit()).foregroundStyle(.white.opacity(0.7))
-                        .frame(width: 54, alignment: .trailing).lineLimit(1)
+                        .frame(width: 84, alignment: .trailing).lineLimit(1)
                         .accessibilityLabel("Time since the last location update was sent")
                 }
             }
@@ -179,7 +179,7 @@ private struct ActivityDetails: View {
                 FindMyActivityStatus(remote: remote, systemIsStale: systemIsStale, life360: true, inlineAge: true)
             }
             if phase == .unverified {
-                Text("Open Elsepin to check. Simulation may remain.").font(.caption2).lineLimit(2)
+                Text("Updates stopped. Open Elsepin to check; the last location may remain.").font(.caption2).lineLimit(2)
             } else if phase == .disconnected {
                 Text("Update failed. The old location may remain.").font(.caption2).lineLimit(2)
             } else if journey == nil, let place {

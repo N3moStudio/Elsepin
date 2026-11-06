@@ -51,7 +51,7 @@ struct DeveloperLogExportSection: View {
             if let message { Text(message).font(.footnote).foregroundStyle(.secondary) }
             Button("Clear developer log", role: .destructive) { confirmClear = true }
             SettingsHelp(title: "What gets recorded?", lines: [
-                "Actions, taps, exact coordinates, warnings, notification requests, and app/network changes. Passwords, pairing files, and keyboard text are excluded.",
+                "Actions, taps, exact coordinates, route and connection steps, CPU/memory/heat samples, and iOS crash/hang reports when available. Passwords, pairing files, and keyboard text are excluded.",
                 "The log resets every 48 hours when Elsepin can run. Files you exported are yours to delete. Storage is capped at 256 MB.",
                 "iOS does not report every force-close or Airplane Mode change. Use Log tools → Mark a test event for those."
             ])

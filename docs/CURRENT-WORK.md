@@ -2,6 +2,29 @@
 
 Updated 5 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
 
+## 2.6.1 (72) - build-71 device feedback follow-up
+
+Owner supplied a 980-event build-71 log: successful TCP probes took 0–3 ms;
+unavailable endpoints waited 2001 ms. "Add stop" search returned 25 results and
+returned to the planner before the next process launch. There is no OS crash stack
+in this export, so navigation hazards are corrected without claiming a proven cause.
+Thermal state remained nominal (0), with recorded CPU around 0.7–34.4% of one core
+across mixed browsing/active periods. No controlled idle-power trace is available.
+Original input is preserved privately in ignored `.build/device-feedback-build71.jsonl`.
+
+Changes: fresh native connection for explicit commands/Stop, 750 ms TCP bound,
+durable unknown-location marker at native-write boundary, deferred search selection,
+immutable timeline neighbors/search route, directions timeout/stage logging, clearer
+Live Activity timer, and local MetricKit report collection/current-memory diagnostics.
+`SystemDiagnosticCollector` supports iOS 27 streams and the older subscriber API.
+Report bytes are split into bounded base64 fields; a begin/end manifest detects
+incomplete capture. Logs remain opt-in, local, capped and free of credentials.
+
+17 local Python checks plus appearance/identity/helper verification passed. Native
+Swift/app/extension checks pending. No release. Keep failed-clear safeguards and
+the widget signing requirement; the owner confirmed Recently Deleted and visual
+checks passed and believes backups work. Do not redo those unrelated interfaces.
+
 ## 2.6.1 (71) - privately validated and delivered
 
 The owner tested build 70 with FlareStore and LocalDevVPN. Six screenshots show

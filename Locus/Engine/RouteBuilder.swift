@@ -144,6 +144,7 @@ enum RouteBuilder {
 
     private static func requestRoutes(from start: RoutePlace, to end: RoutePlace,
                                       network: RouteNetwork, source: RoutePathSource) async throws -> [PlannedRoute] {
+        guard CLLocationCoordinate2DIsValid(start.coordinate), CLLocationCoordinate2DIsValid(end.coordinate) else { throw MissingRoute() }
         let request = MKDirections.Request()
         request.source = MKMapItem(placemark: MKPlacemark(coordinate: start.coordinate))
         request.destination = MKMapItem(placemark: MKPlacemark(coordinate: end.coordinate))
@@ -155,9 +156,11 @@ enum RouteBuilder {
         request.requestsAlternateRoutes = true
         request.departureDate = Date()
 
+        DeveloperLogStore.shared.record("directions_request_started", ["network": network.title])
         let directions = await RouteDirectionsRequest(request)
         let response = try await directions.calculate()
         try Task.checkCancellation()
+        DeveloperLogStore.shared.record("directions_response_received", ["network": network.title, "routes": String(response.routes.count)])
         let matches = response.routes.filter { $0.transportType == request.transportType }
         guard !matches.isEmpty else { throw MissingRoute() }
         let plans = matches.prefix(3).compactMap { route -> PlannedRoute? in
@@ -179,6 +182,8 @@ enum RouteBuilder {
                                 instructions: instructions, calculatedAt: Date())
         }
         guard !plans.isEmpty else { throw MissingRoute() }
+        DeveloperLogStore.shared.record("directions_paths_decoded", ["network": network.title,
+            "routes": String(plans.count), "points": String(plans.reduce(0) { $0 + $1.coordinates.count })])
         return plans
     }
 

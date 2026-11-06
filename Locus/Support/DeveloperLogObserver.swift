@@ -13,10 +13,12 @@ final class DeveloperLogObserver {
     private weak var observedSession: SpoofSession?
     private var energyTask: Task<Void, Never>?
     private var energy = EnergyDiagnostics()
+    private var latestScreen = "Unknown"
 
     func start(session: SpoofSession) {
         guard !started else { return }; started = true
         observedSession = session
+        SystemDiagnosticCollector.shared.start()
         updateEnergySampling()
         DeveloperLogStore.shared.record("observation_started", ["device": UIDevice.current.model])
         let names: [(Notification.Name, String)] = [
@@ -107,7 +109,13 @@ final class DeveloperLogObserver {
         var values = energy.sample()
         values.merge(observedSession?.energySnapshot ?? [:], uniquingKeysWith: { _, new in new })
         values["reason"] = reason
+        values["screen"] = latestScreen
         DeveloperLogStore.shared.record("energy_snapshot", values)
+    }
+
+    func recordScreen(_ title: String, opened: Bool) {
+        if opened { latestScreen = title }
+        DeveloperLogStore.shared.record(opened ? "screen_opened" : "screen_closed", ["screen": title])
     }
 
     func snapshot(session: SpoofSession) {
@@ -183,8 +191,8 @@ struct DeveloperTouchAnchor: UIViewRepresentable {
 extension View {
     func loggedNavigationTitle(_ title: String) -> some View {
         navigationTitle(title)
-            .onAppear { DeveloperLogStore.shared.record("screen_opened", ["screen": title]) }
-            .onDisappear { DeveloperLogStore.shared.record("screen_closed", ["screen": title]) }
+            .onAppear { DeveloperLogObserver.shared.recordScreen(title, opened: true) }
+            .onDisappear { DeveloperLogObserver.shared.recordScreen(title, opened: false) }
     }
 
     func loggedAlert<A: View, M: View>(_ title: String, isPresented: Binding<Bool>,

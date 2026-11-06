@@ -5,6 +5,17 @@ is the last recorded public release. Earlier entries retain their original valid
 
 See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all recorded 2.5.x/2.6.0 native runs.
 
+## 2.6.1 (72) - connection, route handoff and diagnostic follow-up - unreleased
+
+Build-71 device evidence and fixes are summarized in CURRENT-WORK.md and
+ENERGY-REVIEW.md. No OS crash stack was supplied, so the reported Add Stop exit
+remains a device-retest item after focused navigation/timeline corrections.
+Fresh explicit handshakes, a shorter endpoint failure bound, accurate durable
+write markers, directions deadlines, Live Activity age labels and expanded local
+MetricKit/CPU/memory/screen/route diagnostics are implemented. Existing visual,
+Recently Deleted, backup and manual-confirmation behavior is preserved.
+Local packaging checks: 17 passed; native validation pending. No publication.
+
 ## 2.6.1 (71) - owner feedback and bounded diagnostics - unreleased
 
 - Owner installed with FlareStore, confirmed LocalDevVPN is the connection in use.

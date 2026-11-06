@@ -7,6 +7,12 @@ Latest local presentation pass: [UI polish notes](UI-POLISH.md) maps the three-s
 pairing guide (`PairOnDeviceView.swift`) and visible draft mode grid
 (`RoutePlannerSheet.swift`). Build 62 passed native validation; device UI checks remain pending.
 
+Build-72 diagnostics: `Locus/Support/SystemDiagnosticCollector.swift` owns iOS
+MetricKit reports; `Shared/DiagnosticReportChunks.swift` preserves complete bounded
+payloads in the existing JSONL export. Read `docs/ENERGY-REVIEW.md` before changing
+sampling. `LocationEngine` owns the durable write marker and fresh explicit-command
+handshake; moving that marker before setup can create false recovery warnings.
+
 Maintained alongside the [Change Ledger](CHANGE-LEDGER.md). Source paths
 are relative to the repository. Latest verified private build is 2.6.1 (67); see [current work](CURRENT-WORK.md) for local changes, build evidence and publication boundaries. Historical entries below retain their original validation context.
 Build 66 incident export and helper audit are mapped below; current evidence is in CURRENT-WORK.md.

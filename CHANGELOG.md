@@ -5,6 +5,27 @@ is the official release. Earlier Shift entries retain their original names and r
 
 [App introduction](README.md) · [Build history](docs/BUILD-HISTORY.md) · [Detailed Change Ledger](docs/CHANGE-LEDGER.md)
 
+## Unreleased — 2.6.1 build 72 (5 November 2026)
+
+- Reopen the developer service for explicit movement and Stop instead of trusting
+  a cached handle after VPN changes. Missing-endpoint checks wait at most 750 ms;
+  continuous playback keeps its existing cadence and connection.
+- Mark a potentially simulated location only immediately before a native write.
+  Canceling a first connection check no longer creates a false unfinished session.
+  An actual attempted write still requires an accepted clear; app exit is not proof.
+- Defer route endpoint/stop edits until search navigation returns. Freeze the search
+  route and the timeline's previous-row data during transitions. Add a directions
+  timeout and clearer disabled-preview guidance for unavailable cycling paths.
+- Label Live Activity age as "Sent" and hide that timer in unverified states.
+  The timer ages the last sent update; it is not a periodic background connection test.
+- Extend the local developer log with route/network stages and durations, screen,
+  current/peak memory, CPU/context switches, and complete bounded iOS diagnostic
+  reports when MetricKit supplies them. Routine observations batch; failures and
+  route handoffs flush promptly. No telemetry upload or credentials are included.
+- Build-71 feedback confirms search results arrived before the reported Add Stop
+  exit. No OS crash stack was in that export; the exact crash cause and new device
+  behavior require retesting. Native validation for this build is pending.
+
 ## Unreleased — 2.6.1 build 71 (5 November 2026)
 
 - Check the actual developer TCP endpoint before explicit location commands and

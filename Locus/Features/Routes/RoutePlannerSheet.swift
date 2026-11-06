@@ -13,6 +13,8 @@ struct RoutePlannerSheet: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var searchEndpoint: Endpoint?
+    @State private var stopSearchRoute: PlannedRoute?
+    @State private var pendingSearchChoice: (endpoint: Endpoint, place: RoutePlace, alongRoute: Bool)?
     @State private var showImporter = false
     @State private var showExporter = false
     @State private var exportDocument = GPXRouteDocument(text: "")
@@ -81,6 +83,7 @@ struct RoutePlannerSheet: View {
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(hasJourney ? "Done" : "Cancel") { dismiss() } } }
             .safeAreaInset(edge: .bottom, spacing: 0) { routeActions }
             .onAppear {
+                applyPendingSearchChoice()
                 if !hasJourney {
                     planner.initializeDraftIfNeeded(mode: session.travelMode, speedMPH: session.speedMPH(for: session.travelMode), smoothMovement: session.smoothMovement)
                 }
@@ -89,18 +92,21 @@ struct RoutePlannerSheet: View {
                 }
             }
             .navigationDestination(item: $searchEndpoint) { endpoint in
-                if endpoint == .stop, let route = planner.selectedRoute {
+                // Freeze the route for this navigation visit. Rebuilding the
+                // parent must not replace a mounted search screen's identity.
+                if endpoint == .stop, let route = stopSearchRoute {
                     RouteStopSearchSheet(route: route) { place, alongRoute in
-                        planner.addWaypoint(place, mode: displayMode, speedMPH: displaySpeed, insertAlongRoute: alongRoute)
+                        pendingSearchChoice = (endpoint, place, alongRoute)
                     }
                 } else {
                     RoutePlaceSearchSheet(title: endpoint == .origin ? "Starting point" : endpoint == .stop ? "Add stop" : "Destination",
                                           allowsDeviceOrigin: endpoint == .origin) { place in
-                        if endpoint == .origin { planner.setOrigin(place, mode: displayMode) }
-                        else if endpoint == .stop { planner.addWaypoint(place, mode: displayMode, speedMPH: displaySpeed) }
-                        else { planner.setDestination(place, defaultOrigin: session.defaultRouteOrigin, mode: displayMode) }
+                        pendingSearchChoice = (endpoint, place, false)
                     }
                 }
+            }
+            .onChange(of: searchEndpoint) { _, endpoint in
+                if endpoint == nil { applyPendingSearchChoice() }
             }
             .navigationDestination(isPresented: $showPractice) {
                 if let route { RoutePracticeSheet(route: route, mode: displayMode, speed: SpeedConversion.metresPerSecond(mph: displaySpeed)) }
@@ -210,10 +216,13 @@ struct RoutePlannerSheet: View {
     }
 
     private var routeTimeline: some View {
-        Section {
-            ForEach(Array(timelinePlaces.enumerated()), id: \.element.id) { index, place in
+        // Every row and its previous leg use the SAME immutable collection.
+        // Lazy rows can outlive a later stop edit; never index a newly read list.
+        let places = timelinePlaces
+        return Section {
+            ForEach(Array(places.enumerated()), id: \.element.id) { index, place in
                 VStack(alignment: .leading, spacing: 4) {
-                    if index > 0 { timelineLeg(to: place, index: index) }
+                    if index > 0 { timelineLeg(to: place, previousMetres: places[index - 1].metres) }
                     HStack(alignment: .top, spacing: 12) {
                         Text("\(index + 1)").font(.subheadline.weight(.semibold)).monospacedDigit()
                             .foregroundStyle(LocusTheme.onAccent)
@@ -252,7 +261,7 @@ struct RoutePlannerSheet: View {
             HStack {
                 Button {
                     if hasJourney || planner.usesStoredPath { showPathStop = true }
-                    else { searchEndpoint = .stop }
+                    else { stopSearchRoute = planner.selectedRoute; searchEndpoint = .stop }
                 } label: {
                     Label(hasJourney ? "Add a stop ahead" : "Add stop", systemImage: "plus.circle")
                         .frame(minHeight: 44)
@@ -304,13 +313,13 @@ struct RoutePlannerSheet: View {
         }.accessibilityLabel("Options for \(place.name)")
     }
 
-    private func timelineLeg(to place: TimelinePlace, index: Int) -> some View {
-        let choices = timelineLegChoices(to: place, index: index)
+    private func timelineLeg(to place: TimelinePlace, previousMetres: Double?) -> some View {
+        let choices = timelineLegChoices(to: place, previousMetres: previousMetres)
         return HStack(spacing: 12) {
             Rectangle().fill(LocusTheme.accent.opacity(0.3)).frame(width: 2).frame(width: 28)
             Button {
-                if !hasJourney, !planner.usesStoredPath, planner.hasSectionSettings {
-                    editingSection = SectionEdit(id: place.id, title: "To \(place.name)", choice: choices[0])
+                if !hasJourney, !planner.usesStoredPath, planner.hasSectionSettings, let choice = choices.first {
+                    editingSection = SectionEdit(id: place.id, title: "To \(place.name)", choice: choice)
                 } else if hasJourney { liveMovementExpanded = true }
                 else { draftMovementExpanded = true }
             } label: {
@@ -328,9 +337,9 @@ struct RoutePlannerSheet: View {
         .fixedSize(horizontal: false, vertical: true)
     }
 
-    private func timelineLegChoices(to place: TimelinePlace, index: Int) -> [RouteLegChoice] {
+    private func timelineLegChoices(to place: TimelinePlace, previousMetres: Double?) -> [RouteLegChoice] {
         if !hasJourney, !planner.usesStoredPath, let choice = planner.sectionChoices[place.id] { return [choice] }
-        if let route, let end = place.metres, let start = timelinePlaces[index - 1].metres {
+        if let route, let end = place.metres, let start = previousMetres {
             let sections = route.travelSections.filter { $0.endMetres > start && $0.startMetres < end }
             if !sections.isEmpty {
                 return sections.map { RouteLegChoice(mode: $0.mode, speedMPH: $0.speedMPH) }
@@ -595,7 +604,9 @@ struct RoutePlannerSheet: View {
                 }
                 .buttonStyle(ShiftActionStyle())
                 .disabled(!canShowRoute)
-                Text(route == nil ? "Choose a start and destination." : "Next: tap Start route on the map.")
+                Text(planner.isLoading ? "Building your preview. No movement has started."
+                     : planner.cyclingUnavailable ? "Choose Walking path above or change your endpoints."
+                     : route == nil ? "Choose a start and destination." : "Next: tap Start route on the map.")
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
@@ -607,6 +618,24 @@ struct RoutePlannerSheet: View {
     private var canShowRoute: Bool {
         guard let route else { return false }
         return !hasJourney && !planner.isLoading && route.supports(displayMode)
+    }
+
+    private func applyPendingSearchChoice() {
+        guard let choice = pendingSearchChoice else { return }
+        pendingSearchChoice = nil
+        searchEndpoint = nil
+        stopSearchRoute = nil
+        DeveloperLogStore.shared.record("route_search_choice_applied", ["endpoint": choice.endpoint.rawValue])
+        // Run after the navigation update that removed the search destination.
+        Task { @MainActor in
+            await Task.yield()
+            guard planner.isPresented, !hasJourney else { return }
+            switch choice.endpoint {
+            case .origin: planner.setOrigin(choice.place, mode: displayMode)
+            case .stop: planner.addWaypoint(choice.place, mode: displayMode, speedMPH: displaySpeed, insertAlongRoute: choice.alongRoute)
+            case .destination: planner.setDestination(choice.place, defaultOrigin: session.defaultRouteOrigin, mode: displayMode)
+            }
+        }
     }
 
     private func showRoute() {

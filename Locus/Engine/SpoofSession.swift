@@ -1157,7 +1157,8 @@ final class SpoofSession: ObservableObject {
         if !sessionRequested { verification.reset(); sessionID = UUID(); startedAt = Date(); lastConfirmedAt = nil; sessionSpotName = nil }
         sessionRequested = true
         requiresClear = true
-        SessionLifetime.shared.locationMayRemain()
+        // LocationEngine records the durable marker immediately before writing.
+        // UI may show a pending action here, but setup alone is not simulation.
         warnedFailure = false
         warnedUnverified = false
         status = .connecting

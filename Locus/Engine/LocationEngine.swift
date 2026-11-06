@@ -177,6 +177,10 @@ enum LocationEngine {
                     explicit: Bool = false) async -> Result<Void, LocationEngineError> {
         await withCheckedContinuation { continuation in
             queue.async {
+                // A successful TCP connect does not validate a cached DVT
+                // service after a VPN change. Explicit actions must handshake
+                // again; continuous playback retains its working connection.
+                if explicit { cleanup() }
                 guard validateTunnel(deviceIP, explicit: explicit) else {
                     continuation.resume(returning: .failure(.tunnelUnreachable)); return
                 }
@@ -194,6 +198,15 @@ enum LocationEngine {
                     continuation.resume(returning: .failure(.notActive))
                     return
                 }
+                // A canceled initial check never reached the native write.
+                // Queue ordering proves this only when no durable write marker
+                // exists. Never infer that a previous process cleared itself.
+                guard SessionLifetime.shared.previousLocationMayRemain else {
+                    cleanup()
+                    DeveloperLogStore.shared.record("clear_not_needed", ["reason": "no_native_write_attempt"])
+                    continuation.resume(returning: .success(())); return
+                }
+                cleanup() // Stop must not trust a stale cached service either.
                 guard validateTunnel(deviceIP, explicit: true) else {
                     continuation.resume(returning: .failure(.tunnelUnreachable)); return
                 }
@@ -263,6 +276,9 @@ enum LocationEngine {
         guard code == ok, let locationSimulation else { return code == ok ? simulationCreate : code }
         // A termination request can arrive while opening the connection.
         guard SessionLifetime.shared.acceptsCommands else { return terminating }
+        // Persist immediately before the first operation that can change the
+        // device. An exit during mere connection setup creates no false warning.
+        SessionLifetime.shared.locationMayRemain()
         if let err = location_simulation_set(locationSimulation, latitude, longitude) {
             logError(err, stage: "set")
             idevice_error_free(err)
@@ -274,6 +290,7 @@ enum LocationEngine {
 
     private static func connectLocked(pairingPath: String, deviceIP: String) -> Int32 {
         if locationSimulation != nil { return ok }
+        let started = ProcessInfo.processInfo.systemUptime
         DeveloperLogStore.shared.record("engine_opening_new_connection")
         var address = sockaddr_in()
         address.sin_family = sa_family_t(AF_INET)
@@ -325,6 +342,9 @@ enum LocationEngine {
         }
         // location_simulation_new consumes/owns remote server lifecycle alongside handle
         remoteServer = nil
+
+        DeveloperLogStore.shared.record("engine_handshake_completed", [
+            "duration_ms": String(Int((ProcessInfo.processInfo.systemUptime - started) * 1000))])
 
         return ok
     }

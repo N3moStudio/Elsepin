@@ -1,5 +1,21 @@
 # Elsepin energy review — 5 November 2026
 
+## Build 72: observed feedback and expanded evidence
+
+The supplied build-71 export contains 43 energy snapshots. Thermal state remained
+0 (nominal); usable process CPU samples ranged from 0.7% to 34.4% of one core,
+including interaction/route planning. Heat markers were not controlled idle trials.
+Those readings do not establish GPU/display power, a leak or a single heat cause.
+
+Build 72 adds current RSS, context-switch counters and the last opened screen to
+the existing 30-second foreground samples. MetricKit's OS reports are collected
+locally when delivered; no high-rate profiler, server or extra sampling timer is
+added. Complete reports up to 256 KiB are encoded across JSONL records with count
+and digest identifiers. Oversized/incomplete capture is detectable. Routine touch,
+successful probe and periodic energy events use the existing five-second batch;
+errors, route stages and explicit heat markers still flush promptly. Sampling
+and exports remain opt-in. No measured energy-saving claim is made.
+
 ## Build 71 device-feedback follow-up
 
 The owner reports heat shortly after launching build 70. No physical-device

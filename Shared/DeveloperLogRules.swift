@@ -27,6 +27,9 @@ struct DeveloperLogEvent: Codable {
     var canBatch: Bool {
         switch event {
         case "location_write_requested", "live_activity_update_requested", "live_activity_update_finished": return true
+        case "touch_began", "touch_ended", "system_report_part": return true
+        case "developer_endpoint_check": return details["reachable"] == "true"
+        case "energy_snapshot": return details["reason"] == "interval"
         case "location_write_result": return details["result"] == "accepted"
         default: return false
         }

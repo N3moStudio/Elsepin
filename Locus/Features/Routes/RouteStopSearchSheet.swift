@@ -120,6 +120,8 @@ struct RouteStopSearchSheet: View {
     }
 
     private func choose(_ place: RoutePlace) {
+        DeveloperLogStore.shared.record("route_search_choice", ["screen": "Find a stop", "place": place.name,
+            "latitude": String(place.coordinate.latitude), "longitude": String(place.coordinate.longitude)])
         model.cancel()
         session.pushNamedRecent(name: place.name, coordinate: place.coordinate)
         onChoose(place, model.scope == .alongRoute)

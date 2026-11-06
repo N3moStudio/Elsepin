@@ -202,16 +202,26 @@ final class RoutePlanner: ObservableObject {
         let choices = sectionChoices
         let defaultSpeed = mode.clampedSpeedMPH(draftSpeedMPH)
         isLoading = true
+        let started = ProcessInfo.processInfo.systemUptime
+        DeveloperLogStore.shared.record("route_plan_started", ["attempt": token.uuidString,
+            "mode": mode.rawValue, "stops": String(stops.count), "walking_selected": String(preferWalking),
+            "origin_latitude": String(origin.coordinate.latitude), "origin_longitude": String(origin.coordinate.longitude),
+            "destination_latitude": String(destination.coordinate.latitude), "destination_longitude": String(destination.coordinate.longitude)])
         task = Task { [weak self] in
             do {
                 let routes = try await RouteBuilder.itinerary(from: origin, to: destination, via: stops,
                                                               mode: mode, preferWalkingPaths: preferWalking, legChoices: choices, defaultSpeedMPH: defaultSpeed)
+                DeveloperLogStore.shared.record("route_plan_finished", ["attempt": token.uuidString,
+                    "routes": String(routes.count), "duration_ms": String(Int((ProcessInfo.processInfo.systemUptime - started) * 1000))])
                 guard let self, !Task.isCancelled, self.generation == token else { return }
                 self.alternatives = routes
                 self.selectedID = routes.first?.id
                 self.isLoading = false
                 self.task = nil
             } catch {
+                DeveloperLogStore.shared.record("route_plan_failed", ["attempt": token.uuidString,
+                    "domain": (error as NSError).domain, "code": String((error as NSError).code),
+                    "cancelled": String(Task.isCancelled), "duration_ms": String(Int((ProcessInfo.processInfo.systemUptime - started) * 1000))])
                 guard let self, !Task.isCancelled, self.generation == token else { return }
                 self.error = error.localizedDescription
                 self.cyclingUnavailable = error is RouteBuilder.CyclingUnavailable
@@ -259,7 +269,9 @@ final class RoutePlanner: ObservableObject {
     }
 
     func addWaypoint(_ place: RoutePlace, mode: TravelMode, speedMPH: Double? = nil, insertAlongRoute: Bool = false) {
-        guard waypoints.count < 8 else { return }
+        guard waypoints.count < 8, CLLocationCoordinate2DIsValid(place.coordinate) else { return }
+        DeveloperLogStore.shared.record("route_stop_inserting", ["count_before": String(waypoints.count),
+            "mode": mode.rawValue, "along_route": String(insertAlongRoute)])
         let waypoint = TripWaypoint(name: place.name, point: RoutePoint(place.coordinate))
         if hasSectionSettings { sectionChoices[waypoint.id] = RouteLegChoice(mode: mode, speedMPH: mode.clampedSpeedMPH(speedMPH ?? mode.defaultSpeedMPH)) }
         var insertion = waypoints.count
