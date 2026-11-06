@@ -140,7 +140,7 @@ downtime as movement. See [lifecycle details](SESSION-CLOSURE.md).
 ## Pins and search (build 69)
 
 - `PinEditor.swift`: naming, map placement and optional favorite. Does not send movement.
-- `SavedPinMapIcon.swift`: compact tap-only name bubble, centered marker and accessible hit target; changing the label must not shift its coordinate.
+- `SavedPinMapIcon.swift`: centered, size-adjustable marker and accessible hit target. Build 71 selects a preview on tap; its name bubble never shifts the coordinate. `MapFavoriteButton.swift` toggles stars without naming or movement.
 - `SavedPlace.swift`, `LibraryBackup.swift`: optional favorite flag; nil means an old favorite. `SpoofSession.savedPins` owns all pins; `favorites` is filtered display only. Import/export/widgets must use all pins.
 - `SettingsView.swift` / `PlacesView`: Library categories and Favorites headings. `TripViews.swift`: saved route favorite action.
 - `RecentRoute.swift`, `RecentRouteStore.swift`: bounded, local-only route history. Keep privacy clear/reset/retention in `SpoofSession` in sync.

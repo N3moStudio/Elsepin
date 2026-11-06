@@ -77,6 +77,11 @@ final class BackgroundKeepAlive: NSObject, CLLocationManagerDelegate {
         reconcile()
     }
 
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        // Permission changes must be reconciled even when the demand is unchanged.
+        reconcile()
+    }
+
     func requestPreciseFix() {
         guard acceptDeviceFixes else { return }
         precisionTask?.cancel()

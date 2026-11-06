@@ -39,7 +39,9 @@ final class DeveloperLogObserver {
                 ])
                 DeveloperLogStore.shared.maintenance(flush: true)
                 Task { @MainActor in
-                    Self.shared.updateEnergySampling()
+                    if name == UIApplication.willResignActiveNotification || name == UIApplication.didEnterBackgroundNotification {
+                        Self.shared.stopEnergySampling()
+                    } else { Self.shared.updateEnergySampling() }
                     if name == ProcessInfo.thermalStateDidChangeNotification { Self.shared.recordEnergy(reason: "thermal_changed") }
                 }
             })
@@ -80,17 +82,24 @@ final class DeveloperLogObserver {
 
     func updateEnergySampling() {
         guard DeveloperLogStore.shared.enabled, UIApplication.shared.applicationState == .active else {
-            energyTask?.cancel(); energyTask = nil; energy.reset(); return
+            stopEnergySampling(); return
         }
         guard energyTask == nil else { return }
         recordEnergy(reason: "foreground")
         energyTask = Task { [weak self] in
             while !Task.isCancelled {
                 do { try await Task.sleep(nanoseconds: 30_000_000_000) } catch { return }
-                guard let self, DeveloperLogStore.shared.enabled, UIApplication.shared.applicationState == .active else { return }
+                guard let self else { return }
+                guard DeveloperLogStore.shared.enabled, UIApplication.shared.applicationState == .active else {
+                    self.stopEnergySampling(); return
+                }
                 self.recordEnergy(reason: "interval")
             }
         }
+    }
+
+    private func stopEnergySampling() {
+        energyTask?.cancel(); energyTask = nil; energy.reset()
     }
 
     func recordEnergy(reason: String) {

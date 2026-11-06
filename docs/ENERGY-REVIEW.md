@@ -1,5 +1,36 @@
 # Elsepin energy review — 5 November 2026
 
+## Build 71 device-feedback follow-up
+
+The owner reports heat shortly after launching build 70. No physical-device
+power trace is available, so no single subsystem or battery-saving percentage is
+claimed. An optional bounded Groq source review was used for supporting observations;
+its suggested heat causes were not treated as measured findings.
+
+- `DeveloperLogObserver` samples process CPU, peak resident memory, thermal state,
+  work owners and cumulative location writes every 30 seconds only while the app
+  is active and recording. Thermal changes and a **Phone feels warm** marker add
+  snapshots. Sampling stops when inactive or logging is off. CPU is percent of
+  one core (can exceed 100); peak RSS is not current memory or GPU power.
+- Developer endpoint checks and icon failures record stages/durations or native
+  error domain/code. They do not log credentials or provisioning-profile contents.
+- `BackgroundKeepAlive` avoids repeated demand reconfiguration, allows browsing
+  updates to pause, and ends a precise fix when a <=50m fix arrives. Active-session
+  background location remains owned by the session.
+- Failed pairing-audio startup now deactivates its audio session. Stop completion
+  cancels its monitor on both success and failure. Failed clear remains unverified.
+- Status clocks stop when there is no timestamp/provider status to age. Route
+  cadence and urgent Stop/Live Activity updates remain unchanged.
+- Explicit location commands/Stop make a bounded TCP endpoint check. Continuous
+  movement reuses it for ten seconds. This extra liveness traffic is a correctness
+  tradeoff, not an energy saving, and must be included in device comparison.
+
+Quick evidence: reproduce the warmth, tap **Settings → Diagnostics → Developer
+log → Log tools → Phone feels warm**, then export the same developer log. No continuous high-rate
+profiling, new server, uploaded telemetry, or training service was added.
+
+## Build 70 source review
+
 Source review, not a power measurement. Windows has no local native Apple toolchain;
 Codemagic can compile/test, but cannot measure this owner's physical iPhone battery.
 Do not translate pattern counts into battery percentages or a measured health score.
