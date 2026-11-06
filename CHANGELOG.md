@@ -25,7 +25,10 @@ is the official release. Earlier Shift entries retain their original names and r
 - Capture iOS icon error codes, check installed icon metadata and let successful
   icon transitions settle. Clarify missing widget shared-storage signing access
   and disable unavailable saved-shortcut controls. Signer/device acceptance is pending.
-- Native validation pending. No release, deployment, or paid billing.
+- Native app/extension and IPA validation passed at `14d2050`: 615 automated
+  checks, zero compiler warnings/errors; one Windows-only test skipped on Mac.
+  Privately delivered build 71. Phone/signing/heat acceptance remains pending.
+  No release, deployment, or paid billing.
 
 ## Unreleased — 2.6.1 build 70 (5 November 2026)
 

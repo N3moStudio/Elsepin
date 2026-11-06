@@ -2,7 +2,7 @@
 
 Updated 5 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
 
-## 2.6.1 (71) - device feedback fixes, validation in progress
+## 2.6.1 (71) - privately validated and delivered
 
 The owner tested build 70 with FlareStore and LocalDevVPN. Six screenshots show
 mojibake, misleading connection/tray state, tiny label-only saved pins, widget
@@ -19,8 +19,19 @@ Actual LocalDevVPN-off, signer icon/widget behavior and heating require phone te
 Do not remove widget entitlement checks or silently claim a failed Stop succeeded.
 
 Local identity, appearance, helper archives and 17 Python packaging tests passed.
-Native Swift/iOS checks are pending. The existing verified delivered file is still
-build 70 until a replacement is validated. Keep raw diagnostics in ignored `.build`.
+Codemagic run `6aed1ad9ab17f8deb753426c` passed at source
+`14d2050c11cdb23d7cc712b8e6ed3d9e9064d448`: 476 Swift, 104 cloud, 18 Companion
+and 17 packaging checks (615 passed; the Windows-only helper test is skipped on Mac).
+Native app/extension compiled with zero compiler warnings/errors; both are 2.6.1(71),
+arm64/device SDK 27.1. Thirteen icons, requested App Group entitlements, helpers,
+notices and archive integrity passed. Actual signing/device acceptance remains pending.
+
+Only `Elsepin 2.6.1 build 71.ipa` was delivered to the Desktop project IPA folder;
+the verified replacement removed build 70 there. No public release or deployment.
+Raw logs, metadata and receipt: `.build/artifacts/codemagic-6aed1ad9ab17f8deb753426c/`.
+Earlier queued run `6aed1902ab17f8deb75341fb` was canceled before starting to include
+lifecycle review fixes. Run `6aed19b9ab17f8deb753421d` caught a test-only `bind`
+name collision; it was corrected to `Darwin.bind` before the successful run.
 
 ## 2.6.1 (70) - validated and privately delivered
 

@@ -16,7 +16,11 @@ See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all re
   corrected UTF-8 text with a regression guard, signer capability/error diagnostics.
 - Foreground-only 30-second CPU/peak memory/thermal/resource snapshots, heat marker,
   precise-fix early completion and failed audio/session-monitor cleanup.
-- Native/device verification pending. No public release or changes to other apps.
+- Private Codemagic run `6aed1ad9ab17f8deb753426c`, source `14d2050`, passed:
+  615 checks, zero compiler warnings/errors, app/extension and IPA verification.
+  Delivered only build 71 to the Desktop project IPA folder, replacing build 70.
+  Device, FlareStore and heat acceptance remain pending. No public release or
+  changes to other apps. Full run/failure evidence is in BUILD-HISTORY.md.
 
 ## 2.6.1 (70) - map layers and rendering work - private build
 

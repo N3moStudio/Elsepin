@@ -14,7 +14,33 @@ remain. A verified empty Actions history was followed by fresh run
 or spending-limit annotation. Deleting history did not resolve the billing block.
 No new IPA or release resulted.
 
-## Latest native build and private delivery: 2.6.1 (70) - 5 November 2026
+## Latest native build and private delivery: 2.6.1 (71) - 5 November 2026
+
+[Codemagic run 6aed1ad9ab17f8deb753426c](https://codemagic.io/app/6aecefbde7e295d4f44f163e/build/6aed1ad9ab17f8deb753426c)
+passed at source `14d2050c11cdb23d7cc712b8e6ed3d9e9064d448`, private GitLab branch
+`codex/pins-search-69`, on personal M2/Xcode 27.1. All 615 automated checks passed:
+476 Swift, 104 cloud, 18 Companion and 17 packaging tests. The Windows-only
+Companion test was skipped on the Mac; it was not counted as a pass. Native app
+and extension compilation passed with zero compiler warnings/errors. Both bundles
+are 2.6.1 (71), arm64/device SDK 27.1. Archive integrity, thirteen icons, helper
+resources, notices and requested entitlements passed inspection. The controlled
+log-capture check retained stderr and exit 23. Full original logs, metadata and
+receipt remain under `.build/artifacts/codemagic-6aed1ad9ab17f8deb753426c/`.
+
+Only `Elsepin 2.6.1 build 71.ipa` (18,697,744 bytes) was delivered to
+`C:/Users/naith/Desktop/ipa/My Projects (N3mo Studio)`. The delivered copy was
+verified before replacing build 70; other apps and files were untouched. No
+public release or deployment. Sideload signing, LocalDevVPN-off behavior,
+FlareStore icon/widget permissions and measured phone heat still need device checks.
+
+Earlier Elsepin run `6aed1902ab17f8deb75341fb` was canceled while queued, before
+starting, to include lifecycle review fixes. Run `6aed19b9ab17f8deb753421d` then
+caught an XCTest/Darwin `bind` name collision in a new regression test; native
+compilation was skipped. Qualifying `Darwin.bind` fixed that test compile failure
+before the successful run. Its original failure logs remain retained. No other
+app's build was canceled or modified, and paid billing was not enabled.
+
+## Native build and private delivery: 2.6.1 (70) - 5 November 2026
 
 GitHub rejected map-layer upload after the account suspension. The owner first
 paused at local source, then explicitly authorized private GitLab and Codemagic.
