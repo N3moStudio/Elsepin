@@ -271,7 +271,7 @@ struct StatusBarView: View {
     @State private var showDetails = false
 
     var body: some View {
-        ForegroundTimeline(enabled: isVisible && !showDetails) { _ in
+        ForegroundTimeline(enabled: isVisible && !showDetails && (session.lastConfirmedAt != nil || computer.activityStatus != nil)) { _ in
             let phase = session.effectivePhase
             Button { showDetails = true } label: {
             HStack(spacing: 10) {
@@ -366,7 +366,7 @@ struct BottomControlsView: View {
                 // Keep the same details in the tree throughout the drag. Only their
                 // visible height changes; the map and its coordinate space never resize.
                 expandedDetails
-                    .padding(.bottom, 12)
+                    .padding(.bottom, 8)
                     .fixedSize(horizontal: false, vertical: true)
                     .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
                         guard height.isFinite, height >= 0, height != detailHeight else { return }
@@ -378,17 +378,17 @@ struct BottomControlsView: View {
                     .clipped()
                     .allowsHitTesting(!collapsed && !handleTouchActive)
                     .accessibilityHidden(collapsed)
-                VStack(spacing: 10) {
+                VStack(spacing: 6) {
                     primaryActions
                     if session.effectivePhase == .disconnected || session.effectivePhase == .unverified {
                         SessionRetryButton().font(.caption.weight(.semibold))
                     }
                     HStack(spacing: 4) { trayItems }
-                        .padding(.top, 3)
+                        .padding(.top, 0)
                 }
-                .padding(.bottom, 12)
+                .padding(.bottom, 6)
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 12)
             .modifier(ControlPanelStyle(useGlass: preferences.glassPanel))
             .shadow(color: .black.opacity(0.12), radius: 20, y: 8)
             }
@@ -493,6 +493,10 @@ struct BottomControlsView: View {
                     ProgressView("Moving to selected point…").font(.caption)
                 }
                 let actions = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 8)) : AnyLayout(HStackLayout(spacing: 10))
+                if session.pinIsPreview, let point = session.pin {
+                    Text(session.suggestedFavoriteName(for: point)).font(.caption).lineLimit(1)
+                    teleportPin
+                }
                 actions {
                     if session.restoredRouteAwaitingConnection {
                         Button("Resume route") { showRecovery = true }
@@ -574,7 +578,7 @@ struct BottomControlsView: View {
                 HStack(alignment: .center, spacing: 12) {
                     ShiftRowIcon(symbol: session.pinIsPreview ? "mappin" : session.hasSession ? "location.fill" : "map")
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(session.pinIsPreview ? "Selected place" : session.hasSession ? "Holding location" : "Where to next?")
+                        Text(session.isStopping ? "Stopping session" : session.pinIsPreview ? "Selected place" : session.isSpoofing ? "Holding location" : session.hasSession || session.lastError != nil ? session.statusTitle : "Where to next?")
                             .font(.headline)
                         if let point = session.pinIsPreview ? session.pin : session.simulated {
                             Text(session.suggestedFavoriteName(for: point)).font(.subheadline).foregroundStyle(.secondary)
@@ -622,7 +626,12 @@ struct BottomControlsView: View {
                     .frame(maxWidth: .infinity)
             }.buttonStyle(ShiftActionStyle(kind: .secondary, immediatePress: true))
         }
-        if planner.preparedRoute == nil && session.pin != nil && (session.pinIsPreview || !session.hasSession) { teleportPin }
+        if session.journey == nil && planner.preparedRoute == nil && session.pin != nil && (session.pinIsPreview || !session.hasSession) {
+            if session.hasSession {
+                let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 6)) : AnyLayout(HStackLayout(spacing: 8))
+                layout { teleportPin; stopSpoofing }
+            } else { teleportPin }
+        }
         if session.journey != nil {
             if session.routeRerouting {
                 HStack {
@@ -637,7 +646,7 @@ struct BottomControlsView: View {
         } else if let prepared = planner.preparedRoute {
             PreparedRouteControls(prepared: prepared, compact: true)
         }
-        if session.hasSession { stopSpoofing }
+        if session.hasSession && !(session.journey == nil && planner.preparedRoute == nil && session.pin != nil && session.pinIsPreview) { stopSpoofing }
     }
 
     @ViewBuilder private var trayItems: some View {
@@ -690,18 +699,22 @@ struct BottomControlsView: View {
                 .font(.subheadline.weight(.semibold)).frame(maxWidth: .infinity, minHeight: 44)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(ShiftActionStyle(immediatePress: true))
+        .buttonStyle(ShiftActionStyle(immediatePress: true, compact: true))
         .disabled(session.pin == nil || session.isBusy)
     }
 
     private var stopSpoofing: some View {
         Button { session.stop(pairing: pairing) } label: {
-            Label(session.stopButtonTitle, systemImage: "location.slash")
+            HStack(spacing: 6) {
+                if session.isStopping { ProgressView().controlSize(.small) }
+                else { Image(systemName: "stop.circle") }
+                Text(session.stopButtonTitle)
+            }
                 .font(.subheadline.weight(.semibold)).frame(maxWidth: .infinity, minHeight: 44)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(ShiftActionStyle(kind: .destructive, immediatePress: true))
-        .disabled(session.status == .stopping)
+        .buttonStyle(ShiftActionStyle(kind: .destructive, immediatePress: true, compact: true))
+        .disabled(session.isStopping)
     }
 
     private var panelAnimation: Animation? {

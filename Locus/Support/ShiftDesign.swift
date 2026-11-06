@@ -54,6 +54,7 @@ struct ShiftActionStyle: ButtonStyle {
     var kind: Kind = .primary
     // Pilot on the map's action buttons before extending this behavior elsewhere.
     var immediatePress: Bool = false
+    var compact: Bool = false
     @Environment(\.isEnabled) private var enabled
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private var foreground: Color { kind == .primary ? LocusTheme.onAccent : kind == .destructive ? LocusTheme.danger : .primary }
@@ -61,7 +62,7 @@ struct ShiftActionStyle: ButtonStyle {
     @ViewBuilder func makeBody(configuration: Configuration) -> some View {
         let surface = configuration.label
             .font(.subheadline.weight(.semibold))
-            .padding(.horizontal, 13).frame(minHeight: 48)
+            .padding(.horizontal, 13).frame(minHeight: compact ? 44 : 48)
             .foregroundStyle(foreground)
             .background(background, in: RoundedRectangle(cornerRadius: style.cornerRadius))
             .contentShape(RoundedRectangle(cornerRadius: style.cornerRadius))

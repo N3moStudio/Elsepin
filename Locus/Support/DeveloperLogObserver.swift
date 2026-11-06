@@ -10,9 +10,14 @@ final class DeveloperLogObserver {
     private var subscriptions = Set<AnyCancellable>()
     private var monitors: [NWPathMonitor] = []
     private var started = false
+    private weak var observedSession: SpoofSession?
+    private var energyTask: Task<Void, Never>?
+    private var energy = EnergyDiagnostics()
 
     func start(session: SpoofSession) {
         guard !started else { return }; started = true
+        observedSession = session
+        updateEnergySampling()
         DeveloperLogStore.shared.record("observation_started", ["device": UIDevice.current.model])
         let names: [(Notification.Name, String)] = [
             (UIApplication.didBecomeActiveNotification, "app_active"),
@@ -33,6 +38,10 @@ final class DeveloperLogObserver {
                     "thermal_state": String(ProcessInfo.processInfo.thermalState.rawValue)
                 ])
                 DeveloperLogStore.shared.maintenance(flush: true)
+                Task { @MainActor in
+                    Self.shared.updateEnergySampling()
+                    if name == ProcessInfo.thermalStateDidChangeNotification { Self.shared.recordEnergy(reason: "thermal_changed") }
+                }
             })
         }
         // Network observations never change session status or gate Stop/writes.
@@ -69,7 +78,31 @@ final class DeveloperLogObserver {
         }.store(in: &subscriptions)
     }
 
+    func updateEnergySampling() {
+        guard DeveloperLogStore.shared.enabled, UIApplication.shared.applicationState == .active else {
+            energyTask?.cancel(); energyTask = nil; energy.reset(); return
+        }
+        guard energyTask == nil else { return }
+        recordEnergy(reason: "foreground")
+        energyTask = Task { [weak self] in
+            while !Task.isCancelled {
+                do { try await Task.sleep(nanoseconds: 30_000_000_000) } catch { return }
+                guard let self, DeveloperLogStore.shared.enabled, UIApplication.shared.applicationState == .active else { return }
+                self.recordEnergy(reason: "interval")
+            }
+        }
+    }
+
+    func recordEnergy(reason: String) {
+        guard DeveloperLogStore.shared.enabled else { return }
+        var values = energy.sample()
+        values.merge(observedSession?.energySnapshot ?? [:], uniquingKeysWith: { _, new in new })
+        values["reason"] = reason
+        DeveloperLogStore.shared.record("energy_snapshot", values)
+    }
+
     func snapshot(session: SpoofSession) {
+        recordEnergy(reason: "export_or_problem")
         DeveloperLogStore.shared.record("session_snapshot", ["phase": session.effectivePhase.rawValue,
             "has_session": String(session.hasSession), "route_active": String(session.routeActive),
             "route_paused": String(session.routePaused), "busy": String(session.isBusy),

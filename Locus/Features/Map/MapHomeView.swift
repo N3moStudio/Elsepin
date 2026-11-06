@@ -46,8 +46,6 @@ struct MapHomeView: View {
     @State private var markerDragging = false
     @State private var mapSize = CGSize.zero
     @State private var undoVisible = false
-    @State private var favoritePin: RoutePoint?
-    @State private var favoriteName = ""
     @State private var pinAdjusting = false
     @State private var adjustedPin: CLLocationCoordinate2D?
     @State private var pinAdjustmentCamera: MKMapCamera?
@@ -132,7 +130,18 @@ struct MapHomeView: View {
             ForEach(visibleSavedPins) { pin in
                 Annotation("", coordinate: pin.coordinate, anchor: .center) {
                     SavedPinMapIcon(pin: pin, selected: selectedSavedPin == pin.id) {
-                        selectedSavedPin = selectedSavedPin == pin.id ? nil : pin.id
+                        selectedSavedPin = pin.id
+                        selection = nil
+                        followMovement = false
+                        session.selectPin(pin.coordinate, name: pin.displayName)
+                    }
+                    .contextMenu {
+                        Button(pin.isFavorite ? "Unfavorite pin" : "Favorite pin", systemImage: pin.isFavorite ? "star.slash" : "star") {
+                            session.togglePinFavorite(pin)
+                        }
+                        Button("Name pin", systemImage: "tag") {
+                            pinEditor = PinDraft(place: pin, center: pin.coordinate)
+                        }
                     }
                 }.annotationTitles(.hidden)
             }
@@ -361,14 +370,6 @@ struct MapHomeView: View {
     // All @State stays in MapHomeView; extracting these does not reset it.
     private var lifecycleMap: some View {
         mapCanvas
-        .loggedAlert("Save place", isPresented: Binding(get: { favoritePin != nil }, set: { if !$0 { favoritePin = nil } })) {
-            TextField("Place name", text: $favoriteName)
-            Button("Cancel", role: .cancel) { favoritePin = nil }
-            Button("Save") {
-                if let favoritePin { session.addFavorite(name: favoriteName, coordinate: favoritePin.coordinate) }
-                favoritePin = nil
-            }
-        } message: { Text("Choose a name you will recognize in Saved and route planning.") }
         .onAppear {
             session.updateJoystickMapHeading(sketchViewport.camera?.heading ?? 0)
             session.setMapLocationNeeded(visualUpdatesEnabled)
@@ -555,13 +556,8 @@ struct MapHomeView: View {
                 mapButton("arrow.up.left.and.arrow.down.right", label: "Route overview") { previewRoute() }
             } else {
                 mapButton("pencil.tip", label: "Draw a route") { beginDrawing() }
-                if let pin = session.pin {
-                    mapButton("star", label: "Save selected place") {
-                        favoritePin = RoutePoint(pin)
-                        favoriteName = session.suggestedFavoriteName(for: pin)
-                    }
-                }
             }
+            MapFavoriteButton()
             if planner.preparedRoute == nil &&
                 (session.pinIsPreview || (session.hasSession && session.simulated != nil &&
                     (session.journey == nil || session.routePaused || session.journey?.state == .waiting))) {

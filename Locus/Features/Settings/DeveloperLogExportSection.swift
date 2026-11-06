@@ -14,7 +14,10 @@ struct DeveloperLogExportSection: View {
     var body: some View {
         Section {
             Toggle("Record developer log", isOn: $recording)
-                .onChange(of: recording) { _, value in DeveloperLogStore.shared.setEnabled(value) }
+                .onChange(of: recording) { _, value in
+                    DeveloperLogStore.shared.setEnabled(value)
+                    DeveloperLogObserver.shared.updateEnergySampling()
+                }
             Button { confirmExport = true
             } label: {
                 Label(preparing ? "Preparing log…" : "Export data log for developer", systemImage: "doc.text.magnifyingglass")
@@ -23,6 +26,10 @@ struct DeveloperLogExportSection: View {
             DisclosureGroup("Log tools") {
                 NavigationLink { SessionTimelineView() } label: { Label("Session timeline", systemImage: "clock") }
                 ProblemMomentButton()
+                Button("Phone feels warm") {
+                    DeveloperLogObserver.shared.recordEnergy(reason: "user_reported_heat")
+                    message = recording ? "Heat marker saved in the developer log." : "Turn on recording first."
+                }
                 Menu("Mark a test event") {
                     ForEach(["About to turn Airplane Mode on", "Airplane Mode is off again", "About to force-close Elsepin", "Other app shows the new location", "Other app still shows the old location"], id: \.self) { event in
                         Button(event) {
@@ -57,6 +64,7 @@ struct DeveloperLogExportSection: View {
                 preparing = true
                 Task {
                     do {
+                        DeveloperLogObserver.shared.recordEnergy(reason: "export")
                         document = DeveloperLogDocument(data: try await DeveloperLogStore.shared.export())
                         exporting = true
                     } catch { message = "The log couldn’t be exported. Check available storage and try again." }

@@ -27,10 +27,11 @@ enum LocationEngineError: LocalizedError {
     case locationSet
     case locationClear
     case notActive
+    case tunnelUnreachable
 
     var failedBeforeWrite: Bool {
         switch self {
-        case .invalidIP, .pairingRead, .tunnelCreate, .remoteServer, .simulationCreate, .notActive: return true
+        case .invalidIP, .pairingRead, .tunnelCreate, .remoteServer, .simulationCreate, .notActive, .tunnelUnreachable: return true
         case .locationSet, .locationClear: return false
         }
     }
@@ -45,6 +46,7 @@ enum LocationEngineError: LocalizedError {
         case .locationSet: return "Failed to set simulated coordinates."
         case .locationClear: return "Failed to clear simulated location."
         case .notActive: return "No active simulation session."
+        case .tunnelUnreachable: return "The developer connection is unreachable. Turn on LocalDevVPN and try again."
         }
     }
 
@@ -78,6 +80,8 @@ enum LocationEngine {
     private static var handshake: OpaquePointer?
     private static var remoteServer: OpaquePointer?
     private static var locationSimulation: OpaquePointer?
+    private static var probeEndpoint: String?
+    private static var probeCheckedAt: TimeInterval?
 
     private static let ok: Int32 = 0
     private static let invalidIP: Int32 = 1
@@ -169,9 +173,13 @@ enum LocationEngine {
         return probeServer == nil ? .serviceUnavailable : nil
     }
 
-    static func set(latitude: Double, longitude: Double, pairingPath: String, deviceIP: String) async -> Result<Void, LocationEngineError> {
+    static func set(latitude: Double, longitude: Double, pairingPath: String, deviceIP: String,
+                    explicit: Bool = false) async -> Result<Void, LocationEngineError> {
         await withCheckedContinuation { continuation in
             queue.async {
+                guard validateTunnel(deviceIP, explicit: explicit) else {
+                    continuation.resume(returning: .failure(.tunnelUnreachable)); return
+                }
                 let code = setLocked(latitude: latitude, longitude: longitude, pairingPath: pairingPath, deviceIP: deviceIP)
                 let result: Result<Void, LocationEngineError> = code == ok ? .success(()) : .failure(.from(code: code))
                 continuation.resume(returning: result)
@@ -185,6 +193,9 @@ enum LocationEngine {
                 guard SessionLifetime.shared.acceptsCommands else {
                     continuation.resume(returning: .failure(.notActive))
                     return
+                }
+                guard validateTunnel(deviceIP, explicit: true) else {
+                    continuation.resume(returning: .failure(.tunnelUnreachable)); return
                 }
                 // Reopen the service after a failure so Stop can still clear a
                 // simulation. Clearing must not set a new coordinate first.
@@ -214,6 +225,8 @@ enum LocationEngine {
     }
 
     private static func cleanup() {
+        probeCheckedAt = nil
+        probeEndpoint = nil
         if let locationSimulation {
             location_simulation_free(locationSimulation)
             self.locationSimulation = nil
@@ -230,6 +243,18 @@ enum LocationEngine {
             adapter_free(adapter)
             self.adapter = nil
         }
+    }
+
+    private static func validateTunnel(_ ip: String, explicit: Bool) -> Bool {
+        let now = ProcessInfo.processInfo.systemUptime
+        guard ConnectionProbePolicy.needsProbe(explicit: explicit, endpoint: ip,
+            previousEndpoint: probeEndpoint, checkedAt: probeCheckedAt, now: now) else { return true }
+        let reachable = DeveloperTunnelProbe.reaches(ip)
+        DeveloperLogStore.shared.record("developer_endpoint_check", ["reachable": String(reachable),
+            "explicit": String(explicit), "duration_ms": String(Int((ProcessInfo.processInfo.systemUptime - now) * 1000))])
+        if reachable { probeEndpoint = ip; probeCheckedAt = ProcessInfo.processInfo.systemUptime }
+        else { cleanup() }
+        return reachable
     }
 
     private static func setLocked(latitude: Double, longitude: Double, pairingPath: String, deviceIP: String) -> Int32 {

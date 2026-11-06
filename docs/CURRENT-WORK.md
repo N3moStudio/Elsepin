@@ -2,6 +2,26 @@
 
 Updated 5 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
 
+## 2.6.1 (71) - device feedback fixes, validation in progress
+
+The owner tested build 70 with FlareStore and LocalDevVPN. Six screenshots show
+mojibake, misleading connection/tray state, tiny label-only saved pins, widget
+storage permission failure, icon failure and bulky controls. Build 71 addresses
+these flows; see CHANGELOG.md. No public publication is authorized.
+
+New owners: `Shared/DeveloperTunnelProbe.swift` (bounded TCP check on the serial
+engine queue, no location commands), `ConnectionProbePolicy.swift` (ten-second
+continuous reuse; explicit commands always fresh), `MapPinSize.swift`,
+`Locus/Features/Map/MapFavoriteButton.swift`, `Locus/Support/EnergyDiagnostics.swift`.
+The vendor binary's successful return remains developer-command evidence, not
+provider location verification. A TCP probe also cannot verify another app.
+Actual LocalDevVPN-off, signer icon/widget behavior and heating require phone tests.
+Do not remove widget entitlement checks or silently claim a failed Stop succeeded.
+
+Local identity, appearance, helper archives and 17 Python packaging tests passed.
+Native Swift/iOS checks are pending. The existing verified delivered file is still
+build 70 until a replacement is validated. Keep raw diagnostics in ignored `.build`.
+
 ## 2.6.1 (70) - validated and privately delivered
 
 The owner resumed building on 5 November, authorizing private GitLab hosting and

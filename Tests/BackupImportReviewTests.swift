@@ -2,6 +2,25 @@ import XCTest
 @testable import SessionPresentation
 
 final class BackupImportReviewTests: XCTestCase {
+    func testPinSizeRoundTripSelectionAndOldBackupPreservation() throws {
+        var current = try context()
+        current.preferences.display?.mapPinSize = 34
+        let old = try sample("Shift-Settings-Test")
+        XCTAssertNil(old.preferences?.display?.mapPinSize)
+        let oldReview = BackupImportReview(backup: old, current: current)
+        XCTAssertFalse(oldReview.changes.contains { $0.key == .mapPinSize })
+        let oldResult = try XCTUnwrap(oldReview.plan(BackupImportSelection(settings: [.walkSpeed])).preferences)
+        XCTAssertEqual(oldResult.display?.mapPinSize, 34)
+        var new = old
+        new.preferences?.display?.mapPinSize = 56
+        let decoded = try LibraryBackup.decode(new.encoded())
+        let review = BackupImportReview(backup: decoded, current: current)
+        let changed = try XCTUnwrap(review.plan(BackupImportSelection(settings: [.mapPinSize])).preferences)
+        XCTAssertEqual(changed.display?.mapPinSize, 56)
+        XCTAssertEqual(changed.display?.mapStyle, current.preferences.display?.mapStyle)
+        new.preferences?.display?.mapPinSize = 1_000
+        XCTAssertFalse(new.isValid)
+    }
     func testMapLayerChoicesRoundTripAndImportIndependently() throws {
         var current = try context()
         current.preferences.display?.showSavedPinsOnMap = true

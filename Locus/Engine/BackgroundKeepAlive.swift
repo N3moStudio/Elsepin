@@ -18,6 +18,9 @@ final class BackgroundKeepAlive: NSObject, CLLocationManagerDelegate {
     private var backgroundEnabled = false
     private var requestedAlways = false
     private var demand = LocationTrackingDemand.stopped
+    var diagnosticState: String {
+        "\(running ? "running" : "stopped"); demand=\(demand); precise=\(precisionTask != nil)"
+    }
 
     override init() {
         super.init()
@@ -29,6 +32,7 @@ final class BackgroundKeepAlive: NSObject, CLLocationManagerDelegate {
     }
 
     func updateDemand(_ demand: LocationTrackingDemand, appActive: Bool) {
+        guard self.demand != demand || (!appActive && precisionTask != nil) else { return }
         self.demand = demand
         if !appActive {
             precisionTask?.cancel()
@@ -49,6 +53,9 @@ final class BackgroundKeepAlive: NSObject, CLLocationManagerDelegate {
         manager.desiredAccuracy = precisionTask == nil
             ? kCLLocationAccuracyThreeKilometers : kCLLocationAccuracyNearestTenMeters
         let background = demand == .session
+        // Browsing may pause naturally. Keep a confirmed simulation alive only
+        // while the session owns the background location lease.
+        manager.pausesLocationUpdatesAutomatically = !background && precisionTask == nil
         if backgroundEnabled != background {
             backgroundEnabled = background
             manager.allowsBackgroundLocationUpdates = background
@@ -60,6 +67,7 @@ final class BackgroundKeepAlive: NSObject, CLLocationManagerDelegate {
         }
         guard !running else { return }
         running = true
+        DeveloperLogStore.shared.record("location_manager_started", ["demand": String(describing: demand)])
         manager.startUpdatingLocation()
     }
 
@@ -91,5 +99,7 @@ final class BackgroundKeepAlive: NSObject, CLLocationManagerDelegate {
               fix.sourceInformation?.isSimulatedBySoftware == false,
               fix.sourceInformation?.isProducedByAccessory == false else { return }
         onDeviceLocation?(fix)
+        // Finish the bounded precise request as soon as a useful fix arrives.
+        if precisionTask != nil, fix.horizontalAccuracy <= 50 { cancelPreciseFix() }
     }
 }

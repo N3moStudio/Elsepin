@@ -18,13 +18,17 @@ struct HomeWidgetsSettingsView: View {
                     "The medium widget shows 2 shortcuts; the large one shows 4. Some signing setups cannot share widget data; any error appears here."
                 ])
             }.shiftSettingsRows()
-            if let message { Section { Text(message).foregroundStyle(LocusTheme.statusWarn) }.shiftSettingsRows() }
+            if let message {
+                Section(HomeWidgetPublisher.available ? "Widget status" : "Signing permission missing") {
+                    Text(message).font(.footnote).foregroundStyle(LocusTheme.statusWarn)
+                }.shiftSettingsRows()
+            }
             Section("Favorite shortcut") {
                 Picker("Show", selection: $primary) {
                     Text("First selected item").tag("")
                     ForEach(choices.filter { selected.contains($0.id.uuidString) }) { Text($0.title).tag($0.id.uuidString) }
                 }
-            }.shiftSettingsRows()
+            }.shiftSettingsRows().disabled(!HomeWidgetPublisher.available)
             Section {
                 if choices.isEmpty { Text("Save a place or trip first.").foregroundStyle(.secondary) }
                 ForEach(choices) { item in
@@ -35,7 +39,7 @@ struct HomeWidgetsSettingsView: View {
                 }
             } header: { Text("Up to 4 saved shortcuts") } footer: {
                 Text("Selected names are visible on your Home Screen.")
-            }.shiftSettingsRows()
+            }.shiftSettingsRows().disabled(!HomeWidgetPublisher.available)
         }.shiftSettingsScreen().loggedNavigationTitle("Home Screen widgets").navigationBarTitleDisplayMode(.inline)
         .onAppear {
             selected = UserDefaults.standard.stringArray(forKey: "locus.widget.selected") ?? Array(choices.prefix(4).map { $0.id.uuidString })

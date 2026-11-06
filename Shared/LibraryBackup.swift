@@ -70,9 +70,11 @@ struct BackupDisplayPreferences: Codable, Equatable {
     // Optional for older backups: absence preserves the phone's current choices.
     var showSavedPinsOnMap: Bool? = nil
     var showNamedAreasOnMap: Bool? = nil
+    var mapPinSize: Double? = nil
     var isValid: Bool {
         [0, 15, 30, 60, 120].contains(reminderMinutes) && (0...2).contains(mapStyle) &&
-            (connectionCheckSeconds.map { (3...15).contains($0) } ?? true)
+            (connectionCheckSeconds.map { (3...15).contains($0) } ?? true) &&
+            (mapPinSize.map { $0.isFinite && MapPinSize.range.contains($0) } ?? true)
     }
 }
 

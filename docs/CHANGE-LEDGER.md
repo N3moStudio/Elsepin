@@ -5,6 +5,19 @@ is the last recorded public release. Earlier entries retain their original valid
 
 See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all recorded 2.5.x/2.6.0 native runs.
 
+## 2.6.1 (71) - owner feedback and bounded diagnostics - unreleased
+
+- Owner installed with FlareStore, confirmed LocalDevVPN is the connection in use.
+- Endpoint liveness checks and honest pending/failed session labels; compact Stop
+  retains its in-flight lock even when the evidence deadline expires.
+- Saved-pin tap selects a preview; instant pin/route stars and adjustable saved-pin
+  size preserve library identities, metadata and old backup imports.
+- Compact deleted-item selection bar, two-column map actions at ordinary text sizes,
+  corrected UTF-8 text with a regression guard, signer capability/error diagnostics.
+- Foreground-only 30-second CPU/peak memory/thermal/resource snapshots, heat marker,
+  precise-fix early completion and failed audio/session-monitor cleanup.
+- Native/device verification pending. No public release or changes to other apps.
+
 ## 2.6.1 (70) - map layers and rendering work - private build
 
 - Reuse the layers button for Map options: Pins, Areas, and all three map styles.

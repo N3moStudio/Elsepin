@@ -153,6 +153,17 @@ final class SpoofSession: ObservableObject {
     private let favoritesKey = "locus.favorites"
     private let recentsKey = "locus.recents"
     private var terminating = false
+    private var diagnosticWriteCount = 0
+
+    /// Read only when sampling/exporting diagnostics; never drives SwiftUI updates.
+    var energySnapshot: [String: String] {
+        ["location_writes_total": String(diagnosticWriteCount), "route_worker": String(routeTask != nil),
+         "joystick_timer": String(joystickTimer != nil), "connection_monitor": String(monitorTask != nil),
+         "recovery_monitor": String(automaticRecoveryPending), "map_visible": String(mapLocationNeeded),
+         "background_location": String(sessionLocationKeepAlive), "location_manager": locationKeeper.diagnosticState,
+         "phase": effectivePhase.rawValue, "stop_pending": String(stopInFlight),
+         "check_interval_seconds": String(preferences.connectionCheckSeconds)]
+    }
 
     init() {
         if let saved = UserDefaults.standard.object(forKey: EBikeSpeed.preferenceKey) as? Double {
@@ -301,7 +312,8 @@ final class SpoofSession: ObservableObject {
                 saveRecentLocations: preferences.saveRecentLocations, recentHistoryRetention: preferences.recentHistoryRetention,
                 mapStyle: mapStyleIndex, connectionCheckSeconds: preferences.connectionCheckSeconds,
                 showFindMyStatus: preferences.showFindMyStatus, showLife360Status: preferences.showLife360Status,
-                showSavedPinsOnMap: preferences.showSavedPinsOnMap, showNamedAreasOnMap: preferences.showNamedAreasOnMap), speedUnit: preferences.speedUnit,
+                showSavedPinsOnMap: preferences.showSavedPinsOnMap, showNamedAreasOnMap: preferences.showNamedAreasOnMap,
+                mapPinSize: preferences.mapPinSize), speedUnit: preferences.speedUnit,
             visualStyle: preferences.visualStyle, material: preferences.appearanceOverrides.material,
             font: AppearanceFixed.font, textSize: AppearanceFixed.textSize)
     }
@@ -328,6 +340,7 @@ final class SpoofSession: ObservableObject {
                 if let show = display.showLife360Status { preferences.showLife360Status = show }
                 if let show = display.showSavedPinsOnMap { preferences.showSavedPinsOnMap = show }
                 if let show = display.showNamedAreasOnMap { preferences.showNamedAreasOnMap = show }
+                if let size = display.mapPinSize { preferences.mapPinSize = size }
                 preferences.connectionAlerts = display.connectionAlerts
                 preferences.reminderMinutes = display.reminderMinutes
                 if let seconds = display.connectionCheckSeconds { preferences.connectionCheckSeconds = seconds }
@@ -347,10 +360,11 @@ final class SpoofSession: ObservableObject {
     }
 
     var hasSession: Bool { sessionRequested || requiresClear || stopInFlight }
+    var isStopping: Bool { stopInFlight }
     var statusTitle: String {
         if recoveringRoute && isBusy { return "Reconnecting route…" }
         if restoredRouteAwaitingConnection { return automaticRecoveryPending ? "Waiting to resume route" : "Saved route · Paused" }
-        if status.isDropped && !hasSession { return "Couldnâ€™t start spoofing" }
+        if status.isDropped && !hasSession { return "Couldn't start spoofing" }
         if isBusy { return effectivePhase.title }
         if showsClosedSessionNotice { return "Previous session ended" }
         return effectivePhase.title
@@ -359,7 +373,7 @@ final class SpoofSession: ObservableObject {
         reopenedWithoutConnection && !sessionRequested && !isBusy && !stopInFlight && lastError == nil
     }
     var stopButtonTitle: String {
-        if stopInFlight { return "Stoppingâ€¦" }
+        if stopInFlight { return "Stopping…" }
         if recoveringRoute { return "Cancel reconnect" }
         return effectivePhase == .active ? "Stop spoofing" : "Try clearing location"
     }
@@ -583,6 +597,8 @@ final class SpoofSession: ObservableObject {
             endBackground()
             sessionLocationKeepAlive = false
             updateLocationTracking()
+            monitorTask?.cancel()
+            monitorTask = nil
             switch result {
             case .success:
                 reliability.finish()
@@ -601,7 +617,7 @@ final class SpoofSession: ObservableObject {
                 monitorTask?.cancel()
                 monitorTask = nil
             case .failure(let error):
-                let message = "Elsepin could not clear the last location. It may still be set. A new connection needs Wi-Fi and LocalDevVPN; if Wi-Fi isnâ€™t available now, try clearing it when you can connect again. Elsepin wonâ€™t say it stopped until the clear command succeeds. " + error.localizedDescription
+                let message = "Could not confirm Stop. The last location may still be set. Reconnect LocalDevVPN, then tap Try clearing location. " + error.localizedDescription
                 status = .unverified
                 lastError = message
                 warn(title: "Elsepin could not confirm Stop", message: message)
@@ -1182,11 +1198,13 @@ final class SpoofSession: ObservableObject {
         startMonitor(pairing: pairing)
         verification.sending()
         let commandStart = Date()
+        diagnosticWriteCount += 1
         trace?.record("write_requested", ["write": writeID.uuidString, "epoch": String(ticket)])
         DeveloperLogStore.shared.record("location_write_requested", ["id": writeID.uuidString,
             "latitude": String(coordinate.latitude), "longitude": String(coordinate.longitude), "epoch": String(ticket)])
         let result = await LocationEngine.set(latitude: coordinate.latitude, longitude: coordinate.longitude,
-                                              pairingPath: pairing.pairingPath, deviceIP: TunnelConfig.targetIP)
+                                              pairingPath: pairing.pairingPath, deviceIP: TunnelConfig.targetIP,
+                                              explicit: markRecent || status == .connecting || status == .reconnecting)
         var details = ["id": writeID.uuidString, "duration_ms": String(Int(Date().timeIntervalSince(commandStart) * 1000)),
                        "current_operation": String(ticket == epoch && sessionRequested)]
         switch result {
@@ -1254,7 +1272,7 @@ final class SpoofSession: ObservableObject {
             endBackground()
             if !warnedFailure {
                 warnedFailure = true
-                warn(title: requiresClear ? "Elsepin connection lost" : "Elsepin couldnâ€™t start", message: requiresClear ? "A location update failed. The previous location may still be set." : "The connection failed before a location could be sent.")
+                warn(title: requiresClear ? "Elsepin connection lost" : "Elsepin couldn't start", message: requiresClear ? "A location update failed. The previous location may still be set." : "The connection failed before a location could be sent.")
             }
             publishActivity(force: true)
             return .failed
@@ -1510,7 +1528,7 @@ final class SpoofSession: ObservableObject {
         guard CLLocationCoordinate2DIsValid(coordinate) else { return false }
         let trimmed = String(name.trimmingCharacters(in: .whitespacesAndNewlines).prefix(120))
         var place = SavedPlace(
-            name: trimmed.isEmpty ? "Saved place" : trimmed,
+            name: trimmed.isEmpty ? "Unnamed pin" : trimmed,
             latitude: coordinate.latitude,
             longitude: coordinate.longitude
         )
@@ -1538,6 +1556,16 @@ final class SpoofSession: ObservableObject {
         guard let index = savedPins.firstIndex(where: { $0.id == place.id }) else { return }
         savedPins[index].favorite = !savedPins[index].isFavorite
         SavedPlace.save(savedPins, key: favoritesKey)
+    }
+
+    func savedPin(at coordinate: CLLocationCoordinate2D) -> SavedPlace? {
+        savedPins.first { $0.latitude == coordinate.latitude && $0.longitude == coordinate.longitude }
+    }
+
+    /// Favoriting never opens an editor or changes a location/session.
+    func toggleFavorite(at coordinate: CLLocationCoordinate2D) {
+        if let existing = savedPin(at: coordinate) { togglePinFavorite(existing) }
+        else { _ = savePin(name: placeName(at: coordinate) ?? "Unnamed pin", coordinate: coordinate, favorite: true) }
     }
 
     @discardableResult
@@ -1673,7 +1701,7 @@ final class SpoofSession: ObservableObject {
 
     private static func isGenericFavoriteName(_ name: String) -> Bool {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmed.isEmpty || ["Favorite", "Saved place", "Dropped pin", "Selected place"].contains(trimmed) { return true }
+        if trimmed.isEmpty || ["Favorite", "Saved place", "Dropped pin", "Selected place", "Unnamed pin"].contains(trimmed) { return true }
         // Coordinate-looking labels from older teleports.
         let parts = trimmed.split(separator: ",")
         if parts.count == 2,

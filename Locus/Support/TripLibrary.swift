@@ -28,7 +28,7 @@ final class TripLibrary: ObservableObject {
     }
 
     @discardableResult
-    func save(route: PlannedRoute, name: String, mode: TravelMode, speed: Double, smooth: Bool, arrival: ArrivalChoice = .stay, replacingID: UUID? = nil) -> Bool {
+    func save(route: PlannedRoute, name: String, mode: TravelMode, speed: Double, smooth: Bool, arrival: ArrivalChoice = .stay, favorite: Bool? = nil, replacingID: UUID? = nil) -> Bool {
         let replacingIndex = trips.firstIndex { $0.id == replacingID }
         guard trips.count < 50 || replacingIndex != nil else { error = "You have 50 saved trips. Remove one before saving another."; return false }
         let title = String(name.trimmingCharacters(in: .whitespacesAndNewlines).prefix(120))
@@ -42,12 +42,14 @@ final class TripLibrary: ObservableObject {
             trip.id = trips[replacingIndex].id
             trip.folder = trips[replacingIndex].folder
             trip.favorite = trips[replacingIndex].favorite
+            if let favorite { trip.favorite = favorite }
             var updated = trips
             updated[replacingIndex] = trip
             let saved = write(updated)
             if saved { lastSavedID = trip.id }
             return saved
         }
+        trip.favorite = favorite
         let saved = write([trip] + trips)
         if saved { lastSavedID = trip.id }
         return saved

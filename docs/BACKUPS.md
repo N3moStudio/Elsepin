@@ -15,6 +15,10 @@ The historical instructions and examples below retain their original names.
 
 ## Map visibility choices (build 70)
 
+Build 71 adds optional `display.mapPinSize` (22–64 points). Old backups leave the
+current size alone; new backups can review/import the size independently. The
+default is 34 points and reset restores it. No file format or identity changes.
+
 Settings exports include optional `display.showSavedPinsOnMap` and
 `display.showNamedAreasOnMap` flags. Review lists Pins on map and Areas on map
 independently. Missing flags in old backups preserve the phone's current choices;

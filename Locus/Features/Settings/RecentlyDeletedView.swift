@@ -12,19 +12,6 @@ struct RecentlyDeletedView: View {
     private var visibleItems: [DeletedLibraryItem] { bin.items.filter { $0.isRetained(at: Date()) } }
     var body: some View {
         List {
-            if selecting {
-                Section {
-                    HStack {
-                        Button("Select All") { selection.selectAll(visibleItems, now: Date()) }
-                            .disabled(visibleItems.isEmpty || selection.ids.count == visibleItems.count)
-                        Spacer()
-                        Button("Deselect All") { selection.ids = [] }.disabled(selection.ids.isEmpty)
-                    }.buttonStyle(.borderless).frame(minHeight: 44)
-                    Button("Permanently delete selected (\(selection.ids.count))", role: .destructive) {
-                        deleting = selection.review(bin.items, now: Date())
-                    }.frame(minHeight: 44).disabled(selection.ids.isEmpty || !bin.canEdit)
-                }
-            }
             Section {
                 if visibleItems.isEmpty { Text("Nothing recently deleted").foregroundStyle(.secondary) }
                 ForEach(visibleItems) { item in
@@ -51,7 +38,7 @@ struct RecentlyDeletedView: View {
                     }
                 }
                 if let error = bin.error { Text(error).foregroundStyle(LocusTheme.statusWarn) }
-            } footer: { Text("Deleted places, trips, and areas stay here for 30 days. Restoring never starts spoofing. These items are not included in exports.") }
+            } footer: { Text("Kept for 30 days.") }
         }
         .shiftScreen().loggedNavigationTitle("Recently Deleted").navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -59,6 +46,22 @@ struct RecentlyDeletedView: View {
                 Button(selecting ? "Done" : "Select") {
                     selecting.toggle(); selection.ids = []
                 }.disabled(!selecting && visibleItems.isEmpty)
+            }
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if selecting, !visibleItems.isEmpty {
+                HStack {
+                    Button(selection.ids.count == visibleItems.count ? "Deselect All" : "Select All") {
+                        if selection.ids.count == visibleItems.count { selection.ids = [] }
+                        else { selection.selectAll(visibleItems, now: Date()) }
+                    }.frame(minHeight: 44)
+                    Spacer()
+                    Button(selection.ids.isEmpty ? "Delete All" : "Delete (\(selection.ids.count))", role: .destructive) {
+                        deleting = selection.ids.isEmpty ? DeletedItemsDeletion(items: visibleItems)
+                            : selection.review(bin.items, now: Date())
+                    }.frame(minHeight: 44).disabled(!bin.canEdit)
+                }.font(.subheadline.weight(.semibold)).padding(.horizontal, 20)
+                    .background(ShiftCanvas())
             }
         }
         .onAppear { bin.prune() }

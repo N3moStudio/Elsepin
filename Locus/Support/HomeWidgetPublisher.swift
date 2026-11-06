@@ -3,6 +3,8 @@ import WidgetKit
 
 @MainActor
 enum HomeWidgetPublisher {
+    static let unavailableMessage = "Saved-location widgets need shared App Group access. This installation doesn't provide it. Check your signer's app-extension and App Group support."
+    private static var reportedMissingAccess = false
     static var available: Bool { container != nil }
     private static var container: URL? { WidgetLibrary.containerURL }
     static func resetSharedData() throws {
@@ -33,7 +35,13 @@ enum HomeWidgetPublisher {
         let retained = Set(places.map(\.id))
         let trimmed = ids.filter { retained.contains($0.key) }
         if trimmed != ids { UserDefaults.standard.set(trimmed, forKey: "locus.widget.placeIDs") }
-        guard let container else { return "Shared widget storage is unavailable in this signed build. The Open Elsepin widget still works." }
+        guard let container else {
+            if !reportedMissingAccess {
+                reportedMissingAccess = true
+                DeveloperLogStore.shared.record("widget_storage_unavailable", ["shared_container": "missing"])
+            }
+            return unavailableMessage
+        }
         let all = choices(places: places, trips: trips)
         let selected = UserDefaults.standard.stringArray(forKey: "locus.widget.selected")
         let items = selected.map { ids in ids.compactMap { id in all.first { $0.id.uuidString == id } } } ?? Array(all.prefix(4))

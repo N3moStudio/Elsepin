@@ -7,6 +7,17 @@ import struct
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def check_source_encoding(root=ROOT):
+    # Reject common UTF-8 decoded-as-Windows-1252 sequences, not legitimate
+    # Unicode punctuation/localized text. Kept in the normal prebuild check.
+    broken = ('\u00e2\u20ac', '\u00c3\u00a2', '\ufffd')
+    for folder in ('Locus', 'LocusActivity', 'Shared'):
+        for path in (root / folder).rglob('*.swift'):
+            text = path.read_text(encoding='utf-8')
+            if any(marker in text for marker in broken):
+                raise ValueError(f'Corrupted UI text encoding: {path.relative_to(root)}')
+
+
 def read_resource(directory, filename):
     # Windows can resolve a differently cased name, masking a broken Git asset
     # reference until actool reads it on a case-sensitive build volume.
@@ -17,6 +28,7 @@ def read_resource(directory, filename):
 
 
 def check():
+    check_source_encoding()
     entries = json.loads((ROOT / 'Brand/AppearanceIcons/manifest.json').read_text(encoding='utf-8'))
     assert len(entries) == 13 and len({e['asset'] for e in entries}) == 13
     assert entries[0]['asset'] == 'AppIconPrismJumpgate'

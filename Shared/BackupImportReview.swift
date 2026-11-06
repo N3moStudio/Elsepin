@@ -11,6 +11,7 @@ enum BackupSettingValue: Equatable {
 }
 
 enum BackupSettingKey: String, CaseIterable, Identifiable {
+    case mapPinSize
     case visualStyle, material, glassPanel, speedUnit, smoothMovement, preferWalkingPaths, shortcuts, walkSpeed, runSpeed, cycleSpeed, eBikeSpeed, driveSpeed, liveActivities, hideLocation, hideIslandLocation, lockScreenProgress, islandProgress, islandTimer, showFindMyStatus, showLife360Status, connectionAlerts, reminderMinutes, connectionCheckSeconds, saveRecentLocations, recentHistoryRetention, mapStyle, showSavedPinsOnMap, showNamedAreasOnMap
     var id: String { rawValue }
     var title: String {
@@ -43,6 +44,7 @@ enum BackupSettingKey: String, CaseIterable, Identifiable {
         case .mapStyle: return "Map style"
         case .showSavedPinsOnMap: return "Pins on map"
         case .showNamedAreasOnMap: return "Areas on map"
+        case .mapPinSize: return "Map pin size"
         }
     }
     func value(in p: BackupPreferences) -> BackupSettingValue? {
@@ -75,6 +77,7 @@ enum BackupSettingKey: String, CaseIterable, Identifiable {
         case .mapStyle: return p.display.map { .text(["Standard", "Hybrid", "Satellite"].indices.contains($0.mapStyle) ? ["Standard", "Hybrid", "Satellite"][$0.mapStyle] : "Unknown") }
         case .showSavedPinsOnMap: return (p.display?.showSavedPinsOnMap).map { .boolean($0) }
         case .showNamedAreasOnMap: return (p.display?.showNamedAreasOnMap).map { .boolean($0) }
+        case .mapPinSize: return p.display?.mapPinSize.map { .text("\(Int($0)) points") }
         }
     }
     func description(in p: BackupPreferences) -> String {
@@ -123,6 +126,7 @@ enum BackupSettingKey: String, CaseIterable, Identifiable {
             case .mapStyle: target.mapStyle = source.mapStyle
             case .showSavedPinsOnMap: target.showSavedPinsOnMap = source.showSavedPinsOnMap
             case .showNamedAreasOnMap: target.showNamedAreasOnMap = source.showNamedAreasOnMap
+            case .mapPinSize: target.mapPinSize = source.mapPinSize
             default: break
             }
             current.display = target

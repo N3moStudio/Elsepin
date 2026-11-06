@@ -5,6 +5,28 @@ is the official release. Earlier Shift entries retain their original names and r
 
 [App introduction](README.md) · [Build history](docs/BUILD-HISTORY.md) · [Detailed Change Ledger](docs/CHANGE-LEDGER.md)
 
+## Unreleased — 2.6.1 build 71 (5 November 2026)
+
+- Check the actual developer TCP endpoint before explicit location commands and
+  Stop; reject an unreachable endpoint before writing. Continuous movement reuses
+  the check for at most ten seconds. This is connection evidence, not verification
+  of Find My/Life360. Keep failed clear operations honest and retryable.
+- Correct garbled Stop/icon text and add a prebuild encoding regression check.
+  Show connecting/stopping/failed states instead of premature "Holding location."
+- Tap a saved map pin to select it for an explicit teleport. Enlarge saved pins by
+  default, with a 22–64 point Appearance slider and backward-compatible selective backups.
+- Star pins/routes immediately without a naming dialog. Unnamed pins use "Unnamed pin";
+  naming and favoriting stay separate. Retain existing names, folders, symbols and colors.
+- Compact map actions and Recently Deleted selection controls; retain touch targets,
+  accessibility layouts, restore and permanent-delete confirmation.
+- Add local CPU/peak-memory/thermal/work-state diagnostics and a "Phone feels warm"
+  log marker. Sample only while foregrounded and recording; stop failed-session
+  monitors, end precise fixes when sufficient, and release failed pairing audio.
+- Capture iOS icon error codes, check installed icon metadata and let successful
+  icon transitions settle. Clarify missing widget shared-storage signing access
+  and disable unavailable saved-shortcut controls. Signer/device acceptance is pending.
+- Native validation pending. No release, deployment, or paid billing.
+
 ## Unreleased — 2.6.1 build 70 (5 November 2026)
 
 - Show saved area outlines on the main map. The existing layers button now opens

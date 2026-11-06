@@ -15,6 +15,13 @@ final class SessionPreferences: ObservableObject {
     @Published var showLife360Status: Bool { didSet { save(showLife360Status, "showLife360Status") } }
     @Published var showSavedPinsOnMap: Bool { didSet { save(showSavedPinsOnMap, "showSavedPinsOnMap") } }
     @Published var showNamedAreasOnMap: Bool { didSet { save(showNamedAreasOnMap, "showNamedAreasOnMap") } }
+    @Published var mapPinSize: Double {
+        didSet {
+            let value = MapPinSize.bounded(mapPinSize)
+            if value != mapPinSize { mapPinSize = value }
+            defaults.set(value, forKey: "locus.mapPinSize")
+        }
+    }
     // Legacy backup field remains writable; all surfaces now use one policy.
     var glassPanel: Bool {
         get { appearanceOverrides.material(for: visualStyle) == .glass }
@@ -109,6 +116,7 @@ final class SessionPreferences: ObservableObject {
         showLife360Status = defaults.bool(forKey: "locus.showLife360Status")
         showSavedPinsOnMap = defaults.bool(forKey: "locus.showSavedPinsOnMap")
         showNamedAreasOnMap = defaults.bool(forKey: "locus.showNamedAreasOnMap")
+        mapPinSize = MapPinSize.bounded((defaults.object(forKey: "locus.mapPinSize") as? Double) ?? MapPinSize.defaultValue)
         connectionAlerts = defaults.bool(forKey: "locus.connectionAlerts")
         reminderMinutes = defaults.integer(forKey: "locus.reminderMinutes")
         // Legacy color preferences remain readable in backups; themes now own color mode.
@@ -133,6 +141,7 @@ final class SessionPreferences: ObservableObject {
         islandProgress = fresh.islandProgress; islandTimer = fresh.islandTimer
         showFindMyStatus = fresh.showFindMyStatus; showLife360Status = fresh.showLife360Status
         showSavedPinsOnMap = fresh.showSavedPinsOnMap; showNamedAreasOnMap = fresh.showNamedAreasOnMap
+        mapPinSize = fresh.mapPinSize
         appearanceOverrides = fresh.appearanceOverrides; connectionAlerts = fresh.connectionAlerts
         connectionCheckSeconds = fresh.connectionCheckSeconds; reminderMinutes = fresh.reminderMinutes
         appearance = fresh.appearance; appLockEnabled = fresh.appLockEnabled

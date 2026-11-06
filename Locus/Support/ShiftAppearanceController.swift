@@ -29,6 +29,7 @@ final class ShiftIconController: ObservableObject {
     @Published var error: String?
     private var completionReceived = false
     private var completionFailed = false
+    private var failureDescription: String?
     private var resetCompletion: CheckedContinuation<Void, Error>?
     var changing: Bool { pending != nil }
     var supported: Bool { UIApplication.shared.supportsAlternateIcons }
@@ -42,8 +43,10 @@ final class ShiftIconController: ObservableObject {
             let actual = ShiftIconSelection.installed(named: UIApplication.shared.alternateIconName)
             let failed = completionFailed || actual != requested
             if failed {
-                error = "iOS couldn’t change the icon. Try again while Elsepin is open."
+                error = failureDescription ?? "iOS did not confirm the new icon. Reopen Elsepin and try again."
             }
+            DeveloperLogStore.shared.record("icon_change_finished", ["success": String(!failed),
+                "requested": requested.alternateName ?? "primary", "actual": UIApplication.shared.alternateIconName ?? "primary"])
             pending = nil
             completionReceived = false
             completionFailed = false
@@ -66,13 +69,35 @@ final class ShiftIconController: ObservableObject {
         guard supported else { error = "This installation does not support changing the Home Screen icon."; return }
         guard UIApplication.shared.alternateIconName != choice.alternateName else { refresh(); return }
         guard UIApplication.shared.applicationState == .active else { return }
+        if let name = choice.alternateName {
+            let icons = Bundle.main.object(forInfoDictionaryKey: "CFBundleIcons") as? [String: Any]
+            let alternatives = icons?["CFBundleAlternateIcons"] as? [String: Any]
+            guard alternatives?[name] != nil else {
+                error = "This installation is missing that alternate icon. Reinstall a copy that preserves the app's icons."
+                DeveloperLogStore.shared.record("icon_change_missing_metadata", ["icon": name])
+                return
+            }
+        }
         pending = choice
         completionReceived = false
         completionFailed = false
         error = nil
+        failureDescription = nil
         UIApplication.shared.setAlternateIconName(choice.alternateName) { [weak self] failure in
             Task { @MainActor in
                 guard let self else { return }
+                if let failure {
+                    let native = failure as NSError
+                    DeveloperLogStore.shared.record("icon_change_error", ["domain": native.domain, "code": String(native.code),
+                        "icon": choice.alternateName ?? "primary"])
+                    self.failureDescription = native.domain == NSPOSIXErrorDomain && native.code == 35
+                        ? "iOS is busy changing the Home Screen. Dismiss any system prompt, then try again."
+                        : "iOS declined this icon change (code \(native.code)). Reopen Elsepin and try again. If it keeps failing, check that your signer preserves alternate icons."
+                } else {
+                    // Let SpringBoard's icon transition settle before comparing the
+                    // installed name. Scene activation may arrive before this callback.
+                    try? await Task.sleep(nanoseconds: 350_000_000)
+                }
                 self.completionReceived = true
                 self.completionFailed = failure != nil
                 self.refresh()

@@ -62,6 +62,11 @@ final class RoutePlanner: ObservableObject {
         return true
     }
     func discardPreparedRoute() { preparedRoute = nil }
+    func rememberSavedTrip(_ id: UUID, routeID: UUID) {
+        guard preparedRoute?.id == routeID else { return }
+        preparedRoute?.editingTripID = id
+        editingTripID = id
+    }
     func previewContinuation(choice: ArrivalChoice, session: SpoofSession) {
         guard choice != .stay, !continuationLoading, session.journey?.state == .arrived,
               let original = session.activeRoute, let coordinate = session.simulated else { return }

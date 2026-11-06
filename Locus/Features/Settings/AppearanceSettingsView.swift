@@ -5,6 +5,21 @@ struct AppearanceSettingsView: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     var body: some View {
         List {
+            Section("Map pins") {
+                HStack {
+                    Text("Size")
+                    Spacer()
+                    Image(systemName: "mappin.circle.fill")
+                        .font(.system(size: preferences.mapPinSize)).foregroundStyle(LocusTheme.accent)
+                        .frame(width: 72, height: 72)
+                        .accessibilityHidden(true)
+                }
+                Slider(value: $preferences.mapPinSize, in: MapPinSize.range, step: 1) {
+                    Text("Map pin size")
+                } minimumValueLabel: { Text("Small").font(.caption) }
+                  maximumValueLabel: { Text("Large").font(.caption) }
+                    .accessibilityValue("\(Int(preferences.mapPinSize)) points")
+            }.shiftSettingsRows()
             Section {
                 Picker("Surfaces", selection: $preferences.appearanceOverrides.material) {
                     Text("Solid").tag(AppearanceMaterial.solid)
@@ -76,7 +91,7 @@ struct AppIconSettingsView: View {
                 HStack(spacing: 15) {
                     ShiftAppIconPreview(selection: icons.selected, size: 64)
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(icons.changing ? "Changing Iconâ€¦" : "Current Icon").font(.headline)
+                        Text(icons.changing ? "Changing Icon…" : "Current Icon").font(.headline)
                         Text(icons.selected.title).font(.subheadline).foregroundStyle(.secondary)
                     }
                     Spacer(minLength: 0)
@@ -102,12 +117,12 @@ struct AppIconSettingsView: View {
                 }.shiftSettingsRows()
             }
             if !icons.supported {
-                Section { Text("Icon changes arenâ€™t available in this installation.").font(.subheadline).foregroundStyle(.secondary) }.shiftSettingsRows()
+                Section { Text("Icon changes aren't available in this installation.").font(.subheadline).foregroundStyle(.secondary) }.shiftSettingsRows()
             }
         }
         .shiftSettingsScreen().loggedNavigationTitle("App Icon").navigationBarTitleDisplayMode(.inline)
         .onAppear { icons.refresh() }
-        .alert("Couldnâ€™t Change Icon", isPresented: Binding(get: { icons.error != nil }, set: { if !$0 { icons.error = nil } })) {
+        .alert("Couldn't Change Icon", isPresented: Binding(get: { icons.error != nil }, set: { if !$0 { icons.error = nil } })) {
             Button("OK", role: .cancel) { icons.error = nil }
         } message: { Text(icons.error ?? "Try again while Elsepin is open.") }
     }

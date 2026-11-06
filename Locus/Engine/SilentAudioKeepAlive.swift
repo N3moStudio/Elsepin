@@ -19,12 +19,13 @@ final class SilentAudioKeepAlive {
             let p = try AVAudioPlayer(contentsOf: url)
             p.numberOfLoops = -1
             p.volume = 0.01
-            p.prepareToPlay()
-            p.play()
+            guard p.prepareToPlay(), p.play() else { throw AudioStartError.unavailable }
             player = p
             wasActive = true
+            DeveloperLogStore.shared.record("pairing_audio_started")
             NSLog("[Elsepin] silent audio keep-alive started")
         } catch {
+            stop()
             NSLog("[Elsepin] silent audio keep-alive failed: %@", error.localizedDescription)
         }
     }
@@ -34,7 +35,9 @@ final class SilentAudioKeepAlive {
         player = nil
         wasActive = false
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        DeveloperLogStore.shared.record("pairing_audio_stopped")
     }
+    private enum AudioStartError: Error { case unavailable }
 
     private static func writeSilentWAV() throws -> URL {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("locus-silence.wav")
