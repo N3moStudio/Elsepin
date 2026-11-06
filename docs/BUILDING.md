@@ -27,7 +27,7 @@ does not publish a release, configure Apple account signing or trigger on pushes
 Leave paid billing disabled to stay within the personal account's free allowance.
 
 1. Connect the private Elsepin repository in Codemagic and open its configuration.
-2. Select the intended branch and check for `codemagic.yaml`. For builds 69–71 use
+2. Select the intended branch and check for `codemagic.yaml`. For builds 69–72 use
    `codex/pins-search-69`; `main` still contains the previous app build.
 3. Start **Build Elsepin IPA**. Download the IPA after all steps pass and sign it
    with the existing sideloading method, retaining the extension.
@@ -60,8 +60,8 @@ The workflow is `elsepin-ipa`, `mac_mini_m2`, Xcode 27.1, maximum 30 minutes. Ch
 free allowance before dispatch; leave paid billing disabled and allow queuing behind
 other apps. No push trigger, release publishing or Apple signing account is configured.
 
-Latest validated source: `14d2050c11cdb23d7cc712b8e6ed3d9e9064d448`, build 71,
-Codemagic run `6aed1ad9ab17f8deb753426c`. Subsequent documentation-only commits
+Latest validated source: `50467da4bd2aeb16218cadae0f044f8cb3ba453f`, build 72,
+Codemagic run `6aed7105ab17f8deb75355d1`. Subsequent documentation-only commits
 record that result; see [build history](BUILD-HISTORY.md) for test and delivery evidence.
 
 On this Windows workstation, the authenticated CLI is

@@ -2,7 +2,7 @@
 
 Updated 5 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
 
-## 2.6.1 (72) - build-71 device feedback follow-up
+## 2.6.1 (72) - privately validated and delivered
 
 Owner supplied a 980-event build-71 log: successful TCP probes took 0–3 ms;
 unavailable endpoints waited 2001 ms. "Add stop" search returned 25 results and
@@ -27,10 +27,26 @@ Tests cover preference-write loss across process restart and failed marker stora
 One bounded Groq review was consulted; its missing-context native-handle race
 claims were rejected after checking queue ownership, cleanup and TCP probe code.
 
-17 local Python checks plus appearance/identity/helper verification passed. Native
-Swift/app/extension checks pending. No release. Keep failed-clear safeguards and
-the widget signing requirement; the owner confirmed Recently Deleted and visual
-checks passed and believes backups work. Do not redo those unrelated interfaces.
+Private Codemagic run `6aed7105ab17f8deb75355d1` passed at source
+`50467da4bd2aeb16218cadae0f044f8cb3ba453f`: 620 automated checks (481 Swift,
+104 cloud, 18 Companion, 17 packaging), plus native app/extension compilation
+with zero compiler warnings/errors. One Windows-only helper test was skipped
+on the Mac and is not counted as a pass. Both bundles are 2.6.1 (72), arm64,
+device SDK 27.1. IPA integrity, thirteen icons, helper archives, notices and
+requested entitlements passed. Full logs and receipt remain under ignored
+`.build/artifacts/codemagic-6aed7105ab17f8deb75355d1/`.
+
+Delivered only `Elsepin 2.6.1 build 72.ipa` (18,719,902 bytes) to
+`C:/Users/naith/Desktop/ipa/My Projects (N3mo Studio)`, verified before removing
+build 71 there. Other apps/files were untouched. No release or deployment.
+
+Phone retests: quickly disable LocalDevVPN before teleporting, and select a
+restaurant in Add Stop while planning a bike/e-bike route. Preserve the honest
+failed-clear warning: process exit does not prove the last simulated location
+was cleared. MetricKit reports may arrive later; battery/heat improvements are
+not measured yet. Saved-location widgets still require App Group access from
+the signing profile. The owner confirmed Recently Deleted and visual checks
+passed and believes backups work. Do not redo those unrelated interfaces.
 
 ## 2.6.1 (71) - privately validated and delivered
 

@@ -14,7 +14,34 @@ remain. A verified empty Actions history was followed by fresh run
 or spending-limit annotation. Deleting history did not resolve the billing block.
 No new IPA or release resulted.
 
-## Latest native build and private delivery: 2.6.1 (71) - 5 November 2026
+## Latest native build and private delivery: 2.6.1 (72) - 5 November 2026
+
+[Codemagic run 6aed7105ab17f8deb75355d1](https://codemagic.io/app/6aecefbde7e295d4f44f163e/build/6aed7105ab17f8deb75355d1)
+passed at source `50467da4bd2aeb16218cadae0f044f8cb3ba453f`, private GitLab branch
+`codex/pins-search-69`, personal M2/Xcode 27.1. All 620 checks passed: 481 Swift,
+104 cloud, 18 Companion and 17 packaging. The Windows-only helper test was skipped
+on the Mac and is not counted as a pass. Native app and extension compilation
+passed with zero compiler warnings/errors. Both bundles are 2.6.1 (72), arm64,
+device SDK 27.1. Archive integrity, thirteen icons, helper archives, notices and
+requested entitlements passed. The log-capture check preserved stderr and exit 23.
+Complete original logs, metadata and receipt are under
+`.build/artifacts/codemagic-6aed7105ab17f8deb75355d1/`.
+
+Only `Elsepin 2.6.1 build 72.ipa` (18,719,902 bytes) was delivered to
+`C:/Users/naith/Desktop/ipa/My Projects (N3mo Studio)`, verified before removing
+build 71. Other apps and files were untouched. No public release or deployment.
+Route/Add Stop exits, rapid LocalDevVPN changes and phone heat require device
+retests. The sideload signing profile must still provide shared App Group access
+for saved-location widgets; requested build entitlements do not grant it.
+
+Earlier run `6aed6fcbab17f8deb753558c` passed 618 checks and native compilation
+with zero warnings at `fe44e17e397c4660b0a5a5a2409ddde9033e92e7`. It was not
+delivered: final review added the acknowledged on-disk recovery marker and two
+regression tests. That run's original logs remain under its own artifact folder.
+Both runs used the free personal M2 allowance (396.8 minutes remained before
+dispatch); paid billing was disabled. No other app or build was modified/canceled.
+
+## Native build and private delivery: 2.6.1 (71) - 5 November 2026
 
 [Codemagic run 6aed1ad9ab17f8deb753426c](https://codemagic.io/app/6aecefbde7e295d4f44f163e/build/6aed1ad9ab17f8deb753426c)
 passed at source `14d2050c11cdb23d7cc712b8e6ed3d9e9064d448`, private GitLab branch

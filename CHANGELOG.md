@@ -26,7 +26,11 @@ is the official release. Earlier Shift entries retain their original names and r
   route handoffs flush promptly. No telemetry upload or credentials are included.
 - Build-71 feedback confirms search results arrived before the reported Add Stop
   exit. No OS crash stack was in that export; the exact crash cause and new device
-  behavior require retesting. Native validation for this build is pending.
+  behavior require retesting.
+- Private native validation passed at `50467da`: 620 automated checks, app and
+  extension compilation, zero compiler warnings/errors and IPA verification.
+  Delivered build 72 to the Desktop project IPA folder, replacing build 71.
+  Physical route/VPN behavior and heat remain device-retest items. No publication.
 
 ## Unreleased — 2.6.1 build 71 (5 November 2026)
 

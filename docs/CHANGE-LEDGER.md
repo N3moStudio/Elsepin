@@ -14,7 +14,14 @@ Fresh explicit handshakes, a shorter endpoint failure bound, accurate durable
 write markers, directions deadlines, Live Activity age labels and expanded local
 MetricKit/CPU/memory/screen/route diagnostics are implemented. Existing visual,
 Recently Deleted, backup and manual-confirmation behavior is preserved.
-Local packaging checks: 17 passed; native validation pending. No publication.
+Private Codemagic run `6aed7105ab17f8deb75355d1`, source `50467da`, passed
+620 automated checks (481 Swift, 104 cloud, 18 Companion, 17 packaging), native
+app/extension compilation and IPA verification with zero compiler warnings/errors.
+The Mac's Windows-only helper skip is not counted as a pass. Delivered only build
+72 to the Desktop project IPA folder, replacing build 71 after verification.
+Device route/VPN behavior and heat remain unverified; App Group signing remains
+necessary for saved-location widgets. Full run evidence: BUILD-HISTORY.md.
+No publication or deployment.
 
 ## 2.6.1 (71) - owner feedback and bounded diagnostics - unreleased
 
