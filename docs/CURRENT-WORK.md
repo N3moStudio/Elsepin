@@ -20,6 +20,13 @@ Live Activity timer, and local MetricKit report collection/current-memory diagno
 Report bytes are split into bounded base64 fields; a begin/end manifest detects
 incomplete capture. Logs remain opt-in, local, capped and free of credentials.
 
+Final review adds an acknowledged on-disk unknown-location marker before native
+writes, in addition to the legacy UserDefaults key. Initial setup does not create
+it. A marker-save failure blocks new movement; removal follows an accepted clear.
+Tests cover preference-write loss across process restart and failed marker storage.
+One bounded Groq review was consulted; its missing-context native-handle race
+claims were rejected after checking queue ownership, cleanup and TCP probe code.
+
 17 local Python checks plus appearance/identity/helper verification passed. Native
 Swift/app/extension checks pending. No release. Keep failed-clear safeguards and
 the widget signing requirement; the owner confirmed Recently Deleted and visual

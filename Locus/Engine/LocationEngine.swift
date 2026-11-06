@@ -28,10 +28,11 @@ enum LocationEngineError: LocalizedError {
     case locationClear
     case notActive
     case tunnelUnreachable
+    case evidenceStorage
 
     var failedBeforeWrite: Bool {
         switch self {
-        case .invalidIP, .pairingRead, .tunnelCreate, .remoteServer, .simulationCreate, .notActive, .tunnelUnreachable: return true
+        case .invalidIP, .pairingRead, .tunnelCreate, .remoteServer, .simulationCreate, .notActive, .tunnelUnreachable, .evidenceStorage: return true
         case .locationSet, .locationClear: return false
         }
     }
@@ -47,6 +48,7 @@ enum LocationEngineError: LocalizedError {
         case .locationClear: return "Failed to clear simulated location."
         case .notActive: return "No active simulation session."
         case .tunnelUnreachable: return "The developer connection is unreachable. Turn on LocalDevVPN and try again."
+        case .evidenceStorage: return "Elsepin couldn't save recovery state. Check free storage and try again. No new location was sent."
         }
     }
 
@@ -60,6 +62,7 @@ enum LocationEngineError: LocalizedError {
         case 11: return .locationSet
         case 12: return .locationClear
         case 13: return .notActive
+        case 14: return .evidenceStorage
         default: return .locationSet
         }
     }
@@ -278,7 +281,11 @@ enum LocationEngine {
         guard SessionLifetime.shared.acceptsCommands else { return terminating }
         // Persist immediately before the first operation that can change the
         // device. An exit during mere connection setup creates no false warning.
-        SessionLifetime.shared.locationMayRemain()
+        guard SessionLifetime.shared.locationMayRemain() else {
+            DeveloperLogStore.shared.record("engine_recovery_marker_failed")
+            cleanup()
+            return 14
+        }
         if let err = location_simulation_set(locationSimulation, latitude, longitude) {
             logError(err, stage: "set")
             idevice_error_free(err)

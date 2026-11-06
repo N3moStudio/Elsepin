@@ -13,6 +13,8 @@ is the official release. Earlier Shift entries retain their original names and r
 - Mark a potentially simulated location only immediately before a native write.
   Canceling a first connection check no longer creates a false unfinished session.
   An actual attempted write still requires an accepted clear; app exit is not proof.
+  Recovery state is acknowledged on disk before movement, preserving it even if
+  the process exits before asynchronous preferences finish saving.
 - Defer route endpoint/stop edits until search navigation returns. Freeze the search
   route and the timeline's previous-row data during transitions. Add a directions
   timeout and clearer disabled-preview guidance for unavailable cycling paths.

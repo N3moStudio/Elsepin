@@ -65,6 +65,29 @@ final class SessionLifetimeTests: XCTestCase {
         XCTAssertFalse(SessionLifetime(defaults: defaults).previousLocationMayRemain)
     }
 
+    func testNativeWriteMarkerSurvivesUnflushedDefaultsAndIsRemovedOnlyByClear() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let marker = folder.appendingPathComponent("location-may-remain")
+        let lifetime = SessionLifetime(defaults: defaults, markerURL: marker)
+        XCTAssertTrue(lifetime.locationMayRemain())
+        defaults.removeObject(forKey: "locus.unfinishedSession") // simulate lost asynchronous preference write
+        let restarted = SessionLifetime(defaults: defaults, markerURL: marker)
+        XCTAssertTrue(restarted.previousLocationMayRemain)
+        restarted.locationCleared()
+        XCTAssertFalse(FileManager.default.fileExists(atPath: marker.path))
+        XCTAssertFalse(SessionLifetime(defaults: defaults, markerURL: marker).previousLocationMayRemain)
+    }
+
+    func testNativeWriteMustNotProceedWhenRecoveryStateCannotBeSaved() throws {
+        let path = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try Data([1]).write(to: path)
+        defer { try? FileManager.default.removeItem(at: path) }
+        let lifetime = SessionLifetime(defaults: defaults, markerURL: path.appendingPathComponent("impossible"))
+        XCTAssertFalse(lifetime.locationMayRemain())
+        XCTAssertTrue(lifetime.previousLocationMayRemain)
+    }
+
     func testCommandQueuedBeforeShutdownCannotStartAfterGateCloses() {
         let lifetime = SessionLifetime(defaults: defaults)
         let queue = DispatchQueue(label: "session-lifetime-test")
