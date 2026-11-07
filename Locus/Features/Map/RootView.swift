@@ -338,7 +338,11 @@ struct BottomControlsView: View {
     @GestureState private var handleTouchActive = false
     @State private var detailHeight: CGFloat = 0
 
+    private var canCollapse: Bool {
+        planner.preparedRoute != nil || session.joystickActive || session.pinIsPreview || session.hasSession
+    }
     private var expansion: CGFloat {
+        guard canCollapse else { return 1 }
         let base: CGFloat = collapsed ? 0 : 1
         return min(1, max(0, base - CGFloat(handleDrag.translation) / max(80, detailHeight)))
     }
@@ -375,8 +379,8 @@ struct BottomControlsView: View {
                     .opacity(expansion)
                     .clipped()
                     .allowsHitTesting(!collapsed && !handleTouchActive)
-                    .accessibilityHidden(collapsed)
-                panelHandle
+                    .accessibilityHidden(canCollapse && collapsed)
+                if canCollapse { panelHandle }
                 }
                 VStack(spacing: 6) {
                     primaryActions
@@ -400,6 +404,7 @@ struct BottomControlsView: View {
             }
         }
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { _ in interruptHandle() }
+        .onChange(of: canCollapse) { _, available in if !available { setCollapsed(false) } }
         .onChange(of: handleTouchActive) { _, active in
             if !active {
                 // A canceled drag returns to its previous anchor; only onEnded commits.

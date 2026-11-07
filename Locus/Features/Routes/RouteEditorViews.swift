@@ -242,49 +242,67 @@ struct RouteWaypointEditor: View {
 
 struct RouteSectionChoiceSheet: View {
     @EnvironmentObject private var preferences: SessionPreferences
+    @Environment(\.shiftEditorEmbedded) private var embedded
     let title: String
     let original: RouteLegChoice
-    let onSave: (RouteLegChoice) -> Void
+    let onSave: (RouteLegChoice, RouteLegPathChoice) -> Void
     let keepsExactPath: Bool
     @Environment(\.dismiss) private var dismiss
     @State private var mode: TravelMode
     @State private var speed: Double
     @State private var confirmRoadChange = false
 
-    init(title: String, choice: RouteLegChoice, keepsExactPath: Bool = false, onSave: @escaping (RouteLegChoice) -> Void) {
+    init(title: String, choice: RouteLegChoice, keepsExactPath: Bool = false,
+         onSave: @escaping (RouteLegChoice, RouteLegPathChoice) -> Void) {
         self.title = title; original = choice; self.onSave = onSave
         self.keepsExactPath = keepsExactPath
         _mode = State(initialValue: choice.mode); _speed = State(initialValue: choice.speedMPH)
     }
     var body: some View {
         ShiftEditorContainer {
-            Form {
-                Section {
-                    Text(title).font(.headline)
-                    Picker("Travel mode", selection: $mode) {
-                        ForEach(TravelMode.allCases) { Label($0.title, systemImage: $0.icon).tag($0) }
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text(title).font(.subheadline).foregroundStyle(.secondary)
+                    VStack(spacing: 0) {
+                        ForEach(TravelMode.allCases) { item in
+                            Button { mode = item } label: {
+                                HStack(spacing: 12) {
+                                    Label(item.title, systemImage: item.icon)
+                                    Spacer()
+                                    if mode == item { Image(systemName: "checkmark").foregroundStyle(LocusTheme.accent) }
+                                }.frame(minHeight: 44).contentShape(Rectangle())
+                            }.buttonStyle(.plain).accessibilityAddTraits(mode == item ? .isSelected : [])
+                        }
                     }
-                    LabeledContent("Target speed", value: preferences.speedUnit.formatted(mph: speed))
+                    Divider()
+                    HStack {
+                        Text("Speed").font(.subheadline.weight(.semibold))
+                        Spacer()
+                        Text(preferences.speedUnit.formatted(mph: speed)).monospacedDigit()
+                    }
                     SpeedSlider(mph: $speed, mode: mode)
-                } footer: { Text(keepsExactPath ? "Only this leg changes. Your drawn or imported path stays the same." : "Only this leg changes.") }
+                }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
             }
             .shiftScreen().loggedNavigationTitle("Leg movement").navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                if !embedded { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
-                        if !keepsExactPath && original.mode.needsRouteChoice(changingTo: mode) { confirmRoadChange = true }
-                        else { save() }
+                        if RouteLegPathPolicy.needsChoice(from: original.mode, to: mode, exactPath: keepsExactPath) { confirmRoadChange = true }
+                        else { save(.keepCurrent) }
                     }
                 }
             }
             .onChange(of: mode) { _, new in speed = new.defaultSpeedMPH }
-            .loggedConfirmationDialog("Find matching directions?", isPresented: $confirmRoadChange, titleVisibility: .visible) {
-                Button("Recalculate directions") { save() }
+            .loggedConfirmationDialog("Which path?", isPresented: $confirmRoadChange, titleVisibility: .visible) {
+                Button("Keep current path") { save(.keepCurrent) }
+                Button("Recalculate directions") { save(.recalculate) }
                 Button("Cancel", role: .cancel) { }
-            } message: { Text("Changing between a car and other modes needs a different path. The old route cannot start while new directions are loading.") }
+            } message: { Text("Keep the path and change movement only, or find directions for the new mode.") }
         }
-        .presentationDetents([.medium, .large])
     }
-    private func save() { onSave(RouteLegChoice(mode: mode, speedMPH: mode.clampedSpeedMPH(speed))); dismiss() }
+    private func save(_ path: RouteLegPathChoice) {
+        onSave(RouteLegChoice(mode: mode, speedMPH: mode.clampedSpeedMPH(speed)), path)
+        dismiss()
+    }
 }

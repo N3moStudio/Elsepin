@@ -5,6 +5,19 @@ is the official release. Earlier Shift entries retain their original names and r
 
 [App introduction](README.md) · [Build history](docs/BUILD-HISTORY.md) · [Detailed Change Ledger](docs/CHANGE-LEDGER.md)
 
+## Unreleased — 2.6.1 build 74 (6 November 2026)
+
+- Offer Keep current path or Recalculate when changing between route networks.
+- Remove redundant Whole route/Individual leg settings controls, Route notes and
+  Edit names & places. Use plain leg controls; consolidate expanded Options.
+- Put arrival behavior at Destination and naming in endpoint/stop menus, including
+  Name route at Start. Keep Move places on map.
+- Restore native back swipes in pushed editors. Expand Add Stop's map with search,
+  result selection and custom pins; confirm before adding. Exact-path pauses stay
+  on their path. Remove collapse arrow when the tray only shows idle guidance.
+- Compatibility, explicit movement confirmation and recovery remain unchanged.
+  Native validation pending; no public release.
+
 ## Unreleased — 2.6.1 build 73 (6 November 2026)
 
 - Tap the movement row between stops to change only that leg's mode and speed.

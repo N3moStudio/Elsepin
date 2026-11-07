@@ -2,6 +2,23 @@
 
 Updated 6 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
 
+## 2.6.1 (74) - simpler planning and explicit path choice - validation pending
+
+Cross-network leg changes now offer Keep current path or Recalculate directions.
+The existing travel-section format retains the new speed/mode on unchanged geometry.
+Planning removes Whole route, Individual leg settings, Route notes and Edit names
+& places. Plain leg rows replace boxed controls. Arrival belongs at Destination;
+three-dot menus rename start/stops/destination, with Name route at Start. Move
+places on map stays. Active edits still require explicit hold confirmation.
+
+Restore native Back/edge-pop in pushed editors; standalone dismissals remain.
+Add Stop's map expands with search and custom-pin selection followed by explicit
+confirmation. Saved automatic routes support searched stops; exact-path pauses
+snap to the unchanged path and still need Add. Idle guidance has no collapse arrow.
+AGENTS/UI-POLISH record grouping by task rather than a card per small control.
+No identity, backup-format, provider or movement-cadence changes. Native checks
+and phone interaction/layout acceptance are pending. No public publication.
+
 ## 2.6.1 (73) - route legs, recents and compact controls - privately validated/delivered
 
 Each incoming stop/destination leg now opens its own movement editor directly,

@@ -145,6 +145,8 @@ struct AddPathStopSheet: View {
     @State private var name = ""
     @State private var waitSeconds = 60.0
     @State private var error: String?
+    @State private var fullMap = false
+    @State private var initialized = false
     var body: some View {
         ShiftEditorContainer {
             Form {
@@ -156,6 +158,12 @@ struct AddPathStopSheet: View {
                             Marker("Current route position", systemImage: "location.fill", coordinate: route.track.point(at: progress.travelledMetres).coordinate).tint(LocusTheme.accentSecondary)
                         }
                     }.frame(height: 190)
+                    .overlay(alignment: .bottomTrailing) {
+                        Button { fullMap = true } label: {
+                            Image(systemName: "arrow.up.left.and.arrow.down.right")
+                                .frame(width: 44, height: 44).background(.regularMaterial, in: Circle())
+                        }.buttonStyle(.plain).padding(8).accessibilityLabel("Choose pause on full-screen map")
+                    }
                     Text("\(JourneyText.distance(fraction * route.track.length)) from start")
                     Slider(value: $fraction, in: 0...1).accessibilityLabel("Stop position along route")
                         .onChange(of: fraction) { _, _ in error = nil }
@@ -171,10 +179,20 @@ struct AddPathStopSheet: View {
                     : "Adds a pause on this exact path. Use the slider to choose its position.") }
             }
             .shiftScreen().loggedNavigationTitle("Pause along path").navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(isPresented: $fullMap) {
+                RouteStopMapSelection(route: route) { place in
+                    guard let nearest = RouteSnapIndex(track: route.track).nearest(to: RoutePoint(place.coordinate)) else { return }
+                    fraction = min(1, max(0, nearest.metres / route.track.length))
+                    let distance = route.track.point(at: nearest.metres).distance(to: RoutePoint(place.coordinate))
+                    name = distance > 25 ? "Near \(place.name)" : place.name
+                    error = nil
+                }
+            }
             .onAppear {
-                if liveRoute, let progress = session.journey {
+                if !initialized, liveRoute, let progress = session.journey {
                     fraction = min(1, progress.fraction + (1 - progress.fraction) / 2)
                 }
+                initialized = true
             }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }

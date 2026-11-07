@@ -22,6 +22,7 @@ Locus identifiers as safe search-and-replace targets.
 
 | Area | Main owners | Responsibilities |
 | --- | --- | --- |
+| Planner interaction (74) | `RouteLegPathPolicy`, `RoutePlannerSheet`, `RouteStopSearchSheet`, `ShiftEditorContainer` | Explicit keep/recalculate; arrival/naming beside endpoints; full-map confirmation before rebuilding; preserve native edge-pop. |
 | Leg movement / staged route / recents (73) | `Shared/RouteLegEditing.swift`, `RoutePlanner.swift`, `RoutePlannerSheet.swift`, `MapHomeView.swift`, `SpoofSession.swift`, `RoutePlaceSearchSheet.swift` | Incoming-stop intervals preserve other speeds; exact paths remain exact. MapPinPlacement rejects taps while staged/active. Stable history IDs retain the newest valid draft under existing privacy retention. Selecting a recent route only opens the editor. |
 | Resource pressure / preview cache (73) | `ResourceUsageEnvironment.swift`, `DisplayEnergyPolicy.swift`, `ElsepinProgressLabel.swift`, `RoutePlannerSheet.swift` | iOS 27 hint only affects discretionary visuals. Never use it to change location-write or Stop timing. Preview line cache assumes route ID changes with geometry. See ENERGY-REVIEW. |
 | Route-card collapse | `RootView.swift`: `BottomControlsView`, `routeDetailsCollapsed`, `compactJourneyPanel` | Presentation-only toggle. Reset on route ID changes, not progress ticks. Keep command controls/warnings outside hidden detail; preserve overlay viewport and skip code. Build 73 compiles the smaller shared header/handle; see UI-POLISH device checks. |

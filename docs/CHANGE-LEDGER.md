@@ -5,6 +5,17 @@ is the last recorded public release. Earlier entries retain their original valid
 
 See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all recorded 2.5.x/2.6.0 native runs.
 
+## 2.6.1 (74) - planner organization and navigation - unreleased
+
+Owner requested explicit keep/recalculate choice for network changes, fewer cards,
+endpoint-based arrival/naming, full-screen stop selection and native back swipes.
+Remove the redundant planning controls and notes; keep move-on-map and all active
+movement safeguards. Shared editor navigation no longer hides native Back.
+Full-map selection unwinds before itinerary edits; exact-path pauses remain on
+the original geometry. Source/backup identifiers and optional energy policy stay.
+Tests cover cross-network path choice and unchanged movement-section boundaries.
+Native validation and phone interaction acceptance are pending; no publication.
+
 ## 2.6.1 (73) - editable legs, staged-route protection and compact planning - unreleased
 
 Owner supplied six screenshots and reported per-leg editing was inaccessible,

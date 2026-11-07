@@ -10,6 +10,7 @@ struct RoutePlaceSearchSheet: View {
     @EnvironmentObject private var library: TripLibrary
     @EnvironmentObject private var session: SpoofSession
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.shiftEditorEmbedded) private var embedded
     @StateObject private var completer = PlaceSearchCompleter()
     @State private var query = ""
     @State private var isResolving = false
@@ -126,7 +127,7 @@ struct RoutePlaceSearchSheet: View {
             .onSubmit(of: .search, searchAll)
             .shiftScreen().loggedNavigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { cancelSearch(); dismiss() } } }
+            .toolbar { if !embedded { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { cancelSearch(); dismiss() } } } }
             .loggedConfirmationDialog(selectedPlace?.name ?? "Selected place", isPresented: $showPlaceActions, titleVisibility: .visible) {
                 if let place = selectedPlace, let onPreviewTeleport {
                     Button("Teleport here") {

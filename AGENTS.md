@@ -8,5 +8,6 @@
 - Elsepin remains the full product: never copy Veypax paid gates into it. Widgets prepare a pin and always require manual in-app confirmation before movement. Keep Stop available.
 - Locate related code with [app map](docs/APP-MAP.md); maintain historical evidence in [change ledger](docs/CHANGE-LEDGER.md). User approval is still required by task scope for publication; a handoff does not grant it.
 - Before visual polish, read [UI polish constraints and evidence](docs/UI-POLISH.md). Supplemental web design skills must preserve Elsepin's approved native appearance and interactions.
+- Group related editor controls with spacing/dividers; do not give every small control its own rounded card. Preserve native Back/edge-swipe in pushed editors. See UI-POLISH for the approved planner structure.
 - Deliver only the latest requested test IPA to `C:/Users/naith/Desktop/ipa/My Projects (N3mo Studio)`. Replace older Elsepin IPAs there only after the replacement is complete; leave other apps untouched. No checksum sidecars, ZIP bundles, logs or extra files in that folder. Keep build diagnostics in ignored `.build/artifacts/`.
 - For battery work, consult [energy review](docs/ENERGY-REVIEW.md) and the installed Axiom performance/location guidance; source review is not measured battery evidence.

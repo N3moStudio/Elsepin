@@ -5,6 +5,27 @@ polish. Current implementation and device evidence are in [CURRENT-WORK](CURRENT
 
 ## Build 73 owner-directed planner/tray changes
 
+Superseded planner details in build 74: remove Whole route/Individual leg settings,
+Route notes and Edit names & places from planning. Movement lives on the incoming
+leg; arrival behavior lives beneath Destination. Three-dot menus name endpoints
+and stops; Start also offers Name route. Move places on map stays available.
+Network changes offer Keep current path or Recalculate; neither starts movement.
+
+Use visual grouping by task, not by individual control. A heading, whitespace and
+divider are usually enough inside editors; avoid a rounded background per label,
+picker or speed control. The leg editor uses plain rows/checkmarks and one speed
+group. Options expands one related group. This does not authorize removing the
+approved large Settings identity card, theme surfaces or meaningful error feedback.
+
+Pushed editors retain native Back and edge-pop; standalone modals keep dismissal
+controls. Do not replace edge-pop with a broad drag gesture that fights map panning.
+Settings pages already use native navigation and must retain it. Add Stop's map
+expands from its lower-right control and supports search, result selection and a
+custom pin. Confirm before adding; defer the nested pop before editing the route.
+Exact-path pauses snap the selection to the path and still need Add confirmation.
+Idle guidance alone has no collapse arrow. Device gesture/layout acceptance remains
+separate from compilation.
+
 The supplied screenshots approve a smaller map tray and removal of its Settings
 and More buttons. Main Settings remains a tab; Saved/Joystick default shortcuts
 stay, with Speed/Pause still available in shortcut customization. The collapse

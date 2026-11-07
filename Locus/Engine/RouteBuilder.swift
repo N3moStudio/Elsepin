@@ -13,7 +13,7 @@ struct RoutePlace {
 
 struct PlannedRoute: Identifiable {
     let id = UUID()
-    let name: String
+    var name: String
     var origin: RoutePlace
     var destination: RoutePlace
     let coordinates: [CLLocationCoordinate2D]

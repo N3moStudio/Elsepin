@@ -1,5 +1,16 @@
 import Foundation
 
+enum RouteLegPathChoice: Equatable { case keepCurrent, recalculate }
+
+enum RouteLegPathPolicy {
+    static func needsChoice(from old: TravelMode, to new: TravelMode, exactPath: Bool) -> Bool {
+        !exactPath && old.routeNetwork != new.routeNetwork
+    }
+    static func keepsGeometry(from old: TravelMode, to new: TravelMode, exactPath: Bool, choice: RouteLegPathChoice) -> Bool {
+        exactPath || old.routeNetwork == new.routeNetwork || choice == .keepCurrent
+    }
+}
+
 /// Leg boundaries belong to the destination stop. Editing one leg must not
 /// reset speeds outside that interval, including older mixed-mode backups.
 enum RouteLegEditing {

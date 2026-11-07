@@ -12,7 +12,7 @@ struct RouteModeMenu: View {
             ForEach(TravelMode.allCases) { mode in
                 Button {
                     guard mode != session.travelMode else { return }
-                    if session.routeActive, session.travelMode.needsRouteChoice(changingTo: mode) {
+                    if session.routeActive, session.travelMode.routeNetwork != mode.routeNetwork {
                         proposed = mode
                         showRouteChoice = true
                     } else if session.routeSectionSettingsEnabled {

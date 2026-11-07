@@ -11,6 +11,8 @@ struct RouteStopSearchSheet: View {
     @EnvironmentObject private var session: SpoofSession
     @StateObject private var model: RouteStopSearchModel
     @State private var selectedID: UUID?
+    @State private var fullMap = false
+    @State private var pendingMapPlace: RoutePlace?
     @FocusState private var searchFocused: Bool
 
     init(route: PlannedRoute, browsing: Bool = false, onChoose: @escaping (RoutePlace, Bool) -> Void) {
@@ -83,8 +85,13 @@ struct RouteStopSearchSheet: View {
         .searchable(text: $model.query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Place, address, or category")
         .searchFocused($searchFocused)
         .onSubmit(of: .search, submit)
-        .onChange(of: model.scope) { _, _ in selectedID = nil; if !model.query.isEmpty { submit() } }
+        .onChange(of: model.scope) { _, _ in selectedID = nil; if !fullMap && !model.query.isEmpty { submit() } }
         .onChange(of: model.query) { _, _ in selectedID = nil }
+        .navigationDestination(isPresented: $fullMap) {
+            RouteStopMapPicker(route: route, model: model, browsing: browsing) { place in pendingMapPlace = place }
+        }
+        .onChange(of: fullMap) { _, shown in if !shown { applyMapChoice() } }
+        .onAppear { applyMapChoice() }
         .onDisappear { model.cancel() }
     }
 
@@ -97,6 +104,12 @@ struct RouteStopSearchSheet: View {
         }
         .mapStyle(.standard(elevation: .flat)).mapControlVisibility(.hidden)
         .frame(height: 200).clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay(alignment: .bottomTrailing) {
+            Button { searchFocused = false; fullMap = true } label: {
+                Image(systemName: "arrow.up.left.and.arrow.down.right")
+                    .frame(width: 44, height: 44).background(.regularMaterial, in: Circle())
+            }.buttonStyle(.plain).padding(8).accessibilityLabel("Choose stop on full-screen map")
+        }
         .accessibilityLabel("Planned route and matching stops. The same places are listed below.")
     }
 
@@ -128,7 +141,119 @@ struct RouteStopSearchSheet: View {
         dismiss()
     }
 
+    private func applyMapChoice() {
+        guard let place = pendingMapPlace else { return }
+        pendingMapPlace = nil
+        Task { @MainActor in
+            await Task.yield()
+            choose(place)
+        }
+    }
+
     private func submit() { searchFocused = false; selectedID = nil; model.search() }
+}
+
+struct RouteStopMapSelection: View {
+    let route: PlannedRoute
+    let onChoose: (RoutePlace) -> Void
+    @StateObject private var model: RouteStopSearchModel
+    init(route: PlannedRoute, onChoose: @escaping (RoutePlace) -> Void) {
+        self.route = route; self.onChoose = onChoose
+        _model = StateObject(wrappedValue: RouteStopSearchModel(track: route.track))
+    }
+    var body: some View { RouteStopMapPicker(route: route, model: model, browsing: true, onChoose: onChoose) }
+}
+
+/// This map only selects a draft stop. Search and map panning never send location commands.
+private struct RouteStopMapPicker: View {
+    let route: PlannedRoute
+    @ObservedObject var model: RouteStopSearchModel
+    let browsing: Bool
+    let onChoose: (RoutePlace) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var position: MapCameraPosition = .automatic
+    @State private var pin: RoutePlace?
+    @State private var center: CLLocationCoordinate2D?
+    @State private var previewLine: MKPolyline?
+    @FocusState private var searchFocused: Bool
+
+    var body: some View {
+        MapReader { proxy in
+            Map(position: $position, interactionModes: [.pan, .zoom]) {
+                if let previewLine { MapPolyline(previewLine).stroke(LocusTheme.accent, lineWidth: 4) }
+                ForEach(model.results) { result in
+                    Annotation(result.place.name, coordinate: result.place.coordinate) {
+                        Button { select(result.place) } label: {
+                            Image(systemName: "mappin.circle.fill").font(.title)
+                                .foregroundStyle(LocusTheme.accent).frame(width: 44, height: 44)
+                        }.buttonStyle(.plain).accessibilityLabel(result.place.name)
+                    }
+                }
+                if let pin { Marker(pin.name, coordinate: pin.coordinate).tint(LocusTheme.accent) }
+            }
+            .mapStyle(.standard(elevation: .flat)).mapControlVisibility(.hidden)
+            .onTapGesture(coordinateSpace: .named("stopPickerMap")) { point in
+                guard let coordinate = proxy.convert(point, from: .named("stopPickerMap")) else { return }
+                pin = RoutePlace(name: "Dropped pin", coordinate: coordinate)
+                searchFocused = false
+            }
+            .coordinateSpace(name: "stopPickerMap")
+            .onMapCameraChange(frequency: .onEnd) { center = $0.region.center }
+            .overlay(alignment: .top) { searchResults }
+        }
+        .onAppear {
+            if previewLine == nil { previewLine = MKPolyline(coordinates: route.coordinates, count: route.coordinates.count) }
+        }
+        .loggedNavigationTitle("Choose stop").navigationBarTitleDisplayMode(.inline)
+        .searchable(text: $model.query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search places")
+        .searchFocused($searchFocused)
+        .onSubmit(of: .search) { searchFocused = false; pin = nil; model.search() }
+        .onChange(of: model.query) { _, _ in pin = nil }
+        .onChange(of: model.scope) { _, _ in if !model.query.isEmpty { model.search() } }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            VStack(spacing: 6) {
+                HStack {
+                    Text(pin?.name ?? "Tap the map to drop a pin").font(.subheadline).lineLimit(2)
+                    Spacer()
+                    Button("Map center") {
+                        if let center { pin = RoutePlace(name: "Dropped pin", coordinate: center) }
+                    }.font(.caption).frame(minHeight: 44)
+                }
+                Button(browsing ? "Use this pin" : "Add stop here") {
+                    guard let pin else { return }
+                    model.cancel(); onChoose(pin); dismiss()
+                }.buttonStyle(ShiftActionStyle(compact: true)).disabled(pin == nil)
+            }.padding(12).background { ShiftSettingsCanvas() }
+        }
+        .onDisappear { model.cancel() }
+    }
+
+    @ViewBuilder private var searchResults: some View {
+        if !model.query.isEmpty && (pin == nil || searchFocused) {
+            VStack(spacing: 0) {
+                Picker("Search area", selection: $model.scope) {
+                    Text("Along route").tag(RouteStopSearchModel.Scope.alongRoute)
+                    Text("Everywhere").tag(RouteStopSearchModel.Scope.everywhere)
+                }.pickerStyle(.segmented).padding(8)
+                if model.isSearching { ProgressView("Searching…").padding(8) }
+                if let message = model.message { Text(message).font(.caption).padding(8) }
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(model.results) { result in
+                            Button { select(result.place) } label: {
+                                Text(result.place.name).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                            }.buttonStyle(.plain)
+                            Divider()
+                        }
+                    }.padding(.horizontal, 12)
+                }.frame(maxHeight: 180)
+            }.background { ShiftSettingsCanvas() }
+        }
+    }
+    private func select(_ place: RoutePlace) {
+        pin = place; searchFocused = false
+        position = .region(MKCoordinateRegion(center: place.coordinate, latitudinalMeters: 1200, longitudinalMeters: 1200))
+    }
 }
 
 @MainActor

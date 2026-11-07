@@ -28,6 +28,7 @@ final class RoutePlanner: ObservableObject {
     @Published var draftSmoothMovement = false
     private var draftSettingsInitialized = false
     private var draftHistoryID = UUID()
+    private var draftName: String?
     @Published private(set) var origin: RoutePlace?
     @Published private(set) var destination: RoutePlace?
     @Published private(set) var alternatives: [PlannedRoute] = []
@@ -118,6 +119,7 @@ final class RoutePlanner: ObservableObject {
         usesStoredPath = preparedRoute.usesStoredPath
         editingTripID = preparedRoute.editingTripID
         draftHistoryID = preparedRoute.historyID ?? route.id
+        draftName = route.name
         draftContinuationNote = preparedRoute.continuationNote
         draftArrival = preparedRoute.arrival
         draftMode = preparedRoute.mode
@@ -183,6 +185,7 @@ final class RoutePlanner: ObservableObject {
         editingTripID = nil
         draftContinuationNote = nil
         draftHistoryID = UUID()
+        draftName = nil
     }
     func cancel() {
         generation = UUID()
@@ -218,7 +221,11 @@ final class RoutePlanner: ObservableObject {
                 DeveloperLogStore.shared.record("route_plan_finished", ["attempt": token.uuidString,
                     "routes": String(routes.count), "duration_ms": String(Int((ProcessInfo.processInfo.systemUptime - started) * 1000))])
                 guard let self, !Task.isCancelled, self.generation == token else { return }
-                self.alternatives = routes
+                self.alternatives = routes.map { route in
+                    var named = route
+                    if let name = self.draftName { named.name = name }
+                    return named
+                }
                 self.selectedID = routes.first?.id
                 self.isLoading = false
                 self.task = nil
@@ -243,6 +250,7 @@ final class RoutePlanner: ObservableObject {
         waypoints = []
         editingTripID = nil
         draftHistoryID = route.id
+        draftName = nil
         sectionChoices = [:]
         usesStoredPath = true
         origin = route.origin
@@ -258,6 +266,7 @@ final class RoutePlanner: ObservableObject {
         cancel()
         editingTripID = trip.id
         draftHistoryID = trip.id
+        draftName = trip.name
         draftArrival = trip.arrival ?? .stay
         draftMode = trip.mode
         draftSpeedMPH = trip.speedMPH
@@ -289,9 +298,11 @@ final class RoutePlanner: ObservableObject {
     }
 
     func addWaypoint(_ place: RoutePlace, mode: TravelMode, speedMPH: Double? = nil, insertAlongRoute: Bool = false) {
+        syncPathStops()
         guard waypoints.count < 8, CLLocationCoordinate2DIsValid(place.coordinate) else { return }
         DeveloperLogStore.shared.record("route_stop_inserting", ["count_before": String(waypoints.count),
             "mode": mode.rawValue, "along_route": String(insertAlongRoute)])
+        usesStoredPath = false
         let waypoint = TripWaypoint(name: place.name, point: RoutePoint(place.coordinate))
         if hasSectionSettings { sectionChoices[waypoint.id] = RouteLegChoice(mode: mode, speedMPH: mode.clampedSpeedMPH(speedMPH ?? mode.defaultSpeedMPH)) }
         var insertion = waypoints.count
@@ -350,16 +361,25 @@ final class RoutePlanner: ObservableObject {
 
     var hasSectionSettings: Bool { !sectionChoices.isEmpty }
 
-    func useSingleMovement(mode: TravelMode) {
-        sectionChoices = [:]
-        if usesStoredPath {
-            for index in alternatives.indices {
-                alternatives[index].travelSections = []
-                alternatives[index].storedMode = mode
-            }
-        } else { rebuild(mode: mode) }
+    func renameRoute(_ value: String) {
+        let name = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { return }
+        let clipped = String(name.prefix(120))
+        draftName = clipped
+        for index in alternatives.indices { alternatives[index].name = clipped }
     }
-    func setSectionChoice(_ choice: RouteLegChoice, for id: UUID, defaultMode: TravelMode) {
+
+    func replaceWaypoint(_ id: UUID, with place: RoutePlace, mode: TravelMode) {
+        syncPathStops()
+        guard let index = waypoints.firstIndex(where: { $0.id == id }) else { return }
+        waypoints[index].name = place.name
+        waypoints[index].point = RoutePoint(place.coordinate)
+        usesStoredPath = false
+        rebuild(mode: mode)
+    }
+
+    func setSectionChoice(_ choice: RouteLegChoice, for id: UUID, defaultMode: TravelMode,
+                          pathChoice: RouteLegPathChoice = .recalculate) {
         guard !isLoading, choice.isValid else { return }
         syncPathStops()
         let targets = waypoints.map(\.id) + [RouteLegChoice.destinationID]
@@ -379,13 +399,13 @@ final class RoutePlanner: ObservableObject {
         // Speed changes (and Walk/Run or Cycle/E-bike switches) don't require
         // MapKit. Preserve the path, other legs and old mixed-section backups.
         if let route = selectedRoute,
-           keepsExactPath || previous.mode.routeNetwork == choice.mode.routeNetwork {
+           RouteLegPathPolicy.keepsGeometry(from: previous.mode, to: choice.mode, exactPath: keepsExactPath, choice: pathChoice) {
             var updated = alternatives
             for index in updated.indices {
                 guard let range = RouteLegEditing.range(to: id, stops: updated[index].stops, length: updated[index].track.length),
                       let sections = RouteLegEditing.replacing(updated[index].travelSections, in: range,
                         length: updated[index].track.length, id: id, choice: choice, fallback: fallback) else {
-                    error = "This route has too many movement sections. Use one mode for the route, then edit its legs."
+                    error = "This change exceeds the movement-section limit. Your existing legs are unchanged."
                     return
                 }
                 updated[index].travelSections = sections

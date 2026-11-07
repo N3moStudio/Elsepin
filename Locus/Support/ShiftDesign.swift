@@ -197,7 +197,8 @@ struct ShiftEditorContainer<Content: View>: View {
     @Environment(\.shiftEditorEmbedded) private var embedded
     @ViewBuilder var content: () -> Content
     var body: some View {
-        if embedded { content().navigationBarBackButtonHidden(true) }
+        // Native Back also owns interactive edge-pop. Never hide it in a pushed editor.
+        if embedded { content() }
         else { NavigationStack { content().environment(\.shiftEditorEmbedded, true) } }
     }
 }

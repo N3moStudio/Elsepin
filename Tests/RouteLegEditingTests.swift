@@ -2,6 +2,31 @@ import XCTest
 @testable import SessionPresentation
 
 final class RouteLegEditingTests: XCTestCase {
+    func testDifferentNetworksOfferBothDirectionsOfModeChange() {
+        let changes: [(TravelMode, TravelMode)] = [(.drive, .eBike), (.walk, .drive), (.cycle, .walk), (.walk, .cycle)]
+        for pair in changes {
+            XCTAssertTrue(RouteLegPathPolicy.needsChoice(from: pair.0, to: pair.1, exactPath: false))
+            XCTAssertTrue(RouteLegPathPolicy.keepsGeometry(from: pair.0, to: pair.1, exactPath: false, choice: .keepCurrent))
+            XCTAssertFalse(RouteLegPathPolicy.keepsGeometry(from: pair.0, to: pair.1, exactPath: false, choice: .recalculate))
+        }
+    }
+    func testExactAndSameNetworkPathsDoNotNeedRecalculation() {
+        XCTAssertFalse(RouteLegPathPolicy.needsChoice(from: .drive, to: .walk, exactPath: true))
+        XCTAssertTrue(RouteLegPathPolicy.keepsGeometry(from: .drive, to: .walk, exactPath: true, choice: .recalculate))
+        XCTAssertFalse(RouteLegPathPolicy.needsChoice(from: .eBike, to: .cycle, exactPath: false))
+        XCTAssertTrue(RouteLegPathPolicy.keepsGeometry(from: .walk, to: .run, exactPath: false, choice: .recalculate))
+    }
+    func testKeepingCarPathChangesLegMotionWithoutChangingBoundaries() throws {
+        let id = UUID()
+        let old = [RouteTravelSection(id: id, startMetres: 0, endMetres: 100, mode: .drive, speedMPH: 30),
+                   RouteTravelSection(id: UUID(), startMetres: 100, endMetres: 300, mode: .drive, speedMPH: 40)]
+        let changed = try XCTUnwrap(RouteLegEditing.replacing(old, in: 0...100, length: 300, id: id,
+            choice: .init(mode: .eBike, speedMPH: 10), fallback: .init(mode: .drive, speedMPH: 30)))
+        XCTAssertEqual(changed.map(\.startMetres), old.map(\.startMetres))
+        XCTAssertEqual(changed.map(\.endMetres), old.map(\.endMetres))
+        XCTAssertEqual(changed.map(\.mode), [.eBike, .drive])
+        XCTAssertEqual(changed.map(\.speedMPH), [10, 40])
+    }
     private let walk = RouteLegChoice(mode: .walk, speedMPH: 3)
     private let bike = RouteLegChoice(mode: .eBike, speedMPH: 10)
 
