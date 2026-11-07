@@ -1,7 +1,7 @@
 # Elsepin app map
 
 Current status: [handoff](CURRENT-WORK.md) and [build history](BUILD-HISTORY.md).
-Build 73 is the latest privately validated and delivered route/tray update.
+Build 74 is the latest privately validated and delivered planner/navigation update.
 Historical cleanup: [review](CLEANUP-AND-ORBS-REVIEW.md) and [native progress](NATIVE-PROGRESS.md).
 
 Earlier presentation pass: [UI polish notes](UI-POLISH.md) maps the three-step

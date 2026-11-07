@@ -16,7 +16,9 @@ is the official release. Earlier Shift entries retain their original names and r
   result selection and custom pins; confirm before adding. Exact-path pauses stay
   on their path. Remove collapse arrow when the tray only shows idle guidance.
 - Compatibility, explicit movement confirmation and recovery remain unchanged.
-  Native validation pending; no public release.
+  Private build `b66aad4` passed 634 checks and native app/extension compilation,
+  zero compiler warnings/errors. Delivered build 74 to the Desktop project IPA
+  folder, replacing 73. Phone gesture/layout acceptance remains; no public release.
 
 ## Unreleased — 2.6.1 build 73 (6 November 2026)
 

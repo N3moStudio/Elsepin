@@ -2,7 +2,7 @@
 
 Updated 6 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
 
-## 2.6.1 (74) - simpler planning and explicit path choice - validation pending
+## 2.6.1 (74) - simpler planning and explicit path choice - privately validated/delivered
 
 Cross-network leg changes now offer Keep current path or Recalculate directions.
 The existing travel-section format retains the new speed/mode on unchanged geometry.
@@ -16,8 +16,17 @@ Add Stop's map expands with search and custom-pin selection followed by explicit
 confirmation. Saved automatic routes support searched stops; exact-path pauses
 snap to the unchanged path and still need Add. Idle guidance has no collapse arrow.
 AGENTS/UI-POLISH record grouping by task rather than a card per small control.
-No identity, backup-format, provider or movement-cadence changes. Native checks
-and phone interaction/layout acceptance are pending. No public publication.
+No identity, backup-format, provider or movement-cadence changes. Private run
+`6aeebd6324e1ec23755711eb`, source `b66aad460fca0be505e5a7e98edb019ab38acdf6`,
+passed 634 checks (495 Swift, 104 cloud, 18 Companion, 17 packaging), native app
+and extension compilation and IPA inspection with zero compiler warnings/errors.
+One Windows-only helper skip is excluded. Both bundles are 2.6.1 (74), arm64,
+SDK 27.1. Evidence is in ignored `.build/artifacts/codemagic-6aeebd6324e1ec23755711eb/`.
+Only `Elsepin 2.6.1 build 74.ipa` (18,721,476 bytes) was delivered to the Desktop
+project IPA folder, verified before removing build 73 there. Previous IPA remains
+archived internally; other projects were untouched. No public release/deployment.
+Phone retests: cross-network Keep current path versus Recalculate, back swipe from
+destination/leg/map editors, custom stop selection, arrival/naming menus and idle tray.
 
 ## 2.6.1 (73) - route legs, recents and compact controls - privately validated/delivered
 

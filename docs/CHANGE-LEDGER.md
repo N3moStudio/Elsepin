@@ -14,7 +14,14 @@ movement safeguards. Shared editor navigation no longer hides native Back.
 Full-map selection unwinds before itinerary edits; exact-path pauses remain on
 the original geometry. Source/backup identifiers and optional energy policy stay.
 Tests cover cross-network path choice and unchanged movement-section boundaries.
-Native validation and phone interaction acceptance are pending; no publication.
+Private run `6aeebd6324e1ec23755711eb` at `b66aad4` passed 634 checks (495 Swift,
+104 cloud, 18 Companion, 17 packaging) and native app/extension compilation,
+zero compiler warnings/errors. Both bundles and resources passed IPA inspection.
+Delivered only build 74 after verification, replacing 73 in the Desktop folder.
+The earlier `8bc1200` run also passed but was not delivered; final review added
+surface-respecting expand buttons, removed duplicate Cancel controls and retained
+older saved-path stop limits. Both runs' complete logs remain internal. No public
+publication; phone gesture/layout acceptance is pending.
 
 ## 2.6.1 (73) - editable legs, staged-route protection and compact planning - unreleased
 

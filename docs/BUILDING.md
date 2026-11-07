@@ -27,7 +27,7 @@ does not publish a release, configure Apple account signing or trigger on pushes
 Leave paid billing disabled to stay within the personal account's free allowance.
 
 1. Connect the private Elsepin repository in Codemagic and open its configuration.
-2. Select the intended branch and check for `codemagic.yaml`. For builds 69–73 use
+2. Select the intended branch and check for `codemagic.yaml`. For builds 69–74 use
    `codex/pins-search-69`; `main` still contains the previous app build.
 3. Start **Build Elsepin IPA**. Download the IPA after all steps pass and sign it
    with the existing sideloading method, retaining the extension.
@@ -60,8 +60,8 @@ The workflow is `elsepin-ipa`, `mac_mini_m2`, Xcode 27.1, maximum 30 minutes. Ch
 free allowance before dispatch; leave paid billing disabled and allow queuing behind
 other apps. No push trigger, release publishing or Apple signing account is configured.
 
-Latest validated source: `567e6c5726c3d7c7bffd6e0e4b66d154864ed3d6`, build 73,
-Codemagic run `6aee4fc824e1ec237556f9c4`. Subsequent documentation-only commits
+Latest validated source: `b66aad460fca0be505e5a7e98edb019ab38acdf6`, build 74,
+Codemagic run `6aeebd6324e1ec23755711eb`. Subsequent documentation-only commits
 record that result; see [build history](BUILD-HISTORY.md) for test and delivery evidence.
 
 On this Windows workstation, the authenticated CLI is
@@ -138,7 +138,7 @@ IPA validator checks the compiled bundle IDs and URL scheme.
 
 ## Official versus prerelease builds
 
-The latest validated development source is Elsepin 2.6.1 (73) at `567e6c5` on
+The latest validated development source is Elsepin 2.6.1 (74) at `b66aad4` on
 `codex/pins-search-69`, privately built from GitLab in Codemagic for owner testing. `main`
 still contains build 68; select the branch intentionally.
 See [build history](BUILD-HISTORY.md) for native results and retained local evidence.

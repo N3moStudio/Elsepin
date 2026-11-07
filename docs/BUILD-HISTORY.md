@@ -14,7 +14,30 @@ remain. A verified empty Actions history was followed by fresh run
 or spending-limit annotation. Deleting history did not resolve the billing block.
 No new IPA or release resulted.
 
-## Latest native build and private delivery: 2.6.1 (73) - 6 November 2026
+## Latest native build and private delivery: 2.6.1 (74) - 6 November 2026
+
+[Codemagic run 6aeebd6324e1ec23755711eb](https://codemagic.io/app/6aecefbde7e295d4f44f163e/build/6aeebd6324e1ec23755711eb)
+passed at `b66aad460fca0be505e5a7e98edb019ab38acdf6`, private GitLab branch
+`codex/pins-search-69`, personal M2/Xcode 27.1. All 634 checks passed: 495 Swift,
+104 cloud, 18 Companion, 17 packaging; one Windows-only helper test skipped on
+Mac and excluded. Native app/extension compiled with zero warnings/errors. Both
+bundles are 2.6.1 (74), arm64/device SDK 27.1. Integrity, thirteen icons, helpers,
+notices, requested entitlements and the controlled exit-23 log check passed.
+Complete logs, metadata and receipt: `.build/artifacts/codemagic-6aeebd6324e1ec23755711eb/`.
+
+Only `Elsepin 2.6.1 build 74.ipa` (18,721,476 bytes) was delivered to the Desktop
+project IPA folder, verified before removing build 73 there. Other apps were
+untouched; the prior IPA remains archived. No public release or deployment.
+Phone back-swipe, full-map selection and revised layout remain acceptance checks.
+
+Earlier run `6aeebc2e24e1ec23755711b9` passed the same 634 checks and native build
+at `8bc120085a511793cb6e7d77f2b6c1442d4b5034`. It was not delivered because final
+review added surface/back-control refinements and saved-path stop-limit retention.
+Its full logs are preserved. Free personal M2 allowance was checked (241.8 minutes
+remaining); no paid billing changes. The final run queued behind another project,
+which was not modified or canceled.
+
+## Native build and private delivery: 2.6.1 (73) - 6 November 2026
 
 [Codemagic run 6aee4fc824e1ec237556f9c4](https://codemagic.io/app/6aecefbde7e295d4f44f163e/build/6aee4fc824e1ec237556f9c4)
 passed at source `567e6c5726c3d7c7bffd6e0e4b66d154864ed3d6`, private GitLab branch

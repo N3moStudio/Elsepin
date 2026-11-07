@@ -3,9 +3,9 @@
 Read this before applying new design skills or continuing the video-inspired
 polish. Current implementation and device evidence are in [CURRENT-WORK](CURRENT-WORK.md).
 
-## Build 73 owner-directed planner/tray changes
+## Build 74 planner and navigation rules
 
-Superseded planner details in build 74: remove Whole route/Individual leg settings,
+Current planner: remove Whole route/Individual leg settings,
 Route notes and Edit names & places from planning. Movement lives on the incoming
 leg; arrival behavior lives beneath Destination. Three-dot menus name endpoints
 and stops; Start also offers Name route. Move places on map stays available.
@@ -25,6 +25,8 @@ custom pin. Confirm before adding; defer the nested pop before editing the route
 Exact-path pauses snap the selection to the path and still need Add confirmation.
 Idle guidance alone has no collapse arrow. Device gesture/layout acceptance remains
 separate from compilation.
+
+## Build 73 owner-directed planner/tray changes (historical)
 
 The supplied screenshots approve a smaller map tray and removal of its Settings
 and More buttons. Main Settings remains a tab; Saved/Joystick default shortcuts
