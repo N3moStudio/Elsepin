@@ -141,6 +141,7 @@ struct AddPathStopSheet: View {
     let onAdd: (String, Double, Double) -> String?
     @EnvironmentObject private var session: SpoofSession
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.shiftEditorEmbedded) private var embedded
     @State private var fraction = 0.5
     @State private var name = ""
     @State private var waitSeconds = 60.0
@@ -161,7 +162,7 @@ struct AddPathStopSheet: View {
                     .overlay(alignment: .bottomTrailing) {
                         Button { fullMap = true } label: {
                             Image(systemName: "arrow.up.left.and.arrow.down.right")
-                                .frame(width: 44, height: 44).background(.regularMaterial, in: Circle())
+                                .frame(width: 44, height: 44).locusGlass(.regular, in: Circle())
                         }.buttonStyle(.plain).padding(8).accessibilityLabel("Choose pause on full-screen map")
                     }
                     Text("\(JourneyText.distance(fraction * route.track.length)) from start")
@@ -195,7 +196,7 @@ struct AddPathStopSheet: View {
                 initialized = true
             }
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                if !embedded { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {
                         error = onAdd(name, fraction, waitSeconds)

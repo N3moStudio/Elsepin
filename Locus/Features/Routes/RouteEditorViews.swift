@@ -126,6 +126,7 @@ struct RouteWaypointEditor: View {
     let route: PlannedRoute
     let onSave: (RoutePoint, RoutePoint, [TripWaypoint]) -> Void
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.shiftEditorEmbedded) private var embedded
     @State private var start: RoutePoint
     @State private var finish: RoutePoint
     @State private var stops: [TripWaypoint]
@@ -201,7 +202,7 @@ struct RouteWaypointEditor: View {
                 position = .rect(rect.insetBy(dx: -max(100, rect.width * 0.2), dy: -max(100, rect.height * 0.2)))
             }
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                if !embedded { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { onSave(start, finish, stops); dismiss() }
                         .disabled(draggingID != nil)

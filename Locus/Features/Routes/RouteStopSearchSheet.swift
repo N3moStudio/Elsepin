@@ -107,7 +107,7 @@ struct RouteStopSearchSheet: View {
         .overlay(alignment: .bottomTrailing) {
             Button { searchFocused = false; fullMap = true } label: {
                 Image(systemName: "arrow.up.left.and.arrow.down.right")
-                    .frame(width: 44, height: 44).background(.regularMaterial, in: Circle())
+                    .frame(width: 44, height: 44).locusGlass(.regular, in: Circle())
             }.buttonStyle(.plain).padding(8).accessibilityLabel("Choose stop on full-screen map")
         }
         .accessibilityLabel("Planned route and matching stops. The same places are listed below.")

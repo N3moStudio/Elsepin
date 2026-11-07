@@ -280,13 +280,13 @@ struct RoutePlannerSheet: View {
             }
             HStack {
                 Button {
-                    if hasJourney || (planner.usesStoredPath && route?.source.isAutomatic == false) { showPathStop = true }
+                    if hasJourney || (planner.usesStoredPath && (route?.source.isAutomatic == false || timelineStops.count >= 8)) { showPathStop = true }
                     else { replacingStopID = nil; stopSearchRoute = planner.selectedRoute; searchEndpoint = .stop }
                 } label: {
                     Label(hasJourney ? "Add a stop ahead" : "Add stop", systemImage: "plus.circle")
                         .frame(minHeight: 44)
                 }
-                .disabled(hasJourney ? !session.canAddRouteStop || timelineStops.count >= 20 : timelineStops.count >= (planner.usesStoredPath && route?.source.isAutomatic == false ? 20 : 8))
+                .disabled(hasJourney ? !session.canAddRouteStop || timelineStops.count >= 20 : timelineStops.count >= (planner.usesStoredPath ? 20 : 8))
                 Spacer()
                 if !hasJourney { Menu {
                         Button("Swap start and destination", systemImage: "arrow.up.arrow.down") { planner.swap(mode: displayMode) }
