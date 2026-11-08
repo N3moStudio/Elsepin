@@ -3,7 +3,7 @@
 Read this before applying new design skills or continuing the video-inspired
 polish. Current implementation and device evidence are in [CURRENT-WORK](CURRENT-WORK.md).
 
-## Build 74 feedback follow-up (local, unbuilt)
+## Build 75 feedback follow-up (privately compiled; device checks pending)
 
 - A route label does not add a saved map pin. Say so in its editor; saved/recent
   route snapshots may retain the label. Saving a route and naming a Library pin

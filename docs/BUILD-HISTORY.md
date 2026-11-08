@@ -1,8 +1,26 @@
 # Elsepin build history
 
-Updated **6 November 2026**, America/Los_Angeles. Read the [full changelog](../CHANGELOG.md)
+Updated **7 November 2026**, America/Los_Angeles. Read the [full changelog](../CHANGELOG.md)
 for feature details. This page separates compilation, test artifacts and published
 releases so a successful check is not mistaken for an available download.
+
+## 7 November 2026 - Elsepin 2.6.1 (75), private test IPA
+
+Final Codemagic run `6aeffd199b54af17623a586e`, source
+`fc3887a00b85eeed97d911461ffc07a46e3d8481`, private GitLab branch
+`codex/pins-search-69`. All 640 checks passed: 501 Swift, 104 cloud, 18 Companion,
+17 packaging; one Windows-only case skipped on Mac and excluded. Native app and
+Live Activity extension compiled with zero warnings/errors. IPA verified as
+arm64, SDK 27.1, both bundles 2.6.1 (75), expected compatibility IDs/entitlements,
+all 13 icon choices and bundled helpers. Free personal Mac M2 allowance used;
+no paid subscription or payment method enabled.
+
+Only `Elsepin 2.6.1 build 75.ipa` (18,767,708 bytes) was delivered to
+`C:/Users/naith/Desktop/ipa/My Projects (N3mo Studio)`, replacing only build 74.
+First run `6aeffac04ed44a8f85aaa7c7` also compiled/tests passed but had one weak
+capture warning; fixed before final rebuild/delivery. Both complete log bundles
+remain in ignored `.build/artifacts/`. No public release/deployment. A brief phone
+route/satellite zoom test remains necessary to assess the reported crashes.
 
 **Workflow history cleanup, 4 November:** at the owner's request, all 15 previous
 GitHub workflow runs were deleted after archiving their metadata, annotations

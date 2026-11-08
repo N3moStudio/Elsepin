@@ -1,6 +1,6 @@
 # Import and export — official 2.5.7
 
-## Build 74 follow-up review (local, unbuilt)
+## Build 75 review (privately built; phone import check pending)
 
 Overview now groups only selected additions and current-to-applied setting values;
 it does not compare with app defaults. Speed descriptions use the units that will
@@ -9,7 +9,8 @@ the current effective `material`; unchanged legacy values are not false changes.
 The backup wire format, old files, IDs, unchecked-settings default and duplicate
 handling are unchanged. A current route's smoothing is saved with that route;
 settings exports continue to contain the future-route smoothing default.
-Tests were expanded in BackupImportReviewTests; native/Swift execution is pending.
+The expanded BackupImportReviewTests passed within 501 Swift tests, alongside
+native app/extension compilation. Phone import/layout acceptance is still separate.
 
 ## Build 73 retired tray shortcut compatibility
 

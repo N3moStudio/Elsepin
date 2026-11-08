@@ -1,15 +1,17 @@
 # Validation
 
-## Current: build 74 feedback and next-build checks (7 November 2026)
+## Current: build 75 phone checks (7 November 2026)
 
-Latest delivered IPA is still build 74. The follow-up fixes are local source only;
-run Swift tests and a native app/extension compile before making a test build.
+Latest delivered IPA is **2.6.1 build 75**, privately compiled and package-verified
+after 640 passing automated checks, with zero compiler warnings/errors.
 The owner has confirmed preview pin-tap protection, Recents reopening, connection
 retry and ending a route while holding location. Earlier pairing/code access and
 recently-deleted selection also worked. No need to repeat setup or wipe data.
 Idle warmth settled, which does not establish measured energy use.
 
-After a matching new test build exists, use this short regression pass:
+The owner wants minimal testing. **At minimum, do item 3 once on build 75**:
+it targets the repeated phone-only crash that automated tests cannot rule out.
+The rest is a short optional regression pass rather than another full setup tour:
 
 1. **Planner/keyboard:** Add a searched stop, go Back, label Start, then Cancel
    and Save once each. No search bar or extra X may remain on the planner. Labels

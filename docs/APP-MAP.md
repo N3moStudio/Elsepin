@@ -1,11 +1,11 @@
 # Elsepin app map
 
 Current status: [handoff](CURRENT-WORK.md) and [build history](BUILD-HISTORY.md).
-Build 74 is the latest privately validated and delivered planner/navigation update.
-There is an unbuilt local follow-up; see CURRENT-WORK before relying on that build's evidence.
+Build 75 is the latest privately validated and delivered feedback update.
+See CURRENT-WORK for its exact source/build evidence and pending phone acceptance.
 Historical cleanup: [review](CLEANUP-AND-ORBS-REVIEW.md) and [native progress](NATIVE-PROGRESS.md).
 
-Local feedback changes: search ownership is in
+Build 75 feedback changes: search ownership is in
 `Locus/Features/Routes/RouteSearchField.swift` and the two search sheets. Prepared
 write confirmation and per-route smoothing live in `Locus/Engine/SpoofSession.swift`;
 `RootView.PreparedRouteControls` only removes the matching preview on confirmation.

@@ -23,8 +23,10 @@ is the official release. Earlier Shift entries retain their original names and r
 - Replace import paragraphs with grouped selected additions and exact setting
   changes. Fix garbled separators and legacy surface comparisons; retain old
   backup compatibility and prevent unchanged values appearing as new changes.
-- Local Python/resource/syntax checks passed. Owner requested private build 75;
-  Swift tests, native compilation and IPA inspection are pending. No public release.
+- Private build 75 passed 640 checks, native app/extension compilation and IPA
+  inspection with zero compiler warnings/errors. Delivered to the Desktop project
+  IPA folder, replacing 74. First-build callback warning was fixed and rebuilt.
+  Zoom-crash and gesture acceptance still need a phone check. No public release.
 
 ## Unreleased — 2.6.1 build 74 (6 November 2026)
 

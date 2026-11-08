@@ -5,7 +5,7 @@ is the last recorded public release. Earlier entries retain their original valid
 
 See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all recorded 2.5.x/2.6.0 native runs.
 
-## Build 74 feedback follow-up - local source only, 7 November
+## Build 75 - feedback follow-up and private delivery, 7 November
 
 Five owner screenshots show a lingering native search control after route-label
 editing and corrupt import separators. The owner also reports map zoom-out exits,
@@ -28,10 +28,19 @@ grouped by category. Legacy glassPanel compares with the effective current surfa
 No backup schema/version or identifier changes; the prebuild encoding guard now
 rejects corrupted middle-dot/NBSP sequences as well as prior punctuation patterns.
 
-17 Python tests, identity/assets, diff check and parsing of 20 changed Swift files
-passed. New Swift cases were authored but not executed (no local Swift/Xcode).
-Native build, gestures/layout and crash resolution are pending. No push, build,
-IPA replacement, release or deployment. [Current checks](TESTING.md).
+Local Python, identity/assets, diff and 20-file Swift syntax checks passed first.
+Owner then requested the IPA. Private run `6aeffac04ed44a8f85aaa7c7` at `39f124f`
+passed tests/native compilation but exposed one ImplicitStrongCapture warning.
+An explicit weak planner capture plus captured route ID removed that warning.
+Final run `6aeffd199b54af17623a586e` at `fc3887a` passed 640 checks (501 Swift,
+104 cloud, 18 Companion, 17 packaging) and native app/extension compilation with
+zero compiler warnings/errors. One Mac-inapplicable Windows helper skip is excluded.
+Complete original logs and successful receipt remain under `.build/artifacts/`.
+Both bundles verified as 2.6.1 (75), arm64, SDK 27.1; package identities, groups,
+resources and helpers passed. Delivered only the 18,767,708-byte IPA to the Desktop
+project folder after verification and removed only Elsepin build 74 there. Updated
+private GitLab; no public release/deployment. Device zoom-crash resolution and UI
+acceptance remain pending. [Current checks](TESTING.md).
 
 ## 2.6.1 (74) - planner organization and navigation - unreleased
 

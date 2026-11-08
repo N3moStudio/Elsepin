@@ -2,11 +2,12 @@
 
 Updated 7 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
 
-## Build 75 - device-feedback follow-up, private build requested
+## Build 75 - device-feedback follow-up, privately validated and delivered
 
-Current branch remains `codex/pins-search-69`. Build 74 is still the latest
-delivered IPA. Owner requested a private build 75 and Desktop IPA delivery on
-7 November; no public publication is authorized. These fixes are not in build 74:
+Current branch remains `codex/pins-search-69`. Latest delivered IPA is **2.6.1 (75)**,
+built from `fc3887a00b85eeed97d911461ffc07a46e3d8481` by private Codemagic run
+`6aeffd199b54af17623a586e`. Owner requested this test build on 7 November;
+no public publication is authorized. It includes these fixes after build 74:
 
 - Route labels explicitly belong only to the route, not the saved pin library.
   Search fields now belong to their editor views rather than an ancestor native
@@ -28,11 +29,19 @@ delivered IPA. Owner requested a private build 75 and Desktop IPA delivery on
   changes. Fix corrupt separators and legacy glassPanel comparison with the
   actual surface. Existing schema, identifiers and selective import stay intact.
 
-Validation: 17 Python checks, identity/appearance checks, diff whitespace check,
-and syntax parsing of 20 changed Swift files passed. Added/extended Swift tests
-cover import grouping/units/legacy surface and invalid viewport values, but were
-NOT executed: no local Swift/Xcode toolchain. No cloud run, push, new IPA or
-release. Native compilation and device verification remain required.
+Validation: 640 automated checks passed (501 Swift, 104 cloud, 18 Companion,
+17 packaging). One Windows-only helper case was skipped on the Mac and excluded
+from that count. Native app/extension compilation passed with zero compiler
+warnings/errors. Both arm64 bundles are 2.6.1 (75), SDK 27.1; identities,
+entitlements, helper downloads and all 13 icon choices passed IPA inspection.
+Complete original logs/receipt are in ignored
+`.build/artifacts/codemagic-6aeffd199b54af17623a586e/`.
+The first run `6aeffac04ed44a8f85aaa7c7` passed all tests and compilation but had
+one callback-ownership warning; final source fixed it and the full run was repeated.
+Only `Elsepin 2.6.1 build 75.ipa` (18,767,708 bytes) was delivered to the Desktop
+project IPA folder after verification, replacing 74; other projects were untouched.
+Private GitLab source is updated; no public release or deployment. Phone crash,
+gesture/layout and battery acceptance remain distinct from these build checks.
 
 Owner confirms staged routes survive map taps and reopen from Recents; connection
 retry and ending a route while holding location worked. Pairing/code access and
