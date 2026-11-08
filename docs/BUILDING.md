@@ -6,6 +6,12 @@ No Apple signing credentials or deployed helper are included.
 
 ## GitHub Actions — works from Windows
 
+**Current status, 7 November:** GitHub repository access has been restored and the
+private `codex/pins-search-69` branch is synced through build 75. Actions run
+`42448203209` was still rejected before execution for failed payments or a spending
+limit. Account recovery alone did not restore usable build access. Keep Codemagic
+as the working build path; do not change billing or repeatedly retry that block.
+
 1. Open the private Elsepin repository and choose **Actions → Build Elsepin IPA → Run workflow**.
 2. Select `main` (or the specific branch you intend to build). There is no packaging checkbox: every run checks, builds and packages the IPA.
 3. After success, download **Elsepin <version>.ipa** under Artifacts. This is the only downloadable build artifact; there is no outer ZIP to extract. Sign it with SideStore and retain the extension.
@@ -40,18 +46,21 @@ source control. Since 5 November, the delivery folder is
 Elsepin test IPA, replacing older Elsepin IPAs after a complete replacement.
 Leave other apps untouched; no checksum sidecars, ZIP bundles or diagnostic files.
 
-The GitHub workflow remains available. Removing `codemagic.yaml` removes this
+The GitHub workflow remains available once its account restriction is resolved. Removing `codemagic.yaml` removes this
 alternative without changing app behavior. Account allowance and runner availability
 still apply; see [Codemagic pricing](https://docs.codemagic.io/billing/pricing/).
 
 ## Current private source and API build access
 
-GitHub rejected uploads after an account suspension. On 5 November the owner
+GitHub initially rejected uploads after an account suspension. On 5 November the owner
 resumed private builds with GitLab and Codemagic, without browser/desktop automation.
 Use the existing local folder and `gitlab` remote:
 `https://gitlab.com/gajula.naithik/elsepin.git`. GitLab CI/Pages are disabled.
 `codex/pins-search-69` tracks this remote; `remote.pushDefault=gitlab` prevents a
-normal push from targeting suspended GitHub. `origin` and local main are retained.
+normal push from changing the fallback hosting arrangement. `origin` and local main
+are retained. On 7 November, the owner reported GitHub restored; a verified private
+push succeeded, syncing `origin/codex/pins-search-69`. Its Actions run was still
+blocked by billing/spending-limit checks. Use explicit remote names when syncing.
 
 Codemagic app: `6aecefbde7e295d4f44f163e`, personal account owner
 `6aecdf671da16ae2cffff6c7`. A dedicated read-only repository deploy key gives the

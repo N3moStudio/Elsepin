@@ -2,6 +2,23 @@
 
 Updated 7 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
 
+## GitHub access restored; Actions still account-blocked
+
+Owner reported the GitHub account unbanned and requested a sync/build attempt.
+Verified `N3moStudio/Elsepin` remains private, Actions enabled, and push access
+works. Fast-forwarded `origin/codex/pins-search-69` from `ea41165` to `bdbc5da`,
+matching the existing local/GitLab source and build-75 handoff. GitHub `main`
+was not changed. Local checkout/branch and `remote.pushDefault=gitlab` remain.
+
+[Run 42448203209](https://github.com/N3moStudio/Elsepin/actions/runs/42448203209)
+used `bdbc5da4476c3e91070ff0dae1479a30c4a0ede1` but was rejected before any step
+ran. Check annotation: "The job was not started because recent account payments
+have failed or your spending limit needs to be increased." This does not identify
+an exact remaining-minutes balance. Do not repeat the unchanged rejected job or
+change billing. Existing Codemagic build 75 is complete (not still queued), and
+its verified Desktop IPA remains unchanged. No release/deployment or other build
+was cancelled. Both private remotes retain the same production source.
+
 ## Build 75 - device-feedback follow-up, privately validated and delivered
 
 Current branch remains `codex/pins-search-69`. Latest delivered IPA is **2.6.1 (75)**,

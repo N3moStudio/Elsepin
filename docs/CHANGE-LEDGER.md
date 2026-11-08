@@ -5,6 +5,18 @@ is the last recorded public release. Earlier entries retain their original valid
 
 See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all recorded 2.5.x/2.6.0 native runs.
 
+## GitHub source sync and blocked Actions attempt - 7 November
+
+Owner reported account reinstatement and authorized source sync plus a GitHub
+build attempt. Private repository access verified; fast-forwarded the existing
+test branch from `ea41165` to `bdbc5da`, with no main change. Run `42448203209`
+was rejected before execution by GitHub's failed-payment/spending-limit check.
+Account access works; Actions availability is still blocked. Preserved GitLab,
+Codemagic, push defaults and verified build 75 delivery. No code changes, billing
+changes, release, deployment or cancellation of another build. Updated stale
+account-suspension guidance so future chats can use GitHub source access without
+mistaking it for restored build allowance.
+
 ## Build 75 - feedback follow-up and private delivery, 7 November
 
 Five owner screenshots show a lingering native search control after route-label

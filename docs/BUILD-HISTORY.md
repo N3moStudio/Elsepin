@@ -4,6 +4,19 @@ Updated **7 November 2026**, America/Los_Angeles. Read the [full changelog](../C
 for feature details. This page separates compilation, test artifacts and published
 releases so a successful check is not mistaken for an available download.
 
+## 7 November 2026 - GitHub restored/synced; build attempt blocked
+
+Owner requested another GitHub build without interrupting the Codemagic fallback.
+`N3moStudio/Elsepin` remained private; push access and Actions were enabled.
+Fast-forwarded `origin/codex/pins-search-69` through `bdbc5da` (build 75 code and
+handoff); no force push or main change. Manual
+[run 42448203209](https://github.com/N3moStudio/Elsepin/actions/runs/42448203209)
+failed before any step ran. Job/check `128631552031` reported failed recent account
+payments or a spending limit needing increase. This is an account restriction,
+not a compiler/test failure or evidence of the exact remaining minutes.
+No billing changes or repeated attempts; no new IPA from GitHub. Existing verified
+Codemagic build 75 and its Desktop delivery were preserved; no release/deployment.
+
 ## 7 November 2026 - Elsepin 2.6.1 (75), private test IPA
 
 Final Codemagic run `6aeffd199b54af17623a586e`, source
