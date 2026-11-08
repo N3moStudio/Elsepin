@@ -65,7 +65,6 @@ final class BackupImportReviewTests: XCTestCase {
         let review = BackupImportReview(backup: backup, current: try context())
         XCTAssertEqual(backup.included, [.settings])
         XCTAssertTrue(backup.places.isEmpty && backup.trips.isEmpty && (backup.areas ?? []).isEmpty)
-        XCTAssertEqual(review.title, "Settings Import Overview")
         XCTAssertEqual(review.changes.count, 24)
         XCTAssertEqual(review.changedSettings.count, 19)
         XCTAssertEqual(try review.plan(review.defaultSelection).count, 0)
@@ -211,7 +210,7 @@ final class BackupImportReviewTests: XCTestCase {
         changed = original; changed.areas = try sample("Shift-Routes-Areas-Test").areas ?? []
         XCTAssertNotEqual(original, changed)
     }
-    func testOverviewCountsDifferencesAndChangedSettingsComeFirst() throws {
+    func testOverviewContainsOnlySelectedNewItemsAndSettings() throws {
         var backup = try sample("Shift-Routes-Areas-Test")
         backup.preferences = try sample("Shift-Settings-Test").preferences
         backup.categories = [.settings, .places, .trips]
@@ -220,10 +219,74 @@ final class BackupImportReviewTests: XCTestCase {
         current.trips = [backup.trips[0]]
         current.areas = [try XCTUnwrap(backup.areas?.first)]
         let review = BackupImportReview(backup: backup, current: current)
-        XCTAssertEqual(review.title, "Settings & Library Import Overview")
-        XCTAssertTrue(review.overview.contains("1 new routes Â· 1 new pins Â· 1 new areas Â· 19 different settings"))
+        let initial = try review.plan(review.defaultSelection)
+        XCTAssertEqual(initial.summary, "1 pin · 1 route · 1 area")
+        XCTAssertTrue(review.settingChanges(in: initial).isEmpty)
+        var selected = review.defaultSelection
+        selected.places = []
+        selected.settings = [.smoothMovement, .speedUnit]
+        let plan = try review.plan(selected)
+        XCTAssertEqual(plan.summary, "1 route · 1 area · 2 settings")
+        XCTAssertEqual(Set(review.settingChanges(in: plan).map(\.key)), [.smoothMovement, .speedUnit])
         XCTAssertEqual(review.changes.prefix(19).filter(\.changesValue).count, 19)
         XCTAssertTrue(review.changes.dropFirst(19).allSatisfy { !$0.changesValue })
+    }
+    func testOverviewUsesAppliedSpeedUnitsAndGroupsEachSelectedSettingOnce() throws {
+        let current = try context()
+        let review = BackupImportReview(backup: try sample("Shift-Settings-Test"), current: current)
+        let plan = try review.plan(BackupImportSelection(settings: [.walkSpeed]))
+        let changes = review.settingChanges(in: plan)
+        let change = try XCTUnwrap(changes.first)
+        XCTAssertEqual(changes.count, 1)
+        XCTAssertEqual(change.key, .walkSpeed)
+        XCTAssertEqual(change.key.group, .movement)
+        XCTAssertEqual(change.before, BackupSettingKey.walkSpeed.description(in: current.preferences))
+        XCTAssertEqual(change.after, "6.4 km/h")
+        XCTAssertEqual(plan.summary, "1 setting")
+        let withUnits = try review.plan(BackupImportSelection(settings: [.walkSpeed, .speedUnit]))
+        XCTAssertEqual(review.settingChanges(in: withUnits).first { $0.key == .walkSpeed }?.after, "4.0 mph")
+        let grouped = BackupSettingGroup.allCases.flatMap { group in changes.filter { $0.key.group == group }.map(\.key) }
+        XCTAssertEqual(grouped, [.walkSpeed])
+    }
+    func testOverviewComparesCurrentSettingEvenWhenImportRestoresDefault() throws {
+        var backup = try sample("Shift-Settings-Test")
+        backup.preferences?.display?.mapPinSize = 34
+        var current = try context()
+        current.preferences.display?.mapPinSize = 56
+        let review = BackupImportReview(backup: backup, current: current)
+        let plan = try review.plan(BackupImportSelection(settings: [.mapPinSize]))
+        let change = try XCTUnwrap(review.settingChanges(in: plan).first)
+        XCTAssertEqual(change.key.group, .appearanceAndMap)
+        XCTAssertEqual(change.before, "56 points")
+        XCTAssertEqual(change.after, "34 points")
+        current.preferences.display?.mapPinSize = 34
+        let same = BackupImportReview(backup: backup, current: current)
+        XCTAssertTrue(same.settingChanges(in: try same.plan(BackupImportSelection(settings: [.mapPinSize]))).isEmpty)
+    }
+    func testLegacyGlassFlagComparesActualCurrentSurfaceAndAppliesSelectively() throws {
+        var backup = try sample("Shift-Settings-Test")
+        backup.preferences?.material = nil
+        backup.preferences?.glassPanel = false
+        var current = try context()
+        current.preferences.material = .solid
+        current.preferences.glassPanel = true // Retired stored flag must not override the current surface.
+        let same = BackupImportReview(backup: backup, current: current)
+        XCTAssertFalse(same.changedSettings.contains(.glassPanel))
+        XCTAssertEqual(try same.plan(BackupImportSelection(settings: [.glassPanel])).count, 0)
+        current.preferences.material = .glass
+        let review = BackupImportReview(backup: backup, current: current)
+        let plan = try review.plan(BackupImportSelection(settings: [.glassPanel]))
+        XCTAssertEqual(review.settingChanges(in: plan).first?.before, "On")
+        XCTAssertEqual(review.settingChanges(in: plan).first?.after, "Off")
+        XCTAssertEqual(plan.preferences?.material, .solid)
+        XCTAssertEqual(plan.preferences?.speedUnit, current.preferences.speedUnit)
+        backup.preferences?.material = .solid
+        XCTAssertFalse(BackupImportReview(backup: backup, current: current).changes.contains { $0.key == .glassPanel })
+    }
+    func testSummaryHandlesPluralAndEmptySelections() throws {
+        let review = BackupImportReview(backup: try sample("Shift-Routes-Areas-Test"), current: try context())
+        XCTAssertEqual(try review.plan(review.defaultSelection).summary, "2 pins · 2 routes · 2 areas")
+        XCTAssertEqual(try review.plan(BackupImportSelection()).summary, "No changes selected")
     }
     func testOnlySelectedSettingsNeedAStoppedSession() throws {
         let library = BackupImportReview(backup: try sample("Shift-Routes-Areas-Test"), current: try context())

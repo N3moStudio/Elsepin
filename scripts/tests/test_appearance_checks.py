@@ -72,9 +72,11 @@ class IPAIconTests(unittest.TestCase):
             source = folder / 'Example.swift'
             source.write_text('let title = "Stopping\u2026 Caf\u00e9"', encoding='utf-8')
             check_appearance.check_source_encoding(root)
-            source.write_text('let title = "Stopping\u00e2\u20ac\u00a6"', encoding='utf-8')
-            with self.assertRaisesRegex(ValueError, 'Corrupted UI text encoding'):
-                check_appearance.check_source_encoding(root)
+            for corrupt in ('Stopping\u00e2\u20ac\u00a6', '1 pin\u00c2\u00b7 1 route', '1\u00c2\u00a0pin'):
+                with self.subTest(corrupt=corrupt):
+                    source.write_text('let title = "' + corrupt + '"', encoding='utf-8')
+                    with self.assertRaisesRegex(ValueError, 'Corrupted UI text encoding'):
+                        check_appearance.check_source_encoding(root)
     def test_rejects_upstream_identity_and_extension_mismatch(self):
         for wrong_id in ['com.chrismack.locus', 'com.n3mostudio.shift.other']:
             info, files = fixture()

@@ -83,7 +83,9 @@ struct MapHomeView: View {
         // A flat map keeps touch coordinates and the drawn path on one plane.
         // Route holds already arbitrate with map gestures. Reconfiguring the
         // map's recognizers from inside their .began callback is reentrant.
-        pinAdjusting ? [] : [.pan, .zoom, .rotate]
+        // Keep MapKit's recognizers stable during a pin hold, too. The native
+        // hold arbitrates single-finger panning; a second finger cancels it.
+        [.pan, .zoom, .rotate]
     }
     private var canSelectRouteMarker: Bool {
         session.activeRoute != nil && !planner.isDrawing && session.canEditRouteMovement && !session.status.isDropped
@@ -100,9 +102,8 @@ struct MapHomeView: View {
         session.savedPins.first { RoutePoint($0.coordinate).distance(to: RoutePoint(coordinate)) <= 5 }
     }
 
-    private func pinAdjustmentGesture(_ proxy: MapProxy) -> MapPinAdjustmentGesture {
+    private func pinAdjustmentGesture() -> MapPinAdjustmentGesture {
         MapPinAdjustmentGesture(enabled: canAdjustPin, pin: session.pin,
-            project: { proxy.convert($0, to: .global) }, coordinate: { proxy.convert($0, from: .global) },
             onBegan: {
                 pinAdjustmentCamera = sketchViewport.camera?.copy() as? MKMapCamera
                 pinAdjusting = true
@@ -191,8 +192,8 @@ struct MapHomeView: View {
         // Native recognizer representables use gesture(_:). Their UIKit
         // delegates handle simultaneous recognition with the map's gestures.
         baseMap
-            .gesture(pinTapGesture(proxy))
-            .gesture(pinAdjustmentGesture(proxy))
+            .gesture(pinTapGesture)
+            .gesture(pinAdjustmentGesture())
             .gesture(routePressGesture)
     }
 
@@ -201,6 +202,10 @@ struct MapHomeView: View {
             .onMapCameraChange(frequency: .onEnd) { context in
                 visibleMapRect = context.rect
                 refreshSavedPins(session.savedPins)
+                DeveloperLogStore.shared.record("map_viewport_settled", [
+                    "style": String(session.mapStyleIndex), "distance": String(context.camera.distance),
+                    "visible_pins": String(visibleSavedPins.count), "saved_areas": String(savedMapAreas.count),
+                    "route": String(displayedRoute != nil), "pin_adjusting": String(pinAdjusting)])
             }
             .onMapCameraChange(frequency: .continuous) { context in
                 mapCameraChanged(context.camera, proxy: proxy)
@@ -216,6 +221,9 @@ struct MapHomeView: View {
 
     private func mapCameraChanged(_ camera: MapCamera, proxy: MapProxy) {
         guard visualUpdatesEnabled else { return }
+        guard MapViewportSafety.validCamera(latitude: camera.centerCoordinate.latitude,
+            longitude: camera.centerCoordinate.longitude, distance: camera.distance,
+            pitch: camera.pitch, heading: camera.heading) else { return }
         session.updateJoystickMapHeading(camera.heading)
         updateMarkerProjection(proxy)
         sketchViewport.camera = MKMapCamera(lookingAtCenter: camera.centerCoordinate,
@@ -238,12 +246,11 @@ struct MapHomeView: View {
         updateMarkerProjection(proxy)
     }
 
-    private func pinTapGesture(_ proxy: MapProxy) -> MapPinTapGesture {
-        MapPinTapGesture(enabled: canPlacePin) { nativeCoordinate, globalPoint in
+    private var pinTapGesture: MapPinTapGesture {
+        MapPinTapGesture(enabled: canPlacePin) { coordinate in
             guard canPlacePin else { return }
-            guard let coordinate = nativeCoordinate ?? proxy.convert(globalPoint, from: .global) else { return }
             followMovement = false
-            DeveloperLogStore.shared.record("map_pin_input", ["projection": nativeCoordinate == nil ? "global fallback" : "native map"])
+            DeveloperLogStore.shared.record("map_pin_input", ["projection": "native map"])
             var transaction = Transaction(); transaction.disablesAnimations = true
             withTransaction(transaction) {
                 selectedSavedPin = nil
@@ -454,6 +461,9 @@ struct MapHomeView: View {
             savedMapAreas = areas.map(SavedMapArea.init)
         }
         .onChange(of: preferences.showSavedPinsOnMap) { _, _ in refreshSavedPins(session.savedPins) }
+        .onChange(of: session.mapStyleIndex) { _, value in
+            DeveloperLogStore.shared.record("map_style_changed", ["style": String(value), "route": String(displayedRoute != nil)])
+        }
         .onReceive(NotificationCenter.default.publisher(for: .locusDrawRoute)) { _ in beginDrawing() }
         .onChange(of: incomingSearch, initial: true) { _, requested in
             guard requested else { return }
@@ -578,7 +588,8 @@ struct MapHomeView: View {
             if markerScreenPoint != nil { markerScreenPoint = nil }
             return
         }
-        let point = proxy.convert(route.track.point(at: selected.metres).coordinate, to: .named("routeMap"))
+        let projected = proxy.convert(route.track.point(at: selected.metres).coordinate, to: .named("routeMap"))
+        let point = projected.flatMap { $0.x.isFinite && $0.y.isFinite ? $0 : nil }
         if markerScreenPoint != point { markerScreenPoint = point }
     }
 
@@ -888,7 +899,7 @@ private struct RouteMarkerTouchLayer: UIViewRepresentable {
 /// sneak in through a surrounding SwiftUI coordinate space.
 private struct MapPinTapGesture: UIGestureRecognizerRepresentable {
     var enabled: Bool
-    var onTap: (CLLocationCoordinate2D?, CGPoint) -> Void
+    var onTap: (CLLocationCoordinate2D) -> Void
     func makeCoordinator(converter: CoordinateSpaceConverter) -> Coordinator { Coordinator() }
     func makeUIGestureRecognizer(context: Context) -> PinTapRecognizer {
         let tap = PinTapRecognizer()
@@ -905,8 +916,8 @@ private struct MapPinTapGesture: UIGestureRecognizerRepresentable {
         if tap.isEnabled != enabled { tap.isEnabled = enabled }
     }
     func handleUIGestureRecognizerAction(_ tap: PinTapRecognizer, context: Context) {
-        guard enabled, tap.state == .ended else { return }
-        onTap(tap.coordinate, context.converter.location(in: .global))
+        guard enabled, tap.state == .ended, let coordinate = tap.coordinate else { return }
+        onTap(coordinate)
     }
     final class Coordinator: NSObject, UIGestureRecognizerDelegate {
         func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
@@ -929,8 +940,9 @@ private struct MapPinTapGesture: UIGestureRecognizerRepresentable {
                 while let view = ancestor {
                     if let map = view as? MKMapView {
                         let point = touch.location(in: map)
-                        let value = map.convert(point, toCoordinateFrom: map)
-                        if map.bounds.contains(point), CLLocationCoordinate2DIsValid(value) { coordinate = value }
+                        if map.bounds.contains(point) {
+                            coordinate = NativeRouteTouch(map: map, point: point).coordinate
+                        }
                         break
                     }
                     ancestor = view.superview

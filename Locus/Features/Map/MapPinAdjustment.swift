@@ -5,14 +5,12 @@ import SwiftUI
 struct MapPinAdjustmentGesture: UIGestureRecognizerRepresentable {
     var enabled: Bool
     var pin: CLLocationCoordinate2D?
-    var project: (CLLocationCoordinate2D) -> CGPoint?
-    var coordinate: (CGPoint) -> CLLocationCoordinate2D?
     var onBegan: () -> Void
     var onMoved: (CLLocationCoordinate2D) -> Void
     var onEnded: (CLLocationCoordinate2D?, Bool) -> Void
 
     func makeCoordinator(converter: CoordinateSpaceConverter) -> Coordinator {
-        Coordinator(parent: self, location: { converter.location(in: .global) })
+        Coordinator(parent: self)
     }
     func makeUIGestureRecognizer(context: Context) -> UILongPressGestureRecognizer {
         let hold = UILongPressGestureRecognizer()
@@ -28,7 +26,6 @@ struct MapPinAdjustmentGesture: UIGestureRecognizerRepresentable {
     }
     func updateUIGestureRecognizer(_ hold: UILongPressGestureRecognizer, context: Context) {
         context.coordinator.parent = self
-        context.coordinator.location = { context.converter.location(in: .global) }
         if hold.isEnabled != enabled { hold.isEnabled = enabled }
     }
     func handleUIGestureRecognizerAction(_ hold: UILongPressGestureRecognizer, context: Context) {
@@ -40,7 +37,7 @@ struct MapPinAdjustmentGesture: UIGestureRecognizerRepresentable {
         switch hold.state {
         case .began:
             guard enabled, let pin, let anchor = coordinator.projected(pin) else { return }
-            let finger = coordinator.pointer(hold)
+            guard let finger = coordinator.pointer(hold) else { return }
             coordinator.offset = CGPoint(x: anchor.x - finger.x, y: anchor.y - finger.y)
             coordinator.dragging = true
             onBegan()
@@ -55,28 +52,29 @@ struct MapPinAdjustmentGesture: UIGestureRecognizerRepresentable {
 
     final class Coordinator: NSObject, UIGestureRecognizerDelegate {
         var parent: MapPinAdjustmentGesture
-        var location: () -> CGPoint
         weak var map: MKMapView?
         var offset = CGPoint.zero
         var dragging = false
-        init(parent: MapPinAdjustmentGesture, location: @escaping () -> CGPoint) {
-            self.parent = parent; self.location = location
+        init(parent: MapPinAdjustmentGesture) {
+            self.parent = parent
         }
-        func pointer(_ hold: UIGestureRecognizer) -> CGPoint { map.map { hold.location(in: $0) } ?? location() }
+        // UIKit delegates can outlive SwiftUI's event graph during zoom/style
+        // changes. Missing native-map evidence fails the gesture; never fall
+        // back to a retained MapProxy or CoordinateSpaceConverter closure.
+        func pointer(_ hold: UIGestureRecognizer) -> CGPoint? {
+            guard let map, map.window != nil else { return nil }
+            let point = hold.location(in: map)
+            return point.x.isFinite && point.y.isFinite ? point : nil
+        }
         func projected(_ pin: CLLocationCoordinate2D) -> CGPoint? {
-            if let map { return map.convert(pin, toPointTo: map) }
-            return parent.project(pin)
+            guard let map else { return nil }
+            return NativeRouteTouch(map: map, point: .zero).project(pin)
         }
         func adjustedCoordinate(_ hold: UIGestureRecognizer) -> CLLocationCoordinate2D? {
-            let finger = pointer(hold)
+            guard let map, map.window != nil, let finger = pointer(hold) else { return nil }
             let adjusted = CGPoint(x: finger.x + offset.x, y: finger.y + offset.y)
-            let result: CLLocationCoordinate2D?
-            if let map {
-                guard map.bounds.contains(adjusted) else { return nil }
-                result = map.convert(adjusted, toCoordinateFrom: map)
-            } else { result = parent.coordinate(adjusted) }
-            guard let result, CLLocationCoordinate2DIsValid(result) else { return nil }
-            return result
+            guard adjusted.x.isFinite, adjusted.y.isFinite, map.bounds.contains(adjusted) else { return nil }
+            return NativeRouteTouch(map: map, point: adjusted).coordinate
         }
         func finish(cancelled: Bool, hold: UIGestureRecognizer) {
             guard dragging else { return }
@@ -97,12 +95,12 @@ struct MapPinAdjustmentGesture: UIGestureRecognizerRepresentable {
                 if let nativeMap = view as? MKMapView { map = nativeMap; break }
                 candidate = view.superview
             }
-            return true
+            return map?.window != nil
         }
         func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
             guard parent.enabled, gestureRecognizer.numberOfTouches == 1,
-                  let pin = parent.pin, let anchor = projected(pin) else { return false }
-            let finger = pointer(gestureRecognizer)
+                  let pin = parent.pin, let anchor = projected(pin),
+                  let finger = pointer(gestureRecognizer) else { return false }
             // MapKit marker artwork sits above its coordinate (the pointed tip).
             return CGRect(x: anchor.x - 28, y: anchor.y - 64, width: 56, height: 80).contains(finger)
         }

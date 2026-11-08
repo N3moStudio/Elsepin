@@ -27,14 +27,20 @@ struct RecentlyDeletedView: View {
                             .accessibilityValue(selection.ids.contains(item.id) ? "Selected" : "Not selected")
                             .accessibilityAddTraits(selection.ids.contains(item.id) ? .isSelected : [])
                     } else {
-                    VStack(alignment: .leading, spacing: 8) {
-                        itemLabel(item)
-                        HStack {
-                            Button("Restore") { restore(item) }.frame(minHeight: 44)
-                            Spacer()
-                            Button("Delete permanently", role: .destructive) { deleting = DeletedItemsDeletion(items: [item]) }.frame(minHeight: 44)
-                        }.buttonStyle(.borderless)
-                    }
+                        VStack(alignment: .leading, spacing: 8) {
+                            itemLabel(item)
+                            HStack {
+                                Button("Restore") { restore(item) }.frame(minHeight: 44)
+                                Spacer()
+                                Button("Delete permanently", role: .destructive) { deleting = DeletedItemsDeletion(items: [item]) }.frame(minHeight: 44)
+                            }.buttonStyle(.borderless).disabled(!bin.canEdit)
+                        }
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button("Delete", systemImage: "trash") { deleting = DeletedItemsDeletion(items: [item]) }
+                                .tint(.red).disabled(!bin.canEdit)
+                            Button("Restore", systemImage: "arrow.uturn.backward") { restore(item) }
+                                .tint(LocusTheme.accent).disabled(!bin.canEdit)
+                        }
                     }
                 }
                 if let error = bin.error { Text(error).foregroundStyle(LocusTheme.statusWarn) }

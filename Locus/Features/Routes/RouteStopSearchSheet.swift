@@ -82,9 +82,10 @@ struct RouteStopSearchSheet: View {
         }
         .shiftSettingsScreen().loggedNavigationTitle(browsing ? "Along your route" : "Find a stop")
         .navigationBarTitleDisplayMode(.inline)
-        .searchable(text: $model.query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Place, address, or category")
-        .searchFocused($searchFocused)
-        .onSubmit(of: .search, submit)
+        .safeAreaInset(edge: .top, spacing: 0) {
+            RouteSearchField(query: $model.query, focused: $searchFocused,
+                             prompt: "Place, address, or category", submit: submit)
+        }
         .onChange(of: model.scope) { _, _ in selectedID = nil; if !fullMap && !model.query.isEmpty { submit() } }
         .onChange(of: model.query) { _, _ in selectedID = nil }
         .navigationDestination(isPresented: $fullMap) {
@@ -92,7 +93,7 @@ struct RouteStopSearchSheet: View {
         }
         .onChange(of: fullMap) { _, shown in if !shown { applyMapChoice() } }
         .onAppear { applyMapChoice() }
-        .onDisappear { model.cancel() }
+        .onDisappear { searchFocused = false; model.cancel() }
     }
 
     private var resultMap: some View {
@@ -133,6 +134,7 @@ struct RouteStopSearchSheet: View {
     }
 
     private func choose(_ place: RoutePlace) {
+        searchFocused = false
         DeveloperLogStore.shared.record("route_search_choice", ["screen": "Find a stop", "place": place.name,
             "latitude": String(place.coordinate.latitude), "longitude": String(place.coordinate.longitude)])
         model.cancel()
@@ -205,9 +207,11 @@ private struct RouteStopMapPicker: View {
             if previewLine == nil { previewLine = MKPolyline(coordinates: route.coordinates, count: route.coordinates.count) }
         }
         .loggedNavigationTitle("Choose stop").navigationBarTitleDisplayMode(.inline)
-        .searchable(text: $model.query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search places")
-        .searchFocused($searchFocused)
-        .onSubmit(of: .search) { searchFocused = false; pin = nil; model.search() }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            RouteSearchField(query: $model.query, focused: $searchFocused, prompt: "Search places") {
+                searchFocused = false; pin = nil; model.search()
+            }
+        }
         .onChange(of: model.query) { _, _ in pin = nil }
         .onChange(of: model.scope) { _, _ in if !model.query.isEmpty { model.search() } }
         .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -225,7 +229,7 @@ private struct RouteStopMapPicker: View {
                 }.buttonStyle(ShiftActionStyle(compact: true)).disabled(pin == nil)
             }.padding(12).background { ShiftSettingsCanvas() }
         }
-        .onDisappear { model.cancel() }
+        .onDisappear { searchFocused = false; model.cancel() }
     }
 
     @ViewBuilder private var searchResults: some View {

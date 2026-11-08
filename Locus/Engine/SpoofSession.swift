@@ -59,6 +59,10 @@ final class SpoofSession: ObservableObject {
     @Published var smoothMovement = MovementDefaults.loadSmoothMovement(from: .standard) {
         didSet { UserDefaults.standard.set(smoothMovement, forKey: "locus.smoothMovement") }
     }
+    // The persisted value is a default for future plans/backups. A route's
+    // prepared/recovered choice and in-flight edits must never overwrite it.
+    @Published private var routeSmoothMovement: Bool?
+    var currentSmoothMovement: Bool { routeSmoothMovement ?? smoothMovement }
     private var motionSpeed = 0.0
     @Published private var measuredRouteSpeed = 0.0
     private var speedRevision = 0
@@ -142,6 +146,7 @@ final class SpoofSession: ObservableObject {
     private let routeControls = RouteWakeSignal()
     private let routeConnection = RouteWakeSignal()
     private var routeWorkerID = UUID()
+    private var preparedRouteConfirmation: (id: UUID, didStart: () -> Void)?
     private var backgroundTask = UIBackgroundTaskIdentifier.invalid
     private var joystickVector: CGVector = .zero
     // Camera changes don't publish session/UI updates or start a movement timer.
@@ -206,6 +211,8 @@ final class SpoofSession: ObservableObject {
         recoveryAvailable = false
         recovery.discard()
         if wasRestored {
+            routeSmoothMovement = nil
+            preparedRouteConfirmation = nil
             activeRoute = nil; journey = nil; stopProgress = RouteStopProgress()
             routeSectionSettingsEnabled = false; sectionSpeedOverrides = [:]; appliedSectionID = nil
         }
@@ -216,7 +223,7 @@ final class SpoofSession: ObservableObject {
     private func restoreTripDisplay(_ saved: TripCheckpoint, plan: PlannedRoute) {
         travelMode = saved.trip.mode
         setSpeedMPH(saved.trip.speedMPH, for: saved.trip.mode)
-        smoothMovement = saved.trip.smoothMovement
+        routeSmoothMovement = saved.trip.smoothMovement
         arrivalChoice = saved.arrival
         activeRoute = plan
         routeSectionSettingsEnabled = !plan.travelSections.isEmpty
@@ -295,7 +302,7 @@ final class SpoofSession: ObservableObject {
               let confirmedAt = lastConfirmedAt, let simulated,
               RoutePoint(simulated).distance(to: route.track.point(at: progress.travelledMetres)) < 0.1 else { return }
         let trip = route.savedTrip(name: route.name, mode: travelMode, speed: speedMPH(for: travelMode),
-                                  smooth: smoothMovement, arrival: arrivalChoice)
+                                  smooth: currentSmoothMovement, arrival: arrivalChoice)
         recovery.save(TripCheckpoint(trip: trip, metres: progress.travelledMetres, stops: stopProgress,
                                     confirmedAt: confirmedAt, savedAt: Date(), arrival: arrivalChoice),
                       resumeAutomatically: routeActive && !routePaused)
@@ -457,7 +464,7 @@ final class SpoofSession: ObservableObject {
         guard let journey, let route = activeRoute, effectivePhase == .active,
               journey.state == .moving || journey.state == .waiting else { return nil }
         let moving = route.movingEstimate(mode: travelMode, speed: cruiseSpeed(for: travelMode),
-                                         smooth: smoothMovement, from: journey.travelledMetres)
+                                         smooth: currentSmoothMovement, from: journey.travelledMetres)
         return moving + stopProgress.remainingWait(in: route.stops)
     }
 
@@ -674,7 +681,8 @@ final class SpoofSession: ObservableObject {
     }
 
     @discardableResult
-    func startPreparedRoute(_ prepared: PreparedRoute, pairing: PairingStore) -> Bool {
+    func startPreparedRoute(_ prepared: PreparedRoute, pairing: PairingStore,
+                            onStarted: @escaping () -> Void = {}) -> Bool {
         DeveloperLogStore.shared.record("start_route_tapped")
         guard pairing.hasPairingFile else {
             lastError = "Pair this iPhone in Settings before starting a route."
@@ -689,10 +697,12 @@ final class SpoofSession: ObservableObject {
         // change the current session's mode, speed, joystick, or location.
         changeTravelMode(prepared.mode, keepCurrentPath: true)
         setSpeedMPH(prepared.speedMPH, for: prepared.mode)
-        smoothMovement = prepared.smoothMovement
         arrivalChoice = prepared.arrival
-        let started = followRoute(prepared.route, pairing: pairing)
+        let started = followRoute(prepared.route, pairing: pairing, smoothing: prepared.smoothMovement)
         if started {
+            // Queuing a worker is not confirmation that it reached the phone.
+            // Keep the planner preview until apply receives the first success.
+            preparedRouteConfirmation = (prepared.id, onStarted)
             activeSavedTripID = prepared.editingTripID
             var trip = prepared.route.savedTrip(name: prepared.route.name, mode: prepared.mode,
                 speed: prepared.speedMPH, smooth: prepared.smoothMovement, arrival: prepared.arrival)
@@ -703,10 +713,11 @@ final class SpoofSession: ObservableObject {
     }
 
     @discardableResult
-    func followRoute(_ plan: PlannedRoute, pairing: PairingStore) -> Bool {
+    func followRoute(_ plan: PlannedRoute, pairing: PairingStore, smoothing: Bool? = nil) -> Bool {
         guard pairing.hasPairingFile, plan.supports(travelMode), !isBusy,
               !stopInFlight, !routeStopping, !routeActive else { return false }
         cancelRoute()
+        routeSmoothMovement = smoothing ?? smoothMovement
         stopJoystick()
         beginSession()
         activeRoute = plan
@@ -761,6 +772,8 @@ final class SpoofSession: ObservableObject {
                     self.motionSpeed = 0
                     self.routeTask = nil
                     if wasStopping {
+                        self.routeSmoothMovement = nil
+                        self.preparedRouteConfirmation = nil
                         self.activeRoute = nil
                         self.journey = nil
                         self.routeSectionSettingsEnabled = false
@@ -888,9 +901,9 @@ final class SpoofSession: ObservableObject {
                     sampledRevision = speedRevision
                 }
                 let cruise = cruiseSpeed(for: travelMode)
-                let desired = smoothMovement ? motion.target(cruise: cruise, position: current.travelledMetres, stopAt: stopAt, mode: travelMode) : cruise
+                let desired = currentSmoothMovement ? motion.target(cruise: cruise, position: current.travelledMetres, stopAt: stopAt, mode: travelMode) : cruise
                 let movement = RouteMotion.step(speed: motionSpeed, target: desired,
-                    remaining: max(0, stopAt - current.travelledMetres), mode: travelMode, smooth: smoothMovement, seconds: elapsed)
+                    remaining: max(0, stopAt - current.travelledMetres), mode: travelMode, smooth: currentSmoothMovement, seconds: elapsed)
                 let target = min(stopAt, current.travelledMetres + movement.metres)
                 let result = await sendRoutePoint(at: target, plan: plan, pairing: pairing, ticket: ticket)
                 if result == .busy { continue }
@@ -960,6 +973,22 @@ final class SpoofSession: ObservableObject {
     }
     func resetToUsualSpeed(for mode: TravelMode) { setSpeedMPH(usualSpeedMPH(for: mode), for: mode) }
     func restoreStartingUsualSpeeds() { usualSpeeds = [:] }
+
+    func setCurrentRouteSmoothing(_ enabled: Bool) {
+        guard canEditRouteMovement else { return }
+        if activeRoute != nil {
+            guard currentSmoothMovement != enabled else { return }
+            routeSmoothMovement = enabled
+        } else {
+            guard smoothMovement != enabled else { return }
+            smoothMovement = enabled
+        }
+        speedRevision += 1
+        routeControls.signal()
+        DeveloperLogStore.shared.record("route_smoothing_changed", ["enabled": String(enabled),
+            "scope": activeRoute == nil ? "future_default" : "current_route"])
+        publishActivity(force: true)
+    }
 
     func speedMPH(for mode: TravelMode) -> Double {
         if let section = currentPlannedSection, section.mode == mode {
@@ -1065,9 +1094,10 @@ final class SpoofSession: ObservableObject {
                     throw NSError(domain: "Locus", code: 4, userInfo: [NSLocalizedDescriptionKey: "Check pairing and choose the travel mode again."])
                 }
                 rerouteTask = nil
+                let smoothing = currentSmoothMovement
                 cancelRoute()
                 travelMode = mode
-                if followRoute(replacement, pairing: pairing) {
+                if followRoute(replacement, pairing: pairing, smoothing: smoothing) {
                     routePaused = wasPaused
                     journey?.state = wasPaused ? .paused : .moving
                 } else {
@@ -1140,6 +1170,8 @@ final class SpoofSession: ObservableObject {
         routePaused = false
         routeStopping = false
         if clearJourney {
+            preparedRouteConfirmation = nil
+            routeSmoothMovement = nil
             discardRecovery()
             activeSavedTripID = nil
             activeRoute = nil; journey = nil; stopProgress = RouteStopProgress()
@@ -1244,6 +1276,11 @@ final class SpoofSession: ObservableObject {
             warnedFailure = false
             sessionLocationKeepAlive = true
             updateLocationTracking()
+            if let confirmation = preparedRouteConfirmation, confirmation.id == activeRoute?.id {
+                preparedRouteConfirmation = nil
+                DeveloperLogStore.shared.record("prepared_route_confirmed")
+                confirmation.didStart()
+            }
             publishActivity(force: changed)
             return .sent
         case .failure(let error):
@@ -1266,7 +1303,13 @@ final class SpoofSession: ObservableObject {
                                       : "Spoofing did not start. No location was sent. " + error.localizedDescription
             // A failed final write still ends playback when Stop route was
             // explicitly requested; the session separately reports failure.
-            cancelRoute(clearJourney: routeStopping)
+            let returnToPreview = preparedRouteConfirmation?.id == activeRoute?.id
+                && preparedRouteConfirmation != nil && !requiresClear
+            if preparedRouteConfirmation != nil {
+                DeveloperLogStore.shared.record("prepared_route_start_failed", ["preview_restored": String(returnToPreview),
+                    "location_may_remain": String(requiresClear)])
+            }
+            cancelRoute(clearJourney: routeStopping || returnToPreview)
             stopJoystick()
             sessionLocationKeepAlive = false
             updateLocationTracking()
@@ -1633,6 +1676,7 @@ final class SpoofSession: ObservableObject {
         previewSpotName = nil; sessionSpotName = nil; activeSavedTripID = nil
         epoch += 1
         cancelRoute(clearJourney: false)
+        preparedRouteConfirmation = nil; routeSmoothMovement = nil
         activeRoute = nil; journey = nil; stopProgress = RouteStopProgress()
         routeSectionSettingsEnabled = false; sectionSpeedOverrides = [:]; appliedSectionID = nil
         stopJoystick()

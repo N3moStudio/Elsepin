@@ -107,8 +107,13 @@ struct MovementSpeedControl: View {
             }
             .buttonStyle(.borderless)
             .disabled(!session.canEditRouteMovement)
-            Toggle("Smooth route movement", isOn: $session.smoothMovement)
+            Toggle("Smooth route movement", isOn: Binding(get: { session.currentSmoothMovement },
+                set: { session.setCurrentRouteSmoothing($0) }))
                 .font(.subheadline)
+                .disabled(!session.canEditRouteMovement)
+            if session.journey != nil {
+                Text("This route only.").font(.caption).foregroundStyle(.secondary)
+            }
             if session.routeSectionSettingsEnabled {
                 Text("Section settings are on. Speed changes apply to this section only. Choosing a different mode replaces the remaining section settings with that one mode.")
                     .font(.caption).foregroundStyle(.secondary)
@@ -117,7 +122,7 @@ struct MovementSpeedControl: View {
                 Text("Recent sent speed: \(preferences.speedUnit.formatted(mph: SpeedConversion.mph(metresPerSecond: session.currentRouteSpeed)))")
                     .font(.caption).foregroundStyle(.secondary)
             }
-            Text(session.smoothMovement
+            Text(session.currentSmoothMovement
                  ? "Changes apply on the next update. Smooth movement speeds up gradually and slows for corners and stops, so the current speed can be below your target. Turn it off for a constant target speed."
                  : "Changes apply on the next update at the selected speed. Connection delays can still slow travel. Recent sent speed measures confirmed route distance over time, not another app's speed reading.")
                 .font(.caption2).foregroundStyle(.secondary)

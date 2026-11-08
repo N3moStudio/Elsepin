@@ -1,9 +1,37 @@
 # Elsepin Change Ledger
 
-Updated through **6 November 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
+Updated through **7 November 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
 is the last recorded public release. Earlier entries retain their original validation context.
 
 See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all recorded 2.5.x/2.6.0 native runs.
+
+## Build 74 feedback follow-up - local source only, 7 November
+
+Five owner screenshots show a lingering native search control after route-label
+editing and corrupt import separators. The owner also reports map zoom-out exits,
+a lost preview after Start without VPN, and asks for scoped smoothing and swipes.
+RouteSearchField owns its field/focus within each search editor. Place labels are
+explicitly route-only. SpoofSession keeps a matching prepared-route confirmation
+until the first accepted write; a definite pre-write failure restores its preview,
+while uncertain/previous writes still require clearing. Route smoothing is separate
+from the persisted default and survives saved/recovered/recalculated trips.
+
+Native pin recognizers no longer retain SwiftUI converter closures; recognizer
+configuration stays stable during holds. MapViewportSafety rejects invalid camera
+values and projected markers reject non-finite points. Settled viewport/style and
+route-start events use the existing opt-in capped log. These are defensive changes:
+the new crash incident is not yet available; the only local export is November 5.
+
+Library/Favorites swipes preserve trash/confirmation and active-route guards.
+Import Overview describes only selected new items and current-to-applied settings,
+grouped by category. Legacy glassPanel compares with the effective current surface.
+No backup schema/version or identifier changes; the prebuild encoding guard now
+rejects corrupted middle-dot/NBSP sequences as well as prior punctuation patterns.
+
+17 Python tests, identity/assets, diff check and parsing of 20 changed Swift files
+passed. New Swift cases were authored but not executed (no local Swift/Xcode).
+Native build, gestures/layout and crash resolution are pending. No push, build,
+IPA replacement, release or deployment. [Current checks](TESTING.md).
 
 ## 2.6.1 (74) - planner organization and navigation - unreleased
 

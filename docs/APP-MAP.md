@@ -2,7 +2,17 @@
 
 Current status: [handoff](CURRENT-WORK.md) and [build history](BUILD-HISTORY.md).
 Build 74 is the latest privately validated and delivered planner/navigation update.
+There is an unbuilt local follow-up; see CURRENT-WORK before relying on that build's evidence.
 Historical cleanup: [review](CLEANUP-AND-ORBS-REVIEW.md) and [native progress](NATIVE-PROGRESS.md).
+
+Local feedback changes: search ownership is in
+`Locus/Features/Routes/RouteSearchField.swift` and the two search sheets. Prepared
+write confirmation and per-route smoothing live in `Locus/Engine/SpoofSession.swift`;
+`RootView.PreparedRouteControls` only removes the matching preview on confirmation.
+`MapPinAdjustment.swift`/`MapHomeView.swift` require native gesture coordinates;
+`Shared/MapViewportSafety.swift` guards camera samples. Import groups/comparisons
+live in `Shared/BackupImportReview.swift`; swipe actions use the existing pin,
+trip and recently-deleted stores. Preserve backup IDs and confirmed-clear rules.
 
 Earlier presentation pass: [UI polish notes](UI-POLISH.md) maps the three-step
 pairing guide (`PairOnDeviceView.swift`) and visible draft mode grid

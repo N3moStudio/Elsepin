@@ -64,7 +64,7 @@ struct RoutePlannerSheet: View {
     private var route: PlannedRoute? { hasJourney ? session.activeRoute : planner.selectedRoute }
     private var displayMode: TravelMode { hasJourney ? session.travelMode : planner.draftMode }
     private var displaySpeed: Double { hasJourney ? session.speedMPH(for: session.travelMode) : planner.draftSpeedMPH }
-    private var displaySmooth: Bool { hasJourney ? session.smoothMovement : planner.draftSmoothMovement }
+    private var displaySmooth: Bool { hasJourney ? session.currentSmoothMovement : planner.draftSmoothMovement }
 
     var body: some View {
         NavigationStack {
@@ -142,11 +142,11 @@ struct RoutePlannerSheet: View {
                 Text("This ends travel and holds your last sent location while you edit. Show route previews the changes. Start route begins again at the chosen start.")
             }
             .onChange(of: hasJourney) { _, active in if !active { finishLiveEditIfReady() } }
-            .alert("Name place", isPresented: $showRenamePlace) {
+            .alert("Label in this route", isPresented: $showRenamePlace) {
                 TextField("Name", text: $placeName)
                 Button("Save") { renamePlace() }
                 Button("Cancel", role: .cancel) { renamePlaceID = nil }
-            }
+            } message: { Text("Kept if you save this route. No saved map pin is added.") }
             .navigationDestination(isPresented: $showMapEditor) {
                 if let route {
                     RouteWaypointEditor(route: route, stops: planner.editableWaypoints) { start, end, stops in
@@ -312,7 +312,7 @@ struct RoutePlannerSheet: View {
 
     private func timelinePlaceMenu(_ place: TimelinePlace) -> some View {
         Menu {
-            Button("Name place", systemImage: "pencil") {
+            Button("Label in this route", systemImage: "pencil") {
                 renamePlaceID = place.id; placeName = place.name; showRenamePlace = true
             }.disabled(route == nil)
             if place.id == RoutePlacesEditor.startID {

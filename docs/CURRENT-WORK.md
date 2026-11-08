@@ -1,6 +1,46 @@
 # Elsepin current handoff
 
-Updated 6 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
+Updated 7 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
+
+## Build 75 - device-feedback follow-up, private build requested
+
+Current branch remains `codex/pins-search-69`. Build 74 is still the latest
+delivered IPA. Owner requested a private build 75 and Desktop IPA delivery on
+7 November; no public publication is authorized. These fixes are not in build 74:
+
+- Route labels explicitly belong only to the route, not the saved pin library.
+  Search fields now belong to their editor views rather than an ancestor native
+  search controller; leaving a search editor clears focus and cancels its work.
+- Keep the prepared preview until the first location write succeeds. A definite
+  pre-write failure with no previous location to clear restores the preview;
+  uncertain writes retain the existing interrupted-session/clear safeguards.
+- Prepared, recovered and recalculated routes preserve their own smoothing.
+  In-route changes say "This route only" and do not overwrite future defaults.
+- Remove retained SwiftUI coordinate-converter fallbacks from native pin
+  gestures; keep MapKit recognizer configuration stable during holds. Reject
+  invalid camera/overlay values. Add opt-in settled-map/style and route-start
+  diagnostics, with no per-frame logging or new polling timer. These address
+  credible hazards, not a confirmed cause of the reported zoom-out crashes.
+- Pins/routes have Favorite/Unfavorite and confirmed Delete swipes, including
+  Favorites. Recently Deleted has Restore/Delete swipes. No destructive full
+  swipe; existing trash and active-route protections remain.
+- Import Overview groups selected additions and current-to-applied setting
+  changes. Fix corrupt separators and legacy glassPanel comparison with the
+  actual surface. Existing schema, identifiers and selective import stay intact.
+
+Validation: 17 Python checks, identity/appearance checks, diff whitespace check,
+and syntax parsing of 20 changed Swift files passed. Added/extended Swift tests
+cover import grouping/units/legacy surface and invalid viewport values, but were
+NOT executed: no local Swift/Xcode toolchain. No cloud run, push, new IPA or
+release. Native compilation and device verification remain required.
+
+Owner confirms staged routes survive map taps and reopen from Recents; connection
+retry and ending a route while holding location worked. Pairing/code access and
+the smaller UI were reported working earlier. Idle warmth settled; this is not
+a measured energy result. Owner reports repeated zoom-out exits on satellite
+labels and while a named pin/route was visible. The available Downloads developer
+log is dated November 5, before this report; obtain the new incident export.
+See the short current [device checklist](TESTING.md). Crashes still block release.
 
 ## 2.6.1 (74) - simpler planning and explicit path choice - privately validated/delivered
 

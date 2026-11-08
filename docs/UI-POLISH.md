@@ -3,6 +3,28 @@
 Read this before applying new design skills or continuing the video-inspired
 polish. Current implementation and device evidence are in [CURRENT-WORK](CURRENT-WORK.md).
 
+## Build 74 feedback follow-up (local, unbuilt)
+
+- A route label does not add a saved map pin. Say so in its editor; saved/recent
+  route snapshots may retain the label. Saving a route and naming a Library pin
+  are still separate operations.
+- Search fields belong to their pushed editor, never a retained native search
+  controller on the planner's ancestor. Preserve native Back/edge-pop; clear
+  focus and cancel searches when leaving. Keep the full-screen stop selector.
+- Preserve the route preview until the first command succeeds. Failure alone
+  must not discard the user's draft or silently clear an uncertain location.
+- In-flight smoothing is labeled "This route only." Saved/recovered routes
+  carry it, but future defaults must not change.
+- Swipe actions supplement existing pin/route menus. Destructive actions require
+  confirmation and do not permit full-swipe deletion; keep active-route guards.
+- Import Overview uses headings/indentation for Added and Changed settings,
+  showing selected counts and current-to-applied values. Do not claim comparison
+  with app defaults unless that comparison actually uses defaults.
+
+Phone layout, keyboard cleanup and swipe acceptance remain unverified for these
+new changes. Keep map gesture configuration stable; missing native coordinates
+fail the gesture instead of falling back to a stale SwiftUI converter.
+
 ## Build 74 planner and navigation rules
 
 Current planner: remove Whole route/Individual leg settings,

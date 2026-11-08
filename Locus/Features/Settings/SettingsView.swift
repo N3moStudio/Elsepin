@@ -296,6 +296,7 @@ struct PlacesView: View {
     @State private var pinEditor: PinDraft?
     @State private var areaEditor: NamedAreaDraft?
     @State private var folderPlace: SavedPlace?
+    @State private var deletingPlace: SavedPlace?
     var onTrip: (SavedTrip) -> Void = { _ in }
     var onPlace: (SavedPlace) -> Void = { _ in }
     var onFindPlace: (() -> Void)? = nil
@@ -314,6 +315,15 @@ struct PlacesView: View {
                 }
                 .sheet(item: $folderPlace) { place in
                     LibraryFolderSheet(current: place.folder, folders: folders) { session.moveFavorite(place, folder: $0) }
+                }
+                .loggedConfirmationDialog("Delete pin?", isPresented: Binding(get: { deletingPlace != nil }, set: { if !$0 { deletingPlace = nil } }), titleVisibility: .visible) {
+                    Button("Delete pin", role: .destructive) {
+                        if let deletingPlace { session.removeFavorite(deletingPlace) }
+                        deletingPlace = nil
+                    }
+                    Button("Cancel", role: .cancel) { deletingPlace = nil }
+                } message: {
+                    Text("\(deletingPlace?.displayName ?? "This pin") will move to Recently Deleted for 30 days.")
                 }
         }
     }
@@ -386,9 +396,15 @@ struct PlacesView: View {
             Menu {
                 Button("Edit pin", systemImage: "pencil") { pinEditor = PinDraft(place: place, center: place.coordinate) }
                 Button("Move to folder…", systemImage: "folder") { folderPlace = place }
-                Button("Delete pin", role: .destructive) { session.removeFavorite(place) }
+                Button("Delete pin", role: .destructive) { deletingPlace = place }
             } label: { Image(systemName: "ellipsis").frame(width: 44, height: 44) }
                 .buttonStyle(.borderless).accessibilityLabel("Options for \(place.displayName)")
+        }
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button("Delete", systemImage: "trash") { deletingPlace = place }.tint(.red)
+            Button(place.isFavorite ? "Unfavorite" : "Favorite", systemImage: place.isFavorite ? "star.slash" : "star") {
+                session.togglePinFavorite(place)
+            }.tint(.orange)
         }
     }
 }

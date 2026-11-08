@@ -1,9 +1,30 @@
 # Elsepin changelog
 
-Updated through **6 November 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
+Updated through **7 November 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
 is the official release. Earlier Shift entries retain their original names and release status.
 
 [App introduction](README.md) · [Build history](docs/BUILD-HISTORY.md) · [Detailed Change Ledger](docs/CHANGE-LEDGER.md)
+
+## Unreleased — 2.6.1 build 75 (7 November 2026)
+
+- Clarify that naming a start/stop/destination labels that route and does not
+  create a saved pin. Keep search bars inside their own editors to prevent a
+  leftover search control over the route planner.
+- Retain prepared routes until the first confirmed write; return to the preview
+  after a definite no-write start failure. Preserve connection/clear warnings
+  when a previous or uncertain location may remain.
+- Keep smoothing specific to each active route, including recovery, saved
+  routes and recalculation. Label the active-route switch "This route only."
+- Harden native pin gestures and invalid map-camera/overlay inputs; add bounded
+  local map/start diagnostic events. Reported zoom-out crashes still need native
+  investigation and a fresh phone retest before being considered resolved.
+- Add Favorite/Unfavorite and confirmed Delete swipes to pins/routes, and
+  Restore/Delete in Recently Deleted. Keep active-route and trash protections.
+- Replace import paragraphs with grouped selected additions and exact setting
+  changes. Fix garbled separators and legacy surface comparisons; retain old
+  backup compatibility and prevent unchanged values appearing as new changes.
+- Local Python/resource/syntax checks passed. Owner requested private build 75;
+  Swift tests, native compilation and IPA inspection are pending. No public release.
 
 ## Unreleased — 2.6.1 build 74 (6 November 2026)
 

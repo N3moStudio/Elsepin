@@ -10,10 +10,33 @@ enum BackupSettingValue: Equatable {
     }
 }
 
+enum BackupSettingGroup: String, CaseIterable, Identifiable {
+    case appearanceAndMap = "Appearance & map"
+    case movement = "Movement"
+    case liveActivities = "Live Activities"
+    case connection = "Connection & reminders"
+    case history = "Recent history"
+    var id: String { rawValue }
+}
+
 enum BackupSettingKey: String, CaseIterable, Identifiable {
     case mapPinSize
     case visualStyle, material, glassPanel, speedUnit, smoothMovement, preferWalkingPaths, shortcuts, walkSpeed, runSpeed, cycleSpeed, eBikeSpeed, driveSpeed, liveActivities, hideLocation, hideIslandLocation, lockScreenProgress, islandProgress, islandTimer, showFindMyStatus, showLife360Status, connectionAlerts, reminderMinutes, connectionCheckSeconds, saveRecentLocations, recentHistoryRetention, mapStyle, showSavedPinsOnMap, showNamedAreasOnMap
     var id: String { rawValue }
+    var group: BackupSettingGroup {
+        switch self {
+        case .visualStyle, .material, .glassPanel, .mapStyle, .showSavedPinsOnMap, .showNamedAreasOnMap, .mapPinSize:
+            return .appearanceAndMap
+        case .speedUnit, .smoothMovement, .preferWalkingPaths, .shortcuts, .walkSpeed, .runSpeed, .cycleSpeed, .eBikeSpeed, .driveSpeed:
+            return .movement
+        case .liveActivities, .hideLocation, .hideIslandLocation, .lockScreenProgress, .islandProgress, .islandTimer, .showFindMyStatus, .showLife360Status:
+            return .liveActivities
+        case .connectionAlerts, .reminderMinutes, .connectionCheckSeconds:
+            return .connection
+        case .saveRecentLocations, .recentHistoryRetention:
+            return .history
+        }
+    }
     var title: String {
         switch self {
         case .visualStyle: return "Theme"
@@ -74,14 +97,23 @@ enum BackupSettingKey: String, CaseIterable, Identifiable {
         case .connectionCheckSeconds: return (p.display?.connectionCheckSeconds).map { .text("\($0) seconds") }
         case .saveRecentLocations: return (p.display?.saveRecentLocations).map { .boolean($0) }
         case .recentHistoryRetention: return p.display.map { .text($0.recentHistoryRetention.title) }
-        case .mapStyle: return p.display.map { .text(["Standard", "Hybrid", "Satellite"].indices.contains($0.mapStyle) ? ["Standard", "Hybrid", "Satellite"][$0.mapStyle] : "Unknown") }
+        case .mapStyle: return p.display.map { .text(["Standard", "Satellite + labels", "Satellite"].indices.contains($0.mapStyle) ? ["Standard", "Satellite + labels", "Satellite"][$0.mapStyle] : "Unknown") }
         case .showSavedPinsOnMap: return (p.display?.showSavedPinsOnMap).map { .boolean($0) }
         case .showNamedAreasOnMap: return (p.display?.showNamedAreasOnMap).map { .boolean($0) }
         case .mapPinSize: return p.display?.mapPinSize.map { .text("\(Int($0)) points") }
         }
     }
+    private func effectiveValue(in p: BackupPreferences) -> BackupSettingValue? {
+        // Old backups use glassPanel; current preferences use material. Compare
+        // the legacy option with the actual surface choice, not a missing field.
+        if self == .glassPanel, let material = p.material { return .boolean(material == .glass) }
+        return value(in: p)
+    }
+    func matchesCurrentValue(_ incoming: BackupSettingValue, in p: BackupPreferences) -> Bool {
+        effectiveValue(in: p).map(incoming.matches) ?? false
+    }
     func description(in p: BackupPreferences) -> String {
-        switch value(in: p) {
+        switch effectiveValue(in: p) {
         case .boolean(let flag): return flag ? "On" : "Off"
         case .text(let text): return text
         case .number(let speed):
@@ -168,11 +200,11 @@ struct BackupImportPlan {
     }
     var summary: String {
         var parts: [String] = []
-        if !trips.isEmpty { parts.append("Add \(trips.count) route(s)") }
-        if !places.isEmpty { parts.append("Add \(places.count) saved place(s)") }
-        if !areas.isEmpty { parts.append("Add \(areas.count) named area(s)") }
-        if !settingKeys.isEmpty { parts.append("Change \(settingKeys.count) setting(s)") }
-        return parts.isEmpty ? "No changes selected" : parts.joined(separator: " Â· ")
+        if !places.isEmpty { parts.append("\(places.count) \(places.count == 1 ? "pin" : "pins")") }
+        if !trips.isEmpty { parts.append("\(trips.count) \(trips.count == 1 ? "route" : "routes")") }
+        if !areas.isEmpty { parts.append("\(areas.count) \(areas.count == 1 ? "area" : "areas")") }
+        if !settingKeys.isEmpty { parts.append("\(settingKeys.count) \(settingKeys.count == 1 ? "setting" : "settings")") }
+        return parts.isEmpty ? "No changes selected" : parts.joined(separator: " · ")
     }
 }
 
@@ -188,25 +220,25 @@ struct BackupImportReview {
         existingTrips = Set(current.trips.map(\.id))
         existingAreas = Set(current.areas.map(\.id))
     }
-    var title: String {
-        let hasLibrary = !backup.places.isEmpty || !backup.trips.isEmpty || !(backup.areas ?? []).isEmpty
-        if backup.preferences != nil { return hasLibrary ? "Settings & Library Import Overview" : "Settings Import Overview" }
-        return "Library Import Overview"
-    }
-    var overview: String {
-        let newItems = defaultSelection
-        return "Compared with your current data: \(newItems.trips.count) new routes Â· \(newItems.places.count) new pins Â· \(newItems.areas.count) new areas Â· \(changedSettings.count) different settings. Counts include all available changes, before your selections."
-    }
     var changes: [BackupSettingChange] {
         guard let source = backup.preferences else { return [] }
         let rows: [BackupSettingChange] = BackupSettingKey.allCases.compactMap { key in
             guard let value = key.value(in: source) else { return nil }
             return BackupSettingChange(key: key, before: key.description(in: current.preferences),
-                after: key.description(in: source), changesValue: !(key.value(in: current.preferences).map(value.matches) ?? false))
+                after: key.description(in: source), changesValue: !key.matchesCurrentValue(value, in: current.preferences))
         }
         return rows.filter(\.changesValue) + rows.filter { !$0.changesValue }
     }
     var changedSettings: Set<BackupSettingKey> { Set(changes.filter(\.changesValue).map(\.key)) }
+    /// The selected overview describes the applied values, including units kept on
+    /// this device. Neither this comparison nor `changes` compares app defaults.
+    func settingChanges(in plan: BackupImportPlan) -> [BackupSettingChange] {
+        guard let applied = plan.preferences else { return [] }
+        return BackupSettingKey.allCases.filter { plan.settingKeys.contains($0) }.map { key in
+            BackupSettingChange(key: key, before: key.description(in: current.preferences),
+                after: key.description(in: applied), changesValue: true)
+        }
+    }
     var defaultSelection: BackupImportSelection {
         BackupImportSelection(places: Set(backup.places.map(\.id)).subtracting(existingPlaces),
             trips: Set(backup.trips.map(\.id)).subtracting(existingTrips),

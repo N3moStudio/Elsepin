@@ -34,7 +34,7 @@ struct MapFavoriteButton: View {
             let mode = active ? session.travelMode : planner.preparedRoute?.mode ?? .walk
             guard library.save(route: route, name: route.name, mode: mode,
                 speed: active ? session.speedMPH(for: mode) : planner.preparedRoute?.speedMPH ?? 3,
-                smooth: active ? session.smoothMovement : planner.preparedRoute?.smoothMovement ?? false,
+                smooth: active ? session.currentSmoothMovement : planner.preparedRoute?.smoothMovement ?? false,
                 arrival: active ? session.arrivalChoice : planner.preparedRoute?.arrival ?? .stay, favorite: true),
                 let id = library.lastSavedID else { session.lastError = library.error; return }
             if active { session.rememberSavedTrip(id, routeID: route.id) }

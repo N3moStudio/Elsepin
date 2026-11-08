@@ -1,5 +1,39 @@
 # Validation
 
+## Current: build 74 feedback and next-build checks (7 November 2026)
+
+Latest delivered IPA is still build 74. The follow-up fixes are local source only;
+run Swift tests and a native app/extension compile before making a test build.
+The owner has confirmed preview pin-tap protection, Recents reopening, connection
+retry and ending a route while holding location. Earlier pairing/code access and
+recently-deleted selection also worked. No need to repeat setup or wipe data.
+Idle warmth settled, which does not establish measured energy use.
+
+After a matching new test build exists, use this short regression pass:
+
+1. **Planner/keyboard:** Add a searched stop, go Back, label Start, then Cancel
+   and Save once each. No search bar or extra X may remain on the planner. Labels
+   must not create Library pins. Confirm left-edge Back in the search editor.
+2. **Start/retry:** With no existing spoofed location, turn LocalDevVPN off and
+   start a ready route. After failure the route stays ready. Turn VPN on and
+   Start again; do not claim active until the first successful write. Stop after
+   confirmation. A failed clear must still say unconfirmed rather than cleared.
+3. **Map crash blocker:** Start a short route; switch Standard → Satellite +
+   labels, zoom out/in, and select a named pin. Repeat once on Standard. No exit,
+   frozen controls or unexpected pin movement. If it exits, record the time and
+   export the new incident log; stop repeating the failing gesture.
+4. **Smoothing:** Plan with Smooth On, start, confirm the route menu says On.
+   Turn Off there, then recalculate a different travel mode: it stays Off for
+   that route. A separate saved/prepared Smooth On route must still start On.
+5. **Library/import:** Swipe a disposable pin and route in both their category
+   and Favorites; Unfavorite preserves the item, Delete moves it to Recently
+   Deleted, Restore brings it back. Import a backup with one pin and one changed
+   setting: Overview must reflect checked items and exact old → applied values;
+   cancel once, import, then re-import to confirm no duplicates/false changes.
+
+Source checks cannot close item 3. The available Downloads developer log is from
+November 5 and does not include these newly reported crashes. No release approved.
+
 ## Build 62 UI acceptance (pending device checks)
 
 - In Settings → Connection → Pair on this iPhone, confirm three connected steps,

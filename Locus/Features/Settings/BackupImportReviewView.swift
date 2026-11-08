@@ -23,23 +23,38 @@ struct BackupImportReviewView: View {
         let plan = try? result.get()
         List {
             Section {
-                Label(review.title, systemImage: "doc.text.magnifyingglass").font(.headline)
-                Text(review.overview)
-                    .font(.subheadline).foregroundStyle(.secondary)
+                if let plan { overview(plan, review: review) }
+                else if case .failure(let error) = result { Text(error.localizedDescription).font(.footnote) }
+            } header: { Text("Overview") } footer: {
+                Text("Selected changes, compared with your current data.")
             }.shiftSettingsRows()
 
             if !review.changes.isEmpty {
                 Section {
                     DisclosureGroup("Settings · \(selection.settings.intersection(review.changedSettings).count) selected") {
                         selectionButtons(all: review.changedSettings, values: $selection.settings, name: "settings")
-                        ForEach(review.changes) { change in
-                            BackupImportCheckRow(title: change.key.title,
-                                detail: change.changesValue ? "Current: \(change.before)\nImport: \(change.after)" : "Already the same: \(change.before)",
-                                isSelected: selected(change.key, in: $selection.settings), enabled: change.changesValue)
+                        ForEach(BackupSettingGroup.allCases) { group in
+                            let changes = review.changes.filter { $0.changesValue && $0.key.group == group }
+                            if !changes.isEmpty {
+                                Text(group.rawValue).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                                ForEach(changes) { change in
+                                    BackupImportCheckRow(title: change.key.title, detail: "\(change.before) → \(change.after)",
+                                        isSelected: selected(change.key, in: $selection.settings))
+                                }
+                            }
+                        }
+                        let unchanged = review.changes.filter { !$0.changesValue }
+                        if !unchanged.isEmpty {
+                            DisclosureGroup("Already the same · \(unchanged.count)") {
+                                ForEach(unchanged) { change in
+                                    BackupImportCheckRow(title: change.key.title, detail: change.before,
+                                        isSelected: .constant(false), enabled: false)
+                                }
+                            }
                         }
                     }
                 } header: { Text("Settings changes") } footer: {
-                    Text("Settings start unchecked. A checkmark applies the shown value; unchecked settings keep their current value. Speeds show each backup’s units.")
+                    Text("Unchecked settings stay as they are. Overview shows the final selected values.")
                 }.shiftSettingsRows()
             }
             if !backup.trips.isEmpty {
@@ -62,11 +77,11 @@ struct BackupImportReviewView: View {
                         ForEach(backup.places, id: \.id) { place in
                             let exists = review.existingPlaces.contains(place.id)
                             BackupImportCheckRow(title: place.name,
-                                detail: exists ? "Already saved — keep current version" : "Add saved place\n\(place.latitude.formatted(.number.precision(.fractionLength(5)))), \(place.longitude.formatted(.number.precision(.fractionLength(5))))",
+                                detail: exists ? "Already saved — keep current version" : "\(place.latitude.formatted(.number.precision(.fractionLength(5)))), \(place.longitude.formatted(.number.precision(.fractionLength(5))))",
                                 isSelected: selected(place.id, in: $selection.places), enabled: !exists)
                         }
                     }
-                } header: { Text("Places to add") }.shiftSettingsRows()
+                } header: { Text("Pins to add") }.shiftSettingsRows()
             }
             if let areas = backup.areas, !areas.isEmpty {
                 Section {
@@ -83,14 +98,11 @@ struct BackupImportReviewView: View {
             }
             Section {
                 if let plan {
-                    Text(plan.summary).font(.subheadline)
                     if plan.settingKeys.contains(.recentHistoryRetention),
                        let retention = plan.preferences?.display?.recentHistoryRetention, retention != .forever {
                         Text("The selected history limit removes older recent locations: \(retention.title).")
                             .font(.footnote).foregroundStyle(.secondary)
                     }
-                } else if case .failure(let error) = result {
-                    Text(error.localizedDescription).font(.footnote)
                 }
                 Button("Import selected changes") {
                     confirmedContext = current
@@ -112,6 +124,43 @@ struct BackupImportReviewView: View {
             Button("Keep reviewing", role: .cancel) { }
         } message: {
             Text((plan?.summary ?? "No changes selected") + ". Unchecked items stay unchanged.")
+        }
+    }
+
+    @ViewBuilder private func overview(_ plan: BackupImportPlan, review: BackupImportReview) -> some View {
+        if plan.count == 0 {
+            Text("No changes selected").foregroundStyle(.secondary)
+        } else {
+            if !plan.places.isEmpty || !plan.trips.isEmpty || !plan.areas.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Added").font(.subheadline.weight(.semibold))
+                    VStack(spacing: 6) {
+                        if !plan.places.isEmpty { LabeledContent("Pins", value: "\(plan.places.count)") }
+                        if !plan.trips.isEmpty { LabeledContent("Routes", value: "\(plan.trips.count)") }
+                        if !plan.areas.isEmpty { LabeledContent("Areas", value: "\(plan.areas.count)") }
+                    }.padding(.leading, 16)
+                }
+            }
+            let changes = review.settingChanges(in: plan)
+            if !changes.isEmpty {
+                DisclosureGroup("Changed settings · \(changes.count)") {
+                    ForEach(BackupSettingGroup.allCases) { group in
+                        let grouped = changes.filter { $0.key.group == group }
+                        if !grouped.isEmpty {
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text(group.rawValue).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                                ForEach(grouped) { change in
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Text(change.key.title)
+                                        Text("\(change.before) → \(change.after)").font(.footnote).foregroundStyle(.secondary)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                    }.padding(.leading, 16).accessibilityElement(children: .combine)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 

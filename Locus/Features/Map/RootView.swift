@@ -575,6 +575,7 @@ struct BottomControlsView: View {
                     Button { planner.editPreparedRoute() } label: {
                         Image(systemName: "slider.horizontal.3").frame(width: 44, height: 44).contentShape(Rectangle())
                     }.buttonStyle(.plain).accessibilityLabel("Edit route preview")
+                        .disabled(session.isBusy || session.routeActive)
                 }
             } else if !session.joystickActive {
                 HStack(alignment: .center, spacing: 8) {
@@ -766,7 +767,9 @@ private struct PreparedRouteControls: View {
             }
             HStack(spacing: 10) {
                 Button {
-                    if session.startPreparedRoute(prepared, pairing: pairing) { planner.discardPreparedRoute() }
+                    session.startPreparedRoute(prepared, pairing: pairing) { [weak planner] in
+                        planner?.discardPreparedRoute(ifMatching: prepared.id)
+                    }
                 } label: {
                     Label("Start route", systemImage: "play.fill")
                         .font(.subheadline.weight(.semibold)).frame(maxWidth: .infinity, minHeight: 44)
@@ -777,6 +780,7 @@ private struct PreparedRouteControls: View {
                 Button { planner.discardPreparedRoute() } label: {
                     Image(systemName: "xmark").frame(width: 44, height: 44).contentShape(Rectangle())
                 }.buttonStyle(.plain).accessibilityLabel("Discard route preview")
+                    .disabled(session.isBusy || session.routeActive)
             }
             if let note = prepared.continuationNote {
                 Text(note).font(.caption).foregroundStyle(.secondary)

@@ -65,6 +65,10 @@ final class RoutePlanner: ObservableObject {
         return true
     }
     func discardPreparedRoute() { preparedRoute = nil }
+    func discardPreparedRoute(ifMatching id: UUID) {
+        guard preparedRoute?.id == id else { return }
+        preparedRoute = nil
+    }
     func rememberSavedTrip(_ id: UUID, routeID: UUID) {
         guard preparedRoute?.id == routeID else { return }
         preparedRoute?.editingTripID = id
@@ -79,7 +83,7 @@ final class RoutePlanner: ObservableObject {
         let token = generation
         let mode = session.travelMode
         let speed = session.speedMPH(for: mode)
-        let smooth = session.smoothMovement
+        let smooth = session.currentSmoothMovement
         let preferWalking = preferWalkingPaths
         task = Task { [weak self, weak session] in
             do {

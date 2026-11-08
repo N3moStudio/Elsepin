@@ -112,8 +112,10 @@ struct RoutePlaceSearchSheet: View {
                         .disabled(isResolving || query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
             }
-            .searchable(text: $query, prompt: "Saved name, address, or place")
-            .searchFocused($searchFocused)
+            .safeAreaInset(edge: .top, spacing: 0) {
+                RouteSearchField(query: $query, focused: $searchFocused,
+                                 prompt: "Saved name, address, or place", submit: searchAll)
+            }
             .onChange(of: query) { _, value in
                 cancelSearch()
                 searchResults = []
@@ -124,7 +126,6 @@ struct RoutePlaceSearchSheet: View {
                 resultNote = nil
                 error = nil
             }
-            .onSubmit(of: .search, searchAll)
             .shiftScreen().loggedNavigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { if !embedded { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { cancelSearch(); dismiss() } } } }
@@ -160,7 +161,7 @@ struct RoutePlaceSearchSheet: View {
                 DeviceOriginSheet { place in pendingDeviceOrigin = place; showDeviceLocation = false }
                     .presentationDetents([.medium])
             }
-            .onDisappear { cancelSearch() }
+            .onDisappear { searchFocused = false; cancelSearch() }
         }
     }
 

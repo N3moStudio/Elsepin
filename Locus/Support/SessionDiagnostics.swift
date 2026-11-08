@@ -75,7 +75,7 @@ final class SessionDiagnostics: ObservableObject {
             systemVersion: UIDevice.current.systemVersion,
             isTablet: UIDevice.current.userInterfaceIdiom == .pad,
             phase: session.effectivePhase, routeState: session.journey?.state,
-            settings: [.lowPower: session.lowPower, .smooth: session.smoothMovement,
+            settings: [.lowPower: session.lowPower, .smooth: session.currentSmoothMovement,
                        .glass: preferences.glassPanel, .liveActivity: preferences.liveActivities,
                        .hideLockName: preferences.hideLocation, .hideIslandName: preferences.hideIslandLocation,
                        .pairing: pairing.hasPairingFile, .tunnel: LocalDevVPN.hasMatchingInterface,

@@ -42,6 +42,7 @@ struct SavedTripsSection: View {
     @State private var folderTrip: SavedTrip?
     @State private var historyTrip: SavedTrip?
     @State private var renaming: SavedTrip?
+    @State private var deletingTrip: SavedTrip?
     @State private var name = ""
     @State private var copyNotice: String?
 
@@ -81,9 +82,13 @@ struct SavedTripsSection: View {
                     Button { duplicate(trip, edit: false) } label: { Label("Duplicate", systemImage: "doc.on.doc") }.tint(LocusTheme.accent)
                     Button("History") { historyTrip = trip }.tint(.indigo)
                 }
-                .swipeActions {
-                    Button(role: .destructive) { library.remove(trip) } label: { Label("Delete", systemImage: "trash") }
-                    Button { renaming = trip; name = trip.name } label: { Label("Rename", systemImage: "pencil") }.tint(.gray)
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    Button("Delete", systemImage: "trash") { deletingTrip = trip }
+                        .tint(.red).disabled(session.activeSavedTripID == trip.id)
+                    Button(trip.isFavorite ? "Unfavorite" : "Favorite", systemImage: trip.isFavorite ? "star.slash" : "star") {
+                        library.toggleFavorite(trip)
+                    }.tint(.orange)
+                    Button("Rename", systemImage: "pencil") { renaming = trip; name = trip.name }.tint(.gray)
                 }
             }
             if let copyNotice { Label(copyNotice, systemImage: "checkmark.circle").font(.caption).foregroundStyle(.secondary) }
@@ -105,6 +110,15 @@ struct SavedTripsSection: View {
             Button("Cancel", role: .cancel) { renaming = nil }
             Button("Save") { if let renaming { library.rename(renaming, to: name) }; renaming = nil }
         }
+        .loggedConfirmationDialog("Delete route?", isPresented: Binding(get: { deletingTrip != nil }, set: { if !$0 { deletingTrip = nil } }), titleVisibility: .visible) {
+            Button("Delete route", role: .destructive) {
+                if let deletingTrip, session.activeSavedTripID != deletingTrip.id { library.remove(deletingTrip) }
+                deletingTrip = nil
+            }.disabled(deletingTrip?.id == session.activeSavedTripID)
+            Button("Cancel", role: .cancel) { deletingTrip = nil }
+        } message: {
+            Text("\(deletingTrip?.name ?? "This route") will move to Recently Deleted for 30 days. An active route cannot be deleted.")
+        }
         .task(id: copyNotice) {
             guard copyNotice != nil else { return }
             do { try await Task.sleep(nanoseconds: 4_000_000_000) } catch { return }
@@ -125,6 +139,9 @@ struct SavedTripsSection: View {
         Button("Rename", systemImage: "pencil") { renaming = trip; name = trip.name }
         Button("Edit history", systemImage: "clock.arrow.circlepath") { historyTrip = trip }
         Button("Move to folder…", systemImage: "folder") { folderTrip = trip }
+        Divider()
+        Button("Delete route", systemImage: "trash", role: .destructive) { deletingTrip = trip }
+            .disabled(session.activeSavedTripID == trip.id)
     }
     private func duplicate(_ trip: SavedTrip, edit: Bool) {
         guard !edit || (session.journey == nil && !session.isBusy) else { return }

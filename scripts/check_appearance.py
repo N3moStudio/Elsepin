@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def check_source_encoding(root=ROOT):
     # Reject common UTF-8 decoded-as-Windows-1252 sequences, not legitimate
     # Unicode punctuation/localized text. Kept in the normal prebuild check.
-    broken = ('\u00e2\u20ac', '\u00c3\u00a2', '\ufffd')
+    broken = ('\u00e2\u20ac', '\u00c3\u00a2', '\u00c2\u00b7', '\u00c2\u00a0', '\ufffd')
     for folder in ('Locus', 'LocusActivity', 'Shared'):
         for path in (root / folder).rglob('*.swift'):
             text = path.read_text(encoding='utf-8')
