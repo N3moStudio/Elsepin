@@ -767,8 +767,8 @@ private struct PreparedRouteControls: View {
             }
             HStack(spacing: 10) {
                 Button {
-                    session.startPreparedRoute(prepared, pairing: pairing) { [weak planner] in
-                        planner?.discardPreparedRoute(ifMatching: prepared.id)
+                    session.startPreparedRoute(prepared, pairing: pairing) { [weak planner = planner, routeID = prepared.id] in
+                        planner?.discardPreparedRoute(ifMatching: routeID)
                     }
                 } label: {
                     Label("Start route", systemImage: "play.fill")
