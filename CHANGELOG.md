@@ -5,6 +5,24 @@ is the official release. Earlier Shift entries retain their original names and r
 
 [App introduction](README.md) · [Build history](docs/BUILD-HISTORY.md) · [Detailed Change Ledger](docs/CHANGE-LEDGER.md)
 
+## Build 77 - saved-pin annotation crash fix (8 November 2026)
+
+The supplied developer export contains an iOS crash report for build 76 at the
+Demo Garden Walk start. Its Locus UUID matches the delivered binary exactly.
+Exception type 6 / SIGTRAP (5) has Swift/SwiftUI frames above
+`SavedPinMapIcon.body` and its Button label, called during MapKit annotation layout.
+The log records three accepted location writes before exit. This is a recorded
+runtime trap, not a Jetsam report; the last sample was 380.8 MiB footprint with
+6275.2 MiB advisory headroom. It does not establish all other exits have this cause.
+
+Removed the annotation's required EnvironmentObject lookup. MapHomeView now passes
+pin size and label background explicitly. This preserves pin size, themes, labels,
+selection, favorites and explicit Teleport confirmation while avoiding a missing
+settings object in separately hosted/recycled annotation views. No persistence or
+connection behavior changed. Original report/extraction stays in ignored
+`.build/incident-76/`; exact binary symbols resolved the two app frames at offsets
+2979876 and 2977904. Full native validation and private IPA delivery pending.
+
 ## Build 76 - Dev Mode, sweep selection and map hardening (8 November 2026)
 
 Private build 76 compiled and was delivered; 652 checks passed, with zero compiler

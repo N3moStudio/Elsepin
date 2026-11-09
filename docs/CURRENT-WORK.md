@@ -2,6 +2,40 @@
 
 Updated 8 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
 
+## Build 77 - saved-pin annotation crash fix (8 November 2026)
+
+The supplied developer export contains an iOS crash report for build 76 at the
+Demo Garden Walk start. Its Locus UUID matches the delivered binary exactly.
+Exception type 6 / SIGTRAP (5) has Swift/SwiftUI frames above
+`SavedPinMapIcon.body` and its Button label, called during MapKit annotation layout.
+The log records three accepted location writes before exit. This is a recorded
+runtime trap, not a Jetsam report; the last sample was 380.8 MiB footprint with
+6275.2 MiB advisory headroom. It does not establish all other exits have this cause.
+
+Removed the annotation's required EnvironmentObject lookup. MapHomeView now passes
+pin size and label background explicitly. This preserves pin size, themes, labels,
+selection, favorites and explicit Teleport confirmation while avoiding a missing
+settings object in separately hosted/recycled annotation views. No persistence or
+connection behavior changed. Original report/extraction stays in ignored
+`.build/incident-76/`; exact binary symbols resolved the two app frames at offsets
+2979876 and 2977904. Full native validation and private IPA delivery pending.
+
+## Build 76 phone failure - release blocker (8 November 2026)
+
+Owner reports Elsepin closed to Home Screen about one second after tapping Start
+on **Demo Garden Walk**, after movement had begun. The spoofed location remained.
+This disproves treating build 76's automated success as resolution of the exits.
+No fresh developer export or Apple crash/Jetsam report was available locally during
+this follow-up. Route-start/source inspection does not establish a root cause.
+The demo route shares normal playback and uses a small four-point synthetic path;
+do not assume either excessive route size or memory pressure without incident evidence.
+The last accepted simulated location can remain after process termination; preserve
+the durable uncertain-clear marker and require a confirmed clear. Never treat an
+unchanged Live Activity or location as proof that the app/playback is still running.
+Next evidence: existing developer-log export from this incident and, if available,
+the matching Elsepin/Locus or JetsamEvent report. No rebuild/publication in this
+follow-up; avoid another speculative crash-fix build before inspecting evidence.
+
 ## Build 76 - Dev Mode, sweep selection and map hardening (8 November 2026)
 
 Private run `6af16be955fc448af77585cd` succeeded on source

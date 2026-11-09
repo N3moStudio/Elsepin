@@ -5,15 +5,19 @@ import SwiftUI
 struct SavedPinMapIcon: View {
     let pin: SavedPlace
     let selected: Bool
+    // MapKit hosts/recycles annotation content outside the normal view ancestry.
+    // Pass presentation values explicitly: EnvironmentObject can be absent there
+    // and traps while a pin reappears after zooming or starting a route (build 76).
+    let pinSize: Double
+    let labelBackground: Color
     let onTap: () -> Void
-    @EnvironmentObject private var preferences: SessionPreferences
     var body: some View {
         Button(action: onTap) {
             Image(systemName: pin.symbol == .pin ? "mappin.circle.fill" : pin.symbol.rawValue)
-                .font(.system(size: preferences.mapPinSize, weight: .medium, design: .rounded))
+                .font(.system(size: pinSize, weight: .medium, design: .rounded))
                 .foregroundStyle(pin.tint.swatch)
                 .background(Circle().fill(.background).padding(2))
-                .frame(width: max(44, preferences.mapPinSize + 8), height: max(44, preferences.mapPinSize + 8))
+                .frame(width: max(44, pinSize + 8), height: max(44, pinSize + 8))
                 .contentShape(Rectangle())
         }.buttonStyle(.plain).accessibilityLabel(pin.displayName)
             .accessibilityHint("Selects this pin. Tap Teleport to move.")
@@ -21,7 +25,7 @@ struct SavedPinMapIcon: View {
                 if selected {
                     Text(pin.displayName).font(.caption.weight(.semibold)).lineLimit(2)
                         .padding(.horizontal, 9).padding(.vertical, 5)
-                        .background(ShiftPalette.color(.surface, style: preferences.visualStyle), in: Capsule())
+                        .background(labelBackground, in: Capsule())
                         .frame(maxWidth: 160).fixedSize(horizontal: true, vertical: true)
                         .offset(y: -30).allowsHitTesting(false).accessibilityHidden(true)
                 }

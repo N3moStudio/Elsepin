@@ -136,7 +136,9 @@ struct MapHomeView: View {
         if preferences.showSavedPinsOnMap, !planner.isDrawing {
             ForEach(visibleSavedPins) { pin in
                 Annotation("", coordinate: pin.coordinate, anchor: .center) {
-                    SavedPinMapIcon(pin: pin, selected: selectedSavedPin == pin.id) {
+                    SavedPinMapIcon(pin: pin, selected: selectedSavedPin == pin.id,
+                        pinSize: preferences.mapPinSize,
+                        labelBackground: ShiftPalette.color(.surface, style: preferences.visualStyle)) {
                         guard canPlacePin else { return }
                         selectedSavedPin = pin.id
                         selection = nil
