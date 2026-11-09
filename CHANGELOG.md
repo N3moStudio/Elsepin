@@ -7,7 +7,8 @@ is the official release. Earlier Shift entries retain their original names and r
 
 ## Build 76 - Dev Mode, sweep selection and map hardening (8 November 2026)
 
-Private build validation pending. Owner reports build 75 still exits on satellite
+Private build 76 compiled and was delivered; 652 checks passed, with zero compiler
+warnings/errors. Phone acceptance remains pending. Owner reports build 75 still exits on satellite
 zoom and sometimes saving/zooming around a pin; no new incident export is present
 in Downloads. Owner currently reports no noticeable heat. These are device reports,
 not a confirmed crash cause or a measured energy result. No release is authorized.
@@ -33,10 +34,13 @@ not a confirmed crash cause or a measured energy result. No release is authorize
   map snapshots are rate limited to five seconds. No new polling loop. Numeric touch
   formatting rejects nonfinite/out-of-range inputs instead of trapping.
 
-Local evidence: 17 packaging/resource tests, identity/appearance/helper checks and
-Swift syntax parsing passed. New Swift tests cover workspace separation/relaunch,
-failed seeds, demo fixture round-trips, drag ranges and diagnostic values. Native
-compilation, Swift test execution and real-device acceptance are still pending.
+Validation: Codemagic `6af16be955fc448af77585cd`, source `1e7b5dc`, passed 513 Swift,
+104 cloud, 18 Companion and 17 packaging/resource tests. One Windows-only helper
+test was skipped on Mac and excluded. The native app/extension and unsigned IPA
+were verified as 2.6.1 (76), arm64, SDK 27.1. New tests cover workspace isolation,
+failed seeds, fixture round-trips, drag ranges and diagnostic values. The first
+native attempt's compiler complexity error and two concurrency warnings were fixed
+before the successful rebuild. No release or deployment; phone crash acceptance pending.
 
 ## Unreleased — 2.6.1 build 75 (7 November 2026)
 

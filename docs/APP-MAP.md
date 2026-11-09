@@ -1,7 +1,7 @@
 # Elsepin app map
 
 Current status: [handoff](CURRENT-WORK.md) and [build history](BUILD-HISTORY.md).
-Build 75 is the latest privately validated and delivered feedback update.
+Build 76 is the latest privately validated and delivered feedback update.
 See CURRENT-WORK for its exact source/build evidence and pending phone acceptance.
 Historical cleanup: [review](CLEANUP-AND-ORBS-REVIEW.md) and [native progress](NATIVE-PROGRESS.md).
 

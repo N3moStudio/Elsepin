@@ -1,8 +1,29 @@
 # Validation
 
-## Current: build 75 phone checks (7 November 2026)
+## Current: build 76 phone checks (8 November 2026)
 
-Latest delivered IPA is **2.6.1 build 75**, privately compiled and package-verified
+Build 76 passed 652 checks, native app/extension compilation and IPA inspection,
+with zero compiler warnings/errors. Source `1e7b5dc`, Codemagic
+`6af16be955fc448af77585cd`. This does not prove the reported satellite-zoom exit is
+resolved. No full setup/reset tour is needed; the focused device checks are:
+
+1. With no active or uncertain session/recovery, enable Dev Mode in Advanced &
+   experimental -> Testing tools. Edit a demo pin, disable it, and verify the real
+   library returns. Enable again and verify a fresh demo dataset.
+2. In demo Recently Deleted, tap Select and drag down the selection-circle gutter;
+   reverse upward, then tap Done. Selection follows the range; scrolling still works
+   outside the circles. Normal tap selection and delete confirmation remain available.
+3. Start one short route, switch to Satellite + labels, zoom, then save/select a
+   named demo pin. No exit or frozen controls. If it exits, stop repeating the
+   failing action and retain the new incident log/time for diagnosis.
+
+Live connection/provider and widget-signing requirements still apply in Dev Mode;
+the synthetic dataset does not simulate a successful connection or initiate spoofing.
+No new incident export was present in Downloads during build 76 work.
+
+## Previous: build 75 phone checks (7 November 2026)
+
+The build-75 IPA was **2.6.1 build 75**, privately compiled and package-verified
 after 640 passing automated checks, with zero compiler warnings/errors.
 The owner has confirmed preview pin-tap protection, Recents reopening, connection
 retry and ending a route while holding location. Earlier pairing/code access and

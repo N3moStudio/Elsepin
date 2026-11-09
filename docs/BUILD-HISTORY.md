@@ -1,8 +1,29 @@
 # Elsepin build history
 
-Updated **7 November 2026**, America/Los_Angeles. Read the [full changelog](../CHANGELOG.md)
+Updated **8 November 2026**, America/Los_Angeles. Read the [full changelog](../CHANGELOG.md)
 for feature details. This page separates compilation, test artifacts and published
 releases so a successful check is not mistaken for an available download.
+
+## 8 November 2026 - Elsepin 2.6.1 (76), private test IPA
+
+Final Codemagic run `6af16be955fc448af77585cd`, source
+`1e7b5dc14dd6581c9fa883dfc43984b930b22e38`, private branch `codex/pins-search-69`
+synced to GitLab and GitHub. All 652 checks passed: 513 Swift, 104 cloud,
+18 Companion and 17 packaging/resource; one Windows-only case skipped on Mac and
+excluded. Native app/extension compiled with zero compiler warnings/errors. Package
+inspection verified arm64, SDK 27.1, both bundles 2.6.1 (76), compatibility IDs and
+entitlements, all 13 icons, helper downloads and notices.
+
+Delivered only `Elsepin 2.6.1 build 76.ipa` (18,839,150 bytes) to the usual Desktop
+IPA folder, replacing only the previous Elsepin build. No public release, deployment
+or main merge. Personal free Mac M2 allowance used; no paid billing enabled and no
+other app's build cancelled. The first run `6af1674a154a790c0488506a` passed tests
+but failed native compilation on root-view type-check complexity and reported two
+defaults capture warnings; both issues were corrected before the successful rebuild.
+Both complete original logs and final package receipt remain in ignored `.build/artifacts/`.
+
+Dev Mode isolation, drag-selection rules and diagnostics are tested; real-device
+demo switching/gestures and the reported satellite-zoom exit still need acceptance.
 
 ## 7 November 2026 - GitHub restored/synced; build attempt blocked
 

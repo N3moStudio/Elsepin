@@ -4,10 +4,15 @@ Updated 8 November 2026. Read AGENTS.md, inspect Git status, preserve newer work
 
 ## Build 76 - Dev Mode, sweep selection and map hardening (8 November 2026)
 
-Private run `6af1674a154a790c0488506a` passed 513 Swift tests and helper/resource
-checks, then failed native compilation on the root SwiftUI expression complexity;
-it also reported two non-Sendable defaults captures. Split the presentation shell
-from lifecycle observers and capture the immutable workspace context. Retry pending.
+Private run `6af16be955fc448af77585cd` succeeded on source
+`1e7b5dc14dd6581c9fa883dfc43984b930b22e38`: 652 checks passed and native app/extension
+compiled with zero compiler warnings/errors. Both bundles are 2.6.1 (76).
+The verified IPA is delivered in the usual Desktop IPA folder, replacing only build 75.
+Source is synced to both private remotes on `codex/pins-search-69`; main is unchanged.
+The first run `6af1674a154a790c0488506a` passed tests but failed native compilation
+on root SwiftUI expression complexity, with two non-Sendable defaults captures.
+The final build splits presentation from lifecycle observers and captures the
+immutable workspace context. Complete original logs are retained in `.build/artifacts/`.
 Owner reports build 75 still exits on satellite
 zoom and sometimes saving/zooming around a pin; no new incident export is present
 in Downloads. Owner currently reports no noticeable heat. These are device reports,
@@ -34,10 +39,14 @@ not a confirmed crash cause or a measured energy result. No release is authorize
   map snapshots are rate limited to five seconds. No new polling loop. Numeric touch
   formatting rejects nonfinite/out-of-range inputs instead of trapping.
 
-Local evidence: 17 packaging/resource tests, identity/appearance/helper checks and
-Swift syntax parsing passed. New Swift tests cover workspace separation/relaunch,
-failed seeds, demo fixture round-trips, drag ranges and diagnostic values. Native
-compilation, Swift test execution and real-device acceptance are still pending.
+Validation: 513 Swift, 104 cloud, 18 Companion and 17 packaging/resource tests passed;
+one Windows-only helper test was skipped on Mac and excluded from that total.
+New tests cover workspace separation/relaunch, failed seeds, demo fixture round-trips,
+drag ranges and diagnostic values. IPA inspection verified arm64 app/extension,
+SDK 27.1, compatibility IDs/entitlements, 13 icons and bundled helpers/notices.
+Phone acceptance remains pending: toggle demo on/off, sweep-select deleted demo
+items, and check satellite zoom/pin saving once. Do not describe the crash as fixed
+without phone evidence. No public release, deployment, or paid billing change.
 
 ## GitHub access restored; Actions still account-blocked
 

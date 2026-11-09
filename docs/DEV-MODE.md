@@ -39,3 +39,8 @@ recent pins/routes and ten deleted items. `DevModeDatasetTests` verifies validit
 and old-format round-trips; `AppDataWorkspaceTests` verifies independent files,
 relaunch, fresh activation and failure rollback. Swift tests need a Swift host;
 native/phone interaction acceptance remains separate.
+
+Build 76 validation: the workspace, fixture and selection tests ran successfully
+within 513 Swift tests; all 652 checks passed and the native app/extension compiled
+without warnings in Codemagic `6af16be955fc448af77585cd`, source `1e7b5dc`.
+This validates compilation/storage rules, not physical gesture or crash acceptance.
