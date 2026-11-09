@@ -18,15 +18,22 @@ selection, favorites and explicit Teleport confirmation while avoiding a missing
 settings object in separately hosted/recycled annotation views. No persistence or
 connection behavior changed. Original report/extraction stays in ignored
 `.build/incident-76/`; exact binary symbols resolved the two app frames at offsets
-2979876 and 2977904. Full native validation and private IPA delivery pending.
+2979876 and 2977904. Codemagic `6af170c877f10fa3b05d9e17` passed all 652 checks (513 Swift, 104 cloud,
+18 Companion, 17 packaging; one Windows-only helper case skipped on Mac).
+Source `035a8468291078e4d59b57e85fe511a19c830f78`; native app/extension built with
+zero compiler warnings/errors. Verified both bundles 2.6.1 (77), arm64/SDK 27.1,
+compatibility IDs/entitlements, 13 icons and bundled helpers. Delivered only
+`Elsepin 2.6.1 build 77.ipa` (18,839,322 bytes) to the usual Desktop IPA folder,
+replacing build 76. Code is local and on both private remotes. No release or main
+merge. Phone acceptance pending: start Demo Garden Walk and zoom/select a saved pin.
 
 ## Build 76 phone failure - release blocker (8 November 2026)
 
 Owner reports Elsepin closed to Home Screen about one second after tapping Start
 on **Demo Garden Walk**, after movement had begun. The spoofed location remained.
 This disproves treating build 76's automated success as resolution of the exits.
-No fresh developer export or Apple crash/Jetsam report was available locally during
-this follow-up. Route-start/source inspection does not establish a root cause.
+At the initial report, no fresh export was available. The later supplied export
+and build-77 diagnosis above supersede that evidence gap. Route-start/source inspection does not establish a root cause.
 The demo route shares normal playback and uses a small four-point synthetic path;
 do not assume either excessive route size or memory pressure without incident evidence.
 The last accepted simulated location can remain after process termination; preserve

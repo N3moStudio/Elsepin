@@ -1,9 +1,13 @@
 # Elsepin app map
 
 Current status: [handoff](CURRENT-WORK.md) and [build history](BUILD-HISTORY.md).
-Build 76 is the latest privately validated and delivered feedback update.
+Build 77 is the latest privately validated and delivered feedback update.
 See CURRENT-WORK for its exact source/build evidence and pending phone acceptance.
 Historical cleanup: [review](CLEANUP-AND-ORBS-REVIEW.md) and [native progress](NATIVE-PROGRESS.md).
+
+Annotation safety: `SavedPinMapIcon` takes explicit presentation values; do not
+add required environment-object lookups inside MapKit-hosted pin content. See the
+build-77 crash evidence in CURRENT-WORK.
 
 Build 76 work: `Shared/AppDataWorkspace.swift` owns demo namespace selection;
 `Locus/Support/DevModeController.swift` owns seeding and the stopped-session/drained-

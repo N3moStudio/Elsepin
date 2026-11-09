@@ -4,6 +4,18 @@ Updated **8 November 2026**, America/Los_Angeles. Read the [full changelog](../C
 for feature details. This page separates compilation, test artifacts and published
 releases so a successful check is not mistaken for an available download.
 
+## 8 November 2026 - Elsepin 2.6.1 (77), private crash-fix IPA
+
+Codemagic `6af170c877f10fa3b05d9e17`, source `035a846`, passed all 652 checks and
+native app/extension compilation with zero compiler warnings/errors. The supplied
+build-76 crash report was matched to its exact binary and resolved to the saved-pin
+view's required environment lookup; build 77 passes appearance values explicitly.
+IPA identity/arm64/resources verified; 18,839,322 bytes delivered to the usual
+Desktop IPA folder, replacing only build 76. Both private remotes synced; no main
+merge, paid billing, other-build cancellation or public release. Full logs and
+receipt remain in `.build/artifacts/codemagic-6af170c877f10fa3b05d9e17/`.
+Phone acceptance remains pending; automated results do not prove all exits resolved.
+
 ## 8 November 2026 - Elsepin 2.6.1 (76), private test IPA
 
 Final Codemagic run `6af16be955fc448af77585cd`, source

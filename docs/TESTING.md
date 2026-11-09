@@ -1,6 +1,14 @@
 # Validation
 
-## Current: build 76 phone checks (8 November 2026)
+## Current: build 77 phone check (8 November 2026)
+
+Native build, package verification and 652 checks passed. One focused phone check:
+start Demo Garden Walk, zoom out/in and select a saved pin. No app exit. The change
+removes the required settings-object lookup identified in the supplied crash report.
+If it still exits, retain the new log; do not repeat the failing action or claim that
+compilation proves a runtime fix. Existing data, Dev Mode and explicit Start rules remain.
+
+## Previous: build 76 phone checks (8 November 2026)
 
 Build 76 passed 652 checks, native app/extension compilation and IPA inspection,
 with zero compiler warnings/errors. Source `1e7b5dc`, Codemagic

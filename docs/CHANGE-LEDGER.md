@@ -21,7 +21,14 @@ selection, favorites and explicit Teleport confirmation while avoiding a missing
 settings object in separately hosted/recycled annotation views. No persistence or
 connection behavior changed. Original report/extraction stays in ignored
 `.build/incident-76/`; exact binary symbols resolved the two app frames at offsets
-2979876 and 2977904. Full native validation and private IPA delivery pending.
+2979876 and 2977904. Codemagic `6af170c877f10fa3b05d9e17` passed all 652 checks (513 Swift, 104 cloud,
+18 Companion, 17 packaging; one Windows-only helper case skipped on Mac).
+Source `035a8468291078e4d59b57e85fe511a19c830f78`; native app/extension built with
+zero compiler warnings/errors. Verified both bundles 2.6.1 (77), arm64/SDK 27.1,
+compatibility IDs/entitlements, 13 icons and bundled helpers. Delivered only
+`Elsepin 2.6.1 build 77.ipa` (18,839,322 bytes) to the usual Desktop IPA folder,
+replacing build 76. Code is local and on both private remotes. No release or main
+merge. Phone acceptance pending: start Demo Garden Walk and zoom/select a saved pin.
 
 ## Build 76 - Dev Mode, sweep selection and map hardening (8 November 2026)
 
