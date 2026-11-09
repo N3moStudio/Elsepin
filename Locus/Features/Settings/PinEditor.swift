@@ -21,6 +21,7 @@ struct PinEditor: View {
     @EnvironmentObject private var library: TripLibrary
     @Environment(\.dismiss) private var dismiss
     @State private var position: MapCameraPosition = .automatic
+    @State private var visibleMapRect: MKMapRect?
     @State private var search = false
     @State private var error: String?
     var body: some View {
@@ -36,7 +37,7 @@ struct PinEditor: View {
                     }
                     MapReader { proxy in
                         Map(position: $position, interactionModes: [.pan, .zoom]) {
-                            ForEach(session.savedPins.filter { $0.id != draft.existing?.id }) { pin in
+                            ForEach(visiblePins) { pin in
                                 Marker("", systemImage: pin.symbol.rawValue, coordinate: pin.coordinate).tint(pin.tint.swatch)
                             }
                             if let coordinate = draft.coordinate {
@@ -47,6 +48,7 @@ struct PinEditor: View {
                                   CLLocationCoordinate2DIsValid(coordinate) else { return }
                             draft.coordinate = coordinate
                         }
+                        .onMapCameraChange(frequency: .onEnd) { visibleMapRect = $0.rect }
                     }.frame(height: 260).listRowInsets(EdgeInsets())
                 } footer: { Text(draft.existing == nil ? "Tap the map to place a pin. Saving never moves your location." : "This is the saved pin’s location. Saving changes its name and appearance only.") }
                 Section("Pin appearance") {
@@ -76,6 +78,11 @@ struct PinEditor: View {
                 }
         }
     }
+    private var visiblePins: [SavedPlace] {
+        session.savedPins.filter { pin in
+            pin.id != draft.existing?.id && (visibleMapRect?.contains(MKMapPoint(pin.coordinate)) ?? true)
+        }
+    }
     private func center(_ coordinate: CLLocationCoordinate2D) {
         position = .region(MKCoordinateRegion(center: coordinate, latitudinalMeters: 2000, longitudinalMeters: 2000))
     }
@@ -84,12 +91,12 @@ struct PinEditor: View {
         if let existing = draft.existing, !session.savedPins.contains(where: { $0.id == existing.id }) {
             error = "This pin was removed. Close the editor and add it again."; return
         }
-        guard session.savePin(name: draft.name, coordinate: coordinate, favorite: draft.favorite),
-              let saved = session.savedPins.first(where: { $0.latitude == coordinate.latitude && $0.longitude == coordinate.longitude }),
-              session.renameFavorite(saved, to: draft.name, icon: draft.symbol, tint: draft.tint) else {
+        guard session.savePin(name: draft.name, coordinate: coordinate, favorite: draft.favorite,
+                              icon: draft.symbol, tint: draft.tint, replaceName: true) else {
             error = session.lastError ?? "Couldn't save this pin."; return
         }
         if let existing = draft.existing, existing.name != draft.name { library.renameLinkedPlace(existing, to: draft.name) }
+        DeveloperLogObserver.shared.recordMapEnergy(reason: "pin_saved")
         dismiss()
     }
 }

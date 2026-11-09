@@ -21,6 +21,40 @@ final class DeletedItemsSelectionTests: XCTestCase {
         selection.toggle(items[1].id)
         XCTAssertNil(selection.review(items, now: now))
     }
+    func testSweepSelectsSkippedRowsAndReversesWithoutLosingEarlierSelection() throws {
+        let ids = (0..<6).map { _ in UUID() }
+        let sweep = try XCTUnwrap(DeletedItemsSelectionSweep(anchor: ids[1], orderedIDs: ids, selectedIDs: [ids[5]]))
+        XCTAssertEqual(sweep.selection(through: ids[4]), Set([ids[1], ids[2], ids[3], ids[4], ids[5]]))
+        XCTAssertEqual(sweep.selection(through: ids[2]), Set([ids[1], ids[2], ids[5]]))
+        XCTAssertEqual(sweep.selection(through: ids[0]), Set([ids[0], ids[1], ids[5]]))
+        // Repeated samples and revisiting the same range must not invert selection.
+        XCTAssertEqual(sweep.selection(through: ids[4]), Set([ids[1], ids[2], ids[3], ids[4], ids[5]]))
+        XCTAssertEqual(sweep.selection(through: ids[1]), Set([ids[1], ids[5]]))
+    }
+    func testSweepStartingOnSelectedRowDeselectsAndRestoresOnReversal() throws {
+        let ids = (0..<5).map { _ in UUID() }
+        let sweep = try XCTUnwrap(DeletedItemsSelectionSweep(anchor: ids[3], orderedIDs: ids, selectedIDs: Set(ids)))
+        XCTAssertEqual(sweep.selection(through: ids[1]), Set([ids[0], ids[4]]))
+        XCTAssertEqual(sweep.selection(through: ids[2]), Set([ids[0], ids[1], ids[4]]))
+        XCTAssertEqual(sweep.selection(through: ids[4]), Set([ids[0], ids[1], ids[2]]))
+    }
+    func testSweepRejectsMissingOrAmbiguousAnchorsAndNeverAdoptsNewRows() throws {
+        let ids = (0..<3).map { _ in UUID() }
+        XCTAssertNil(DeletedItemsSelectionSweep(anchor: UUID(), orderedIDs: ids, selectedIDs: []))
+        XCTAssertNil(DeletedItemsSelectionSweep(anchor: ids[0], orderedIDs: [ids[0], ids[0]], selectedIDs: []))
+        let stale = UUID()
+        let sweep = try XCTUnwrap(DeletedItemsSelectionSweep(anchor: ids[0], orderedIDs: ids, selectedIDs: [stale]))
+        XCTAssertNil(sweep.selection(through: UUID()))
+        XCTAssertEqual(sweep.selection(through: ids[2]), Set(ids))
+    }
+    func testNewSweepAfterAnInterruptionStartsFromCurrentSelection() throws {
+        let ids = (0..<4).map { _ in UUID() }
+        var active: DeletedItemsSelectionSweep? = try XCTUnwrap(DeletedItemsSelectionSweep(anchor: ids[0], orderedIDs: ids, selectedIDs: []))
+        let selected = try XCTUnwrap(active?.selection(through: ids[2]))
+        active = nil // GestureState cancellation clears only the transient gesture.
+        active = try XCTUnwrap(DeletedItemsSelectionSweep(anchor: ids[1], orderedIDs: ids, selectedIDs: selected))
+        XCTAssertEqual(active?.selection(through: ids[2]), [ids[0]])
+    }
     func testSelectAllIgnoresExpiredAndInvalidEntriesAndDeselectAllIsEmpty() throws {
         let valid = items()
         var expired = valid[0]; expired.id = UUID(); expired.deletedAt = now.addingTimeInterval(-DeletedLibraryItem.lifetime)

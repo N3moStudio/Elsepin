@@ -15,14 +15,14 @@ enum HomeWidgetPublisher {
         WidgetCenter.shared.reloadAllTimelines()
     }
     static func placeID(_ place: SavedPlace) -> UUID {
-        var ids = UserDefaults.standard.dictionary(forKey: "locus.widget.placeIDs") as? [String: String] ?? [:]
+        var ids = AppDataWorkspace.defaults.dictionary(forKey: "locus.widget.placeIDs") as? [String: String] ?? [:]
         if let stored = ids[place.id], let id = UUID(uuidString: stored) { return id }
         let id = UUID(); ids[place.id] = id.uuidString
-        UserDefaults.standard.set(ids, forKey: "locus.widget.placeIDs")
+        AppDataWorkspace.defaults.set(ids, forKey: "locus.widget.placeIDs")
         return id
     }
     static func place(for id: UUID, among places: [SavedPlace]) -> SavedPlace? {
-        let ids = UserDefaults.standard.dictionary(forKey: "locus.widget.placeIDs") as? [String: String] ?? [:]
+        let ids = AppDataWorkspace.defaults.dictionary(forKey: "locus.widget.placeIDs") as? [String: String] ?? [:]
         return places.first { ids[$0.id] == id.uuidString }
     }
     static func choices(places: [SavedPlace], trips: [SavedTrip]) -> [WidgetLibraryItem] {
@@ -31,10 +31,10 @@ enum HomeWidgetPublisher {
     }
     @discardableResult
     static func publish(places: [SavedPlace], trips: [SavedTrip]) -> String? {
-        let ids = UserDefaults.standard.dictionary(forKey: "locus.widget.placeIDs") as? [String: String] ?? [:]
+        let ids = AppDataWorkspace.defaults.dictionary(forKey: "locus.widget.placeIDs") as? [String: String] ?? [:]
         let retained = Set(places.map(\.id))
         let trimmed = ids.filter { retained.contains($0.key) }
-        if trimmed != ids { UserDefaults.standard.set(trimmed, forKey: "locus.widget.placeIDs") }
+        if trimmed != ids { AppDataWorkspace.defaults.set(trimmed, forKey: "locus.widget.placeIDs") }
         guard let container else {
             if !reportedMissingAccess {
                 reportedMissingAccess = true
@@ -43,9 +43,9 @@ enum HomeWidgetPublisher {
             return unavailableMessage
         }
         let all = choices(places: places, trips: trips)
-        let selected = UserDefaults.standard.stringArray(forKey: "locus.widget.selected")
+        let selected = AppDataWorkspace.defaults.stringArray(forKey: "locus.widget.selected")
         let items = selected.map { ids in ids.compactMap { id in all.first { $0.id.uuidString == id } } } ?? Array(all.prefix(4))
-        let primary = UserDefaults.standard.string(forKey: "locus.widget.primary").flatMap(UUID.init(uuidString:))
+        let primary = AppDataWorkspace.defaults.string(forKey: "locus.widget.primary").flatMap(UUID.init(uuidString:))
         let snapshot = WidgetLibrary(items: Array(items.prefix(4)), primaryID: primary, availableItems: all)
         guard snapshot.valid else { return "Couldn't prepare the widget's saved items." }
         do {

@@ -9,6 +9,10 @@ struct RecentlyDeletedView: View {
     @State private var deleting: DeletedItemsDeletion?
     @State private var message: String?
     @State private var messageTitle = "Couldn't restore"
+    @State private var rowFrames: [UUID: CGRect] = [:]
+    @State private var sweep: DeletedItemsSelectionSweep?
+    @GestureState private var sweepActive = false
+    private let selectionSpace = "recently-deleted-selection"
     private var visibleItems: [DeletedLibraryItem] { bin.items.filter { $0.isRetained(at: Date()) } }
     var body: some View {
         List {
@@ -16,16 +20,7 @@ struct RecentlyDeletedView: View {
                 if visibleItems.isEmpty { Text("Nothing recently deleted").foregroundStyle(.secondary) }
                 ForEach(visibleItems) { item in
                     if selecting {
-                        Button { selection.toggle(item.id) } label: {
-                            HStack(spacing: 12) {
-                                Image(systemName: selection.ids.contains(item.id) ? "checkmark.circle.fill" : "circle")
-                                    .foregroundStyle(selection.ids.contains(item.id) ? LocusTheme.accent : .secondary)
-                                    .accessibilityHidden(true)
-                                itemLabel(item)
-                            }.frame(maxWidth: .infinity, minHeight: 52, alignment: .leading).contentShape(Rectangle())
-                        }.buttonStyle(.plain)
-                            .accessibilityValue(selection.ids.contains(item.id) ? "Selected" : "Not selected")
-                            .accessibilityAddTraits(selection.ids.contains(item.id) ? .isSelected : [])
+                        selectionRow(item)
                     } else {
                         VStack(alignment: .leading, spacing: 8) {
                             itemLabel(item)
@@ -44,13 +39,17 @@ struct RecentlyDeletedView: View {
                     }
                 }
                 if let error = bin.error { Text(error).foregroundStyle(LocusTheme.statusWarn) }
-            } footer: { Text("Kept for 30 days.") }
+            } footer: { Text(selecting ? "Drag down the circles to select several items. Kept for 30 days." : "Kept for 30 days.") }
         }
+        .coordinateSpace(name: selectionSpace)
+        .onPreferenceChange(DeletedSelectionFrames.self) { rowFrames = $0 }
+        .onChange(of: sweepActive) { _, active in if !active { sweep = nil } }
+        .onDisappear { sweep = nil; rowFrames = [:] }
         .shiftScreen().loggedNavigationTitle("Recently Deleted").navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button(selecting ? "Done" : "Select") {
-                    selecting.toggle(); selection.ids = []
+                    sweep = nil; selecting.toggle(); selection.ids = []; rowFrames = [:]
                 }.disabled(!selecting && visibleItems.isEmpty)
             }
         }
@@ -58,11 +57,13 @@ struct RecentlyDeletedView: View {
             if selecting, !visibleItems.isEmpty {
                 HStack {
                     Button(selection.ids.count == visibleItems.count ? "Deselect All" : "Select All") {
+                        sweep = nil
                         if selection.ids.count == visibleItems.count { selection.ids = [] }
                         else { selection.selectAll(visibleItems, now: Date()) }
                     }.frame(minHeight: 44)
                     Spacer()
                     Button(selection.ids.isEmpty ? "Delete All" : "Delete (\(selection.ids.count))", role: .destructive) {
+                        sweep = nil
                         deleting = selection.ids.isEmpty ? DeletedItemsDeletion(items: visibleItems)
                             : selection.review(bin.items, now: Date())
                     }.frame(minHeight: 44).disabled(!bin.canEdit)
@@ -71,7 +72,10 @@ struct RecentlyDeletedView: View {
             }
         }
         .onAppear { bin.prune() }
-        .onChange(of: bin.items) { _, items in selection.reconcile(with: items, now: Date()) }
+        .onChange(of: bin.items) { _, items in
+            sweep = nil
+            selection.reconcile(with: items, now: Date())
+        }
         .loggedAlert("Permanently delete \(deleting?.items.count ?? 0) \(deleting?.items.count == 1 ? "item" : "items")?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })) {
             Button("Cancel", role: .cancel) { deleting = nil }
             if let plan = deleting {
@@ -86,6 +90,54 @@ struct RecentlyDeletedView: View {
             Button("OK", role: .cancel) { message = nil }
         } message: { Text(message ?? "") }
     }
+    private func selectionRow(_ item: DeletedLibraryItem) -> some View {
+        HStack(spacing: 4) {
+            // Only this gutter claims a drag. Text and trailing whitespace keep
+            // native List scrolling; taps remain ordinary accessible buttons.
+            Button { selection.toggle(item.id) } label: {
+                Image(systemName: selection.ids.contains(item.id) ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(selection.ids.contains(item.id) ? LocusTheme.accent : .secondary)
+                    .frame(width: 44, height: 52).contentShape(Rectangle())
+            }
+            .highPriorityGesture(selectionDrag(from: item.id))
+            Button { selection.toggle(item.id) } label: {
+                itemLabel(item).frame(maxWidth: .infinity, minHeight: 52, alignment: .leading)
+                    .contentShape(Rectangle())
+            }
+        }
+        .buttonStyle(.plain)
+        .background {
+            GeometryReader { geometry in
+                Color.clear.preference(key: DeletedSelectionFrames.self,
+                    value: [item.id: geometry.frame(in: .named(selectionSpace))])
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(PlaceLabel.readable(item.payload.name)), \(item.payload.kind), expires \(item.expiresAt.formatted(date: .abbreviated, time: .omitted))")
+        .accessibilityValue(selection.ids.contains(item.id) ? "Selected" : "Not selected")
+        .accessibilityAddTraits(selection.ids.contains(item.id) ? [.isButton, .isSelected] : [.isButton])
+        .accessibilityAction { selection.toggle(item.id) }
+    }
+
+    private func selectionDrag(from anchor: UUID) -> some Gesture {
+        DragGesture(minimumDistance: 8, coordinateSpace: .named(selectionSpace))
+            .updating($sweepActive) { _, active, _ in active = true }
+            .onChanged { value in
+                guard selecting, deleting == nil, value.location.y.isFinite else { return }
+                let items = visibleItems
+                if sweep == nil {
+                    sweep = DeletedItemsSelectionSweep(anchor: anchor, orderedIDs: items.map(\.id), selectedIDs: selection.ids)
+                }
+                // Nearest visible row handles separator gaps and fast samples.
+                // The immutable ordered range also covers rows skipped by touch events.
+                let available = Set(items.map(\.id))
+                let target = rowFrames.filter { available.contains($0.key) && $0.value.midY.isFinite }
+                    .min { abs($0.value.midY - value.location.y) < abs($1.value.midY - value.location.y) }?.key ?? anchor
+                if let ids = sweep?.selection(through: target), ids != selection.ids { selection.ids = ids }
+            }
+            .onEnded { _ in sweep = nil }
+    }
+
     private func itemLabel(_ item: DeletedLibraryItem) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(PlaceLabel.readable(item.payload.name)).font(.headline).foregroundStyle(.primary)
@@ -114,5 +166,12 @@ struct RecentlyDeletedView: View {
     private enum RestoreError: LocalizedError {
         case exists
         var errorDescription: String? { "An item with this identity is already saved. Keep it, or delete it before restoring the older version." }
+    }
+}
+
+private struct DeletedSelectionFrames: PreferenceKey {
+    static let defaultValue: [UUID: CGRect] = [:]
+    static func reduce(value: inout [UUID: CGRect], nextValue: () -> [UUID: CGRect]) {
+        value.merge(nextValue(), uniquingKeysWith: { _, new in new })
     }
 }

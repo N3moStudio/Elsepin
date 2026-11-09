@@ -214,7 +214,7 @@ struct RootView: View {
     }
 
     private func publishWidgets() {
-        guard !reset.isResetting else { return }
+        guard !reset.isResetting, tripLibrary.isCurrentWorkspace, !DevModeController.shared.switching else { return }
         _ = HomeWidgetPublisher.publish(places: session.savedPins, trips: tripLibrary.trips)
     }
     private func showNotice(_ message: String) {

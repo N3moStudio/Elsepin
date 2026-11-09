@@ -5,6 +5,15 @@ Build 75 is the latest privately validated and delivered feedback update.
 See CURRENT-WORK for its exact source/build evidence and pending phone acceptance.
 Historical cleanup: [review](CLEANUP-AND-ORBS-REVIEW.md) and [native progress](NATIVE-PROGRESS.md).
 
+Build 76 work: `Shared/AppDataWorkspace.swift` owns demo namespace selection;
+`Locus/Support/DevModeController.swift` owns seeding and the stopped-session/drained-
+writes transition. Read [Dev Mode](DEV-MODE.md) before editing any library or
+preference persistence: never route pairing, security or uncertain-clear evidence
+through this namespace. `Shared/DevModeDataset.swift` owns synthetic examples.
+`RecentlyDeletedView.swift` and `DeletedItemsSelectionSweep` own gutter selection.
+`EnergyDiagnostics.swift` and `DeveloperLogObserver.recordMapEnergy` own bounded
+memory samples; they do not identify the crash cause by themselves.
+
 Build 75 feedback changes: search ownership is in
 `Locus/Features/Routes/RouteSearchField.swift` and the two search sheets. Prepared
 write confirmation and per-route smoothing live in `Locus/Engine/SpoofSession.swift`;

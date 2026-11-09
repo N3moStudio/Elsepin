@@ -52,7 +52,8 @@ struct MapHomeView: View {
     @State private var pinAdjustmentCamera: MKMapCamera?
 
     private var visualUpdatesEnabled: Bool {
-        isVisible && scenePhase == .active && !showSearch && !showRouteSearch && !showPathEditor && !planner.isDrawing
+        isVisible && scenePhase == .active && !showSearch && !showRouteSearch && !showPathEditor
+            && pinEditor == nil && !planner.isDrawing
     }
 
     private enum DrawTool: String, CaseIterable, Identifiable {
@@ -200,12 +201,14 @@ struct MapHomeView: View {
     private func homeMap(_ proxy: MapProxy) -> some View {
         mapWithGestures(proxy)
             .onMapCameraChange(frequency: .onEnd) { context in
+                guard visualUpdatesEnabled else { return }
                 visibleMapRect = context.rect
                 refreshSavedPins(session.savedPins)
                 DeveloperLogStore.shared.record("map_viewport_settled", [
                     "style": String(session.mapStyleIndex), "distance": String(context.camera.distance),
                     "visible_pins": String(visibleSavedPins.count), "saved_areas": String(savedMapAreas.count),
                     "route": String(displayedRoute != nil), "pin_adjusting": String(pinAdjusting)])
+                DeveloperLogObserver.shared.recordMapEnergy(reason: "map_settled")
             }
             .onMapCameraChange(frequency: .continuous) { context in
                 mapCameraChanged(context.camera, proxy: proxy)
@@ -231,6 +234,7 @@ struct MapHomeView: View {
     }
 
     private func refreshSavedPins(_ pins: [SavedPlace]) {
+        guard visualUpdatesEnabled else { return }
         // Refresh only after a pan, library edit or visibility change. Movement
         // ticks reuse this list instead of repeatedly scanning the whole library.
         let visible = preferences.showSavedPinsOnMap
@@ -430,7 +434,9 @@ struct MapHomeView: View {
             centerOnLocation()
         }
         .onChange(of: visualUpdatesEnabled) { _, enabled in
-            if enabled, followMovement, session.routeActive { centerOnLocation() }
+            guard enabled else { return }
+            refreshSavedPins(session.savedPins)
+            if followMovement, session.routeActive { centerOnLocation() }
         }
         .onChange(of: position.positionedByUser) { _, isUser in if isUser { followMovement = false } }
         .onChange(of: drawTool) { _, _ in drawing.endStroke() }
@@ -456,13 +462,14 @@ struct MapHomeView: View {
 
     var body: some View {
         timedMap
-        .onReceive(session.$savedPins) { pins in refreshSavedPins(pins) }
+        .onChange(of: session.savedPins, initial: true) { _, pins in refreshSavedPins(pins) }
         .onChange(of: session.namedAreas, initial: true) { _, areas in
             savedMapAreas = areas.map(SavedMapArea.init)
         }
         .onChange(of: preferences.showSavedPinsOnMap) { _, _ in refreshSavedPins(session.savedPins) }
         .onChange(of: session.mapStyleIndex) { _, value in
             DeveloperLogStore.shared.record("map_style_changed", ["style": String(value), "route": String(displayedRoute != nil)])
+            DeveloperLogObserver.shared.recordMapEnergy(reason: "map_style")
         }
         .onReceive(NotificationCenter.default.publisher(for: .locusDrawRoute)) { _ in beginDrawing() }
         .onChange(of: incomingSearch, initial: true) { _, requested in
@@ -894,9 +901,9 @@ private struct RouteMarkerTouchLayer: UIViewRepresentable {
     }
 }
 
-/// Capture the coordinate from the native map at first contact. The MapKit
-/// view owns both the touch and its projection, so safe-area offsets cannot
-/// sneak in through a surrounding SwiftUI coordinate space.
+/// Capture the native map and first-contact point, but project only after a
+/// single tap is recognized. Pinch/pan contacts never need map conversion.
+/// The map owns both coordinate spaces; no SwiftUI converter is retained.
 private struct MapPinTapGesture: UIGestureRecognizerRepresentable {
     var enabled: Bool
     var onTap: (CLLocationCoordinate2D) -> Void
@@ -932,16 +939,26 @@ private struct MapPinTapGesture: UIGestureRecognizerRepresentable {
         func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool { true }
     }
     final class PinTapRecognizer: UITapGestureRecognizer {
-        private(set) var coordinate: CLLocationCoordinate2D?
+        private weak var sourceMap: MKMapView?
+        private var contactPoint: CGPoint?
+        private var contactCount = 0
+        var coordinate: CLLocationCoordinate2D? {
+            guard state == .ended, contactCount == 1, let sourceMap, let contactPoint,
+                  sourceMap.bounds.contains(contactPoint) else { return nil }
+            return NativeRouteTouch(map: sourceMap, point: contactPoint).coordinate
+        }
         override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
-            coordinate = nil
-            if touches.count == 1, let touch = touches.first {
+            contactCount += touches.count
+            sourceMap = nil
+            contactPoint = nil
+            if contactCount == 1, let touch = touches.first {
                 var ancestor = touch.view
                 while let view = ancestor {
                     if let map = view as? MKMapView {
                         let point = touch.location(in: map)
-                        if map.bounds.contains(point) {
-                            coordinate = NativeRouteTouch(map: map, point: point).coordinate
+                        if point.x.isFinite, point.y.isFinite, map.bounds.contains(point) {
+                            sourceMap = map
+                            contactPoint = point
                         }
                         break
                     }
@@ -950,7 +967,12 @@ private struct MapPinTapGesture: UIGestureRecognizerRepresentable {
             }
             super.touchesBegan(touches, with: event)
         }
-        override func reset() { super.reset(); coordinate = nil }
+        override func reset() {
+            super.reset()
+            sourceMap = nil
+            contactPoint = nil
+            contactCount = 0
+        }
     }
 }
 

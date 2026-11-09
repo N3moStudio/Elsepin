@@ -8,6 +8,7 @@ struct SettingsView: View {
     @EnvironmentObject private var updates: AppUpdateController
     @Environment(\.scenePhase) private var scenePhase
     @State private var search = ""
+    @ObservedObject private var demo = DevModeController.shared
 
     var body: some View {
         NavigationStack {
@@ -16,6 +17,13 @@ struct SettingsView: View {
                     if let release = updates.notice {
                         Section { AppUpdateNotice(release: release) { updates.dismiss(release) } }
                             .shiftSettingsRows()
+                    }
+                    if demo.enabled {
+                        Section {
+                            NavigationLink { ExperimentalFeaturesView() } label: {
+                                Label("Dev Mode · Demo data", systemImage: "hammer")
+                            }
+                        }.shiftSettingsRows()
                     }
                     settingsIdentity
                     Section("Your connection") {
@@ -292,6 +300,7 @@ struct PlacesView: View {
     private enum Category: String, CaseIterable { case favorites = "Favorites", pins = "Pins", routes = "Routes", areas = "Areas" }
     @State private var category = Category.favorites
     @State private var search = ""
+    @ObservedObject private var demo = DevModeController.shared
     @State private var selectedFolder: String?
     @State private var pinEditor: PinDraft?
     @State private var areaEditor: NamedAreaDraft?

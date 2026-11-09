@@ -104,6 +104,13 @@ final class DeveloperLogObserver {
         energyTask?.cancel(); energyTask = nil; energy.reset()
     }
 
+    private var lastMapEnergy = Date.distantPast
+    /// Bounded, opt-in snapshots around the reported map exits, not a frame loop.
+    func recordMapEnergy(reason: String) {
+        guard DeveloperLogStore.shared.enabled, Date().timeIntervalSince(lastMapEnergy) >= 5 else { return }
+        lastMapEnergy = Date()
+        recordEnergy(reason: reason)
+    }
     func recordEnergy(reason: String) {
         guard DeveloperLogStore.shared.enabled else { return }
         var values = energy.sample()
@@ -167,7 +174,7 @@ struct DeveloperTouchAnchor: UIViewRepresentable {
         override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
             if active.isEmpty, let touch = touches.first {
                 start = touch.location(in: view); started = Date()
-                DeveloperLogStore.shared.record("touch_began", ["x": String(Int(start.x)), "y": String(Int(start.y))])
+                DeveloperLogStore.shared.record("touch_began", ["x": DiagnosticNumber.rounded(Double(start.x)), "y": DiagnosticNumber.rounded(Double(start.y))])
             }
             active.formUnion(touches); maximumTouches = max(maximumTouches, active.count)
         }
@@ -178,8 +185,8 @@ struct DeveloperTouchAnchor: UIViewRepresentable {
             guard active.isEmpty else { return }
             let end = touches.first?.location(in: view) ?? start
             DeveloperLogStore.shared.record(cancelled ? "touch_cancelled" : "touch_ended", [
-                "x": String(Int(end.x)), "y": String(Int(end.y)), "fingers": String(maximumTouches),
-                "duration_ms": String(Int(Date().timeIntervalSince(started) * 1000)),
+                "x": DiagnosticNumber.rounded(Double(end.x)), "y": DiagnosticNumber.rounded(Double(end.y)), "fingers": String(maximumTouches),
+                "duration_ms": DiagnosticNumber.rounded(Date().timeIntervalSince(started) * 1000),
                 "kind": hypot(end.x - start.x, end.y - start.y) < 12 ? "tap_or_hold" : "gesture"
             ])
             state = .failed

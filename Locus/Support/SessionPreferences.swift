@@ -63,12 +63,14 @@ final class SessionPreferences: ObservableObject {
         }
     }
     @Published private(set) var iconSelection: ShiftIconSelection
-    private let defaults: UserDefaults
+    private let injectedDefaults: UserDefaults?
+    private var defaults: UserDefaults { injectedDefaults ?? AppDataWorkspace.defaults }
+    private var deviceDefaults: UserDefaults { injectedDefaults ?? .standard }
 
     func confirmIcon(_ selection: ShiftIconSelection) {
         guard iconSelection != selection else { return }
         iconSelection = selection
-        defaults.set(selection.id, forKey: ShiftAppearanceSelection.iconKey)
+        deviceDefaults.set(selection.id, forKey: ShiftAppearanceSelection.iconKey)
         publishAppearance()
     }
 
@@ -85,12 +87,14 @@ final class SessionPreferences: ObservableObject {
         } catch { /* In-app choices still persist when shared widget storage is unavailable. */ }
     }
 
-    init(defaults: UserDefaults = .standard) {
-        self.defaults = defaults
+    init(defaults suppliedDefaults: UserDefaults? = nil) {
+        self.injectedDefaults = suppliedDefaults
+        let defaults = suppliedDefaults ?? AppDataWorkspace.defaults
+        let device = suppliedDefaults ?? UserDefaults.standard
         speedUnit = SpeedUnit(rawValue: defaults.string(forKey: "shift.speedUnit") ?? "") ?? .mph
         let branding = ShiftAppearanceSelection(defaults: defaults)
         visualStyle = branding.style
-        iconSelection = branding.icon
+        iconSelection = ShiftAppearanceSelection(defaults: device).icon
         appearanceOverrides = defaults.data(forKey: AppearanceOverrides.defaultsKey)
             .flatMap { try? JSONDecoder().decode(AppearanceOverrides.self, from: $0) } ?? AppearanceOverrides()
         connectionCheckSeconds = SessionTiming.checkSeconds(defaults.object(forKey: "shift.connectionCheckSeconds") as? Int ?? SessionTiming.defaultCheckSeconds)
@@ -121,8 +125,8 @@ final class SessionPreferences: ObservableObject {
         reminderMinutes = defaults.integer(forKey: "locus.reminderMinutes")
         // Legacy color preferences remain readable in backups; themes now own color mode.
         appearance = "theme"
-        appLockEnabled = defaults.bool(forKey: "locus.appLockEnabled")
-        hideInAppSwitcher = defaults.bool(forKey: "locus.hideInAppSwitcher")
+        appLockEnabled = device.bool(forKey: "locus.appLockEnabled")
+        hideInAppSwitcher = device.bool(forKey: "locus.hideInAppSwitcher")
         saveRecentLocations = defaults.bool(forKey: "locus.saveRecentLocations")
         recentHistoryRetention = RecentHistoryRetention(rawValue: defaults.string(forKey: "locus.recentHistoryRetention") ?? "") ?? .forever
     }
@@ -134,7 +138,7 @@ final class SessionPreferences: ObservableObject {
 
     /// Rehydrate the live object after the reset policy removes preference keys.
     func reloadAfterReset() {
-        let fresh = SessionPreferences(defaults: defaults)
+        let fresh = SessionPreferences(defaults: injectedDefaults)
         speedUnit = fresh.speedUnit
         liveActivities = fresh.liveActivities; hideLocation = fresh.hideLocation
         hideIslandLocation = fresh.hideIslandLocation; lockScreenProgress = fresh.lockScreenProgress
@@ -153,6 +157,7 @@ final class SessionPreferences: ObservableObject {
 
     private func save(_ value: Any, _ key: String) {
         DeveloperLogStore.shared.record("preference_changed", ["preference": key, "value": String(describing: value)])
-        defaults.set(value, forKey: "locus.\(key)")
+        let target = ["appLockEnabled", "hideInAppSwitcher"].contains(key) ? deviceDefaults : defaults
+        target.set(value, forKey: "locus.\(key)")
     }
 }

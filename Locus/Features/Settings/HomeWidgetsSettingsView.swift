@@ -42,16 +42,16 @@ struct HomeWidgetsSettingsView: View {
             }.shiftSettingsRows().disabled(!HomeWidgetPublisher.available)
         }.shiftSettingsScreen().loggedNavigationTitle("Home Screen widgets").navigationBarTitleDisplayMode(.inline)
         .onAppear {
-            selected = UserDefaults.standard.stringArray(forKey: "locus.widget.selected") ?? Array(choices.prefix(4).map { $0.id.uuidString })
+            selected = AppDataWorkspace.defaults.stringArray(forKey: "locus.widget.selected") ?? Array(choices.prefix(4).map { $0.id.uuidString })
             selected = selected.filter { id in choices.contains { $0.id.uuidString == id } }
-            primary = UserDefaults.standard.string(forKey: "locus.widget.primary") ?? ""
+            primary = AppDataWorkspace.defaults.string(forKey: "locus.widget.primary") ?? ""
             save()
         }
         .onChange(of: selected) { _, _ in save() }.onChange(of: primary) { _, _ in save() }
     }
     private func save() {
-        UserDefaults.standard.set(selected, forKey: "locus.widget.selected")
-        UserDefaults.standard.set(primary, forKey: "locus.widget.primary")
+        AppDataWorkspace.defaults.set(selected, forKey: "locus.widget.selected")
+        AppDataWorkspace.defaults.set(primary, forKey: "locus.widget.primary")
         message = HomeWidgetPublisher.publish(places: session.savedPins, trips: library.trips)
     }
 }

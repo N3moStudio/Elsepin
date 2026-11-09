@@ -22,7 +22,7 @@ struct SavedPlace: Identifiable, Codable, Equatable {
     }
 
     static func load(key: String) -> [SavedPlace] {
-        guard let data = UserDefaults.standard.data(forKey: key),
+        guard let data = AppDataWorkspace.defaults.data(forKey: key),
               let decoded = try? JSONDecoder().decode([SavedPlace].self, from: data) else {
             return []
         }
@@ -31,7 +31,7 @@ struct SavedPlace: Identifiable, Codable, Equatable {
 
     static func save(_ places: [SavedPlace], key: String) {
         if let data = try? JSONEncoder().encode(places) {
-            UserDefaults.standard.set(data, forKey: key)
+            AppDataWorkspace.defaults.set(data, forKey: key)
         }
     }
 
@@ -42,14 +42,14 @@ struct SavedPlace: Identifiable, Codable, Equatable {
     @discardableResult
     static func saveRecents(_ places: [SavedPlace], retention: RecentHistoryRetention, saveEnabled: Bool, now: Date = Date()) -> [SavedPlace] {
         guard saveEnabled else {
-            UserDefaults.standard.removeObject(forKey: "locus.recents")
+            AppDataWorkspace.defaults.removeObject(forKey: "locus.recents")
             return []
         }
         let kept = Array(places.filter {
             $0.latitude.isFinite && $0.longitude.isFinite && (-90...90).contains($0.latitude)
                 && (-180...180).contains($0.longitude) && retention.keeps(visitedAt: $0.visitedAt, now: now)
         }.prefix(20))
-        if kept.isEmpty { UserDefaults.standard.removeObject(forKey: "locus.recents") }
+        if kept.isEmpty { AppDataWorkspace.defaults.removeObject(forKey: "locus.recents") }
         else if kept != load(key: "locus.recents") { save(kept, key: "locus.recents") }
         return kept
     }

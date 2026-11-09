@@ -8,9 +8,10 @@ final class TripLibrary: ObservableObject {
     @Published var error: String?
     private(set) var lastSavedID: UUID?
     private var loadFailed = false
+    private let workspace = AppDataWorkspace.shared.context
+    var isCurrentWorkspace: Bool { workspace.generation == AppDataWorkspace.shared.context.generation }
     private var file: URL {
-        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Locus", isDirectory: true).appendingPathComponent("Trips.json")
+        workspace.file("Trips.json")
     }
 
     init() {
@@ -101,6 +102,7 @@ final class TripLibrary: ObservableObject {
     }
 
     func remove(_ trip: SavedTrip) {
+        guard isCurrentWorkspace else { return }
         guard let current = trips.first(where: { $0.id == trip.id }) else { return }
         let bin = RecentlyDeletedStore.shared
         guard let deletedID = bin.keep(.trip(current)) else { error = bin.error; return }
@@ -120,6 +122,7 @@ final class TripLibrary: ObservableObject {
     /// Called only after the user confirms clearing explicitly saved trips.
     @discardableResult
     func clearAll() -> Bool {
+        guard isCurrentWorkspace else { return false }
         guard RecentlyDeletedStore.shared.clear(kind: "Saved trip") else { error = RecentlyDeletedStore.shared.error; return false }
         do {
             if FileManager.default.fileExists(atPath: file.path) { try FileManager.default.removeItem(at: file) }
@@ -136,6 +139,7 @@ final class TripLibrary: ObservableObject {
 
     /// App-wide wipe handles Recently Deleted as its own separately reported step.
     func resetAll() throws {
+        guard isCurrentWorkspace else { throw CocoaError(.userCancelled) }
         if FileManager.default.fileExists(atPath: file.path) { try FileManager.default.removeItem(at: file) }
         trips = []; revisions = []; lastSavedID = nil; loadFailed = false; error = nil
     }
@@ -191,6 +195,7 @@ final class TripLibrary: ObservableObject {
     }
 
     private func persist(_ document: TripLibraryDocument) -> Bool {
+        guard isCurrentWorkspace else { error = "The data workspace changed. Reopen the library and try again."; return false }
         guard !loadFailed else { error = "The saved-trip file could not be read, so it has not been overwritten."; return false }
         do {
             let data = try document.encoded()

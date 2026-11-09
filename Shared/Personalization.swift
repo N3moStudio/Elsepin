@@ -61,7 +61,7 @@ enum SettingsDestination: String, CaseIterable, Identifiable {
         case .shortcuts: return "bottom menu buttons controls"
         case .widgets: return "home screen shortcuts favorite favorites saved places routes"
         case .recovery: return "recover restore interrupted route session trip"
-        case .experimental: return "find my life360 life 360 companion computer checks verification reset restore defaults wipe erase data pairing setup"
+        case .experimental: return "dev mode demo dataset testing find my life360 life 360 companion computer checks verification reset restore defaults wipe erase data pairing setup"
         case .remoteFindMy: return "remote find my experimental apple icloud cloud helper server login findmy life360 cron uptime"
         case .report: return "bug bugs issue issues feedback diagnostics"
         case .diagnostics: return "developer dev log logs timeline recording diagnostics export"

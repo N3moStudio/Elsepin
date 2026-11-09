@@ -41,8 +41,8 @@ final class RoutePlanner: ObservableObject {
     @Published private(set) var waypoints: [TripWaypoint] = []
     @Published private(set) var usesStoredPath = false
     @Published private(set) var sectionChoices: [UUID: RouteLegChoice] = [:]
-    @Published var preferWalkingPaths = UserDefaults.standard.bool(forKey: "locus.preferWalkingPaths") {
-        didSet { UserDefaults.standard.set(preferWalkingPaths, forKey: "locus.preferWalkingPaths") }
+    @Published var preferWalkingPaths = AppDataWorkspace.defaults.bool(forKey: "locus.preferWalkingPaths") {
+        didSet { AppDataWorkspace.defaults.set(preferWalkingPaths, forKey: "locus.preferWalkingPaths") }
     }
     private var generation = UUID()
     private var task: Task<Void, Never>?

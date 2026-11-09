@@ -8,10 +8,10 @@ final class RecentlyDeletedStore: ObservableObject {
     @Published var error: String?
     private var loadFailed = false
     var canEdit: Bool { !loadFailed }
-    private let file: URL
-    init() {
-        file = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Locus/RecentlyDeleted.json")
+    private var file: URL { AppDataWorkspace.file("RecentlyDeleted.json") }
+    init() { reloadWorkspace() }
+    func reloadWorkspace() {
+        items = []; error = nil; loadFailed = false
         guard FileManager.default.fileExists(atPath: file.path) else { return }
         do {
             let data = try Data(contentsOf: file)

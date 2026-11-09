@@ -26,7 +26,8 @@ struct ExperimentalFeaturesView: View {
                     experiment("Find My & Life360", detail: "Uses a Windows computer on the same Wi-Fi", icon: "laptopcomputer")
                 }
             } header: { Text("Service checks") } footer: { Text("Optional tests. Reports can be delayed or unavailable.") }.shiftSettingsRows()
-            Section("Testing tools") {
+            DevModeSection()
+            Section {
                 NavigationLink { iPhoneLocationCheckView() } label: { Label("Check iPhone location", systemImage: "location.magnifyingglass") }
                 NavigationLink { ReliabilityTestView() } label: { Label("Test a session", systemImage: "waveform.path.ecg") }
             }.shiftSettingsRows()

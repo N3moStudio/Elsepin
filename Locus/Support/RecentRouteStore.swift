@@ -7,28 +7,38 @@ final class RecentRouteStore {
     private static let availableKey = "locus.recentRoutesAvailable"
     private let queue = DispatchQueue(label: "locus.recent-routes", qos: .utility)
     private var revision = UUID()
+    private let pending = DispatchGroup()
     func load() -> [RecentRoute] {
-        guard UserDefaults.standard.bool(forKey: Self.availableKey),
-              let data = UserDefaults.standard.data(forKey: Self.key), data.count <= LibraryBackup.maximumBytes,
+        guard AppDataWorkspace.defaults.bool(forKey: Self.availableKey),
+              let data = AppDataWorkspace.defaults.data(forKey: Self.key), data.count <= LibraryBackup.maximumBytes,
               let values = try? JSONDecoder().decode([RecentRoute].self, from: data) else { return [] }
         return values
     }
+    func finishPendingWrites() async {
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            pending.notify(queue: queue) { continuation.resume() }
+        }
+    }
     func save(_ values: [RecentRoute]) {
+        let defaults = AppDataWorkspace.defaults
         let key = Self.key
         let availableKey = Self.availableKey
         let token = UUID(); revision = token
         // Revoke reads immediately. Even termination before the queued deletion
         // cannot make cleared history visible at the next launch.
-        if values.isEmpty { UserDefaults.standard.set(false, forKey: availableKey) }
+        if values.isEmpty { defaults.set(false, forKey: availableKey) }
+        let pending = pending
+        pending.enter()
         queue.async { [weak self] in
-            if values.isEmpty { UserDefaults.standard.removeObject(forKey: key) }
+            if values.isEmpty { defaults.removeObject(forKey: key); pending.leave() }
             else if let data = try? JSONEncoder().encode(values), data.count <= LibraryBackup.maximumBytes {
-                UserDefaults.standard.set(data, forKey: key)
+                defaults.set(data, forKey: key)
                 Task { @MainActor [weak self] in
+                    defer { pending.leave() }
                     guard self?.revision == token else { return }
-                    UserDefaults.standard.set(true, forKey: availableKey)
+                    defaults.set(true, forKey: availableKey)
                 }
-            }
+            } else { pending.leave() }
         }
     }
 }

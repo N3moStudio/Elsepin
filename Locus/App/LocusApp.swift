@@ -10,6 +10,7 @@ struct LocusApp: App {
     @StateObject private var privacy = AppPrivacyController()
     @StateObject private var appUpdates = AppUpdateController()
     @StateObject private var reset = AppResetController()
+    @StateObject private var demo = DevModeController.shared
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(SetupGate.defaultsKey) private var setupComplete = false
     @AppStorage(SetupGate.deferredKey) private var setupDeferred = false
@@ -35,15 +36,15 @@ struct LocusApp: App {
                     })
                 }
             }
-            .id(reset.revision)
+            .id(reset.revision.uuidString + demo.revision.uuidString)
             .modifier(ElsepinResourceUsage())
             .onAppear { lifecycle.session = session }
-            .disabled(reset.isResetting)
+            .disabled(reset.isResetting || demo.switching)
             .overlay {
-                if reset.isResetting {
+                if reset.isResetting || demo.switching {
                     ZStack {
                         Color.black.opacity(0.12).ignoresSafeArea().contentShape(Rectangle())
-                        ProgressView("Resetting Elsepin…").padding(24).background(ShiftPalette.surface, in: RoundedRectangle(cornerRadius: 16))
+                        ProgressView(demo.switching ? "Switching data…" : "Resetting Elsepin…").padding(24).background(ShiftPalette.surface, in: RoundedRectangle(cornerRadius: 16))
                     }.accessibilityAddTraits(.isModal)
                 }
             }
@@ -62,7 +63,7 @@ struct LocusApp: App {
             .loggedAlert(reset.noticeTitle, isPresented: Binding(get: { reset.notice != nil }, set: { if !$0 { reset.notice = nil } })) {
                 Button("OK", role: .cancel) { reset.notice = nil }
             } message: { Text(reset.notice ?? "") }
-            .onChange(of: reset.revision) { _, _ in
+            .onChange(of: reset.revision.uuidString + demo.revision.uuidString) { _, _ in
                 pendingShortcut = nil
                 notificationNavigation.pendingSessionDetails = false
                 for item in pendingImports where item.holdsSecurityScope { item.url.stopAccessingSecurityScopedResource() }
@@ -84,7 +85,7 @@ struct LocusApp: App {
                 if phase == .active {
                     DeveloperLogObserver.shared.snapshot(session: session)
                     ShiftIconController.shared.refresh()
-                    guard !reset.isResetting else { return }
+                    guard !reset.isResetting, !demo.switching else { return }
                     session.becameActive(pairing: pairing)
                     session.updateAutomaticRecovery(pairing: pairing, allowed: privacy.canOpenContent && showMap)
                     session.refreshRecentHistory()
@@ -117,14 +118,14 @@ struct LocusApp: App {
                 session.updateAutomaticRecovery(pairing: pairing, allowed: privacy.canOpenContent && showMap && scenePhase == .active && !resetting)
             }
             .task(id: scenePhase) {
-                guard scenePhase == .active, !reset.isResetting else { return }
+                guard scenePhase == .active, !reset.isResetting, !demo.switching else { return }
                 await appUpdates.checkIfDue()
             }
             .task(id: scenePhase) {
                 guard scenePhase == .active else { return }
                 while !Task.isCancelled {
                     do { try await Task.sleep(nanoseconds: 60_000_000_000) } catch { return }
-                    guard !reset.isResetting else { continue }
+                    guard !reset.isResetting, !demo.switching else { continue }
                     DeveloperLogStore.shared.maintenance()
                     DeveloperLogObserver.shared.snapshot(session: session)
                     if preferences.recentHistoryRetention != .forever { session.refreshRecentHistory() }
@@ -150,7 +151,7 @@ struct LocusApp: App {
                 session.updatePowerState()
             }
             .onOpenURL { url in
-                guard !reset.isResetting else { return }
+                guard !reset.isResetting, !demo.switching else { return }
                 if ["shift", "locus"].contains(url.scheme?.lowercased() ?? ""), url.host?.lowercased() == "session" {
                     notificationNavigation.pendingSessionDetails = true
                 } else { queueIncoming(url) }
@@ -186,7 +187,7 @@ struct LocusApp: App {
     }
 
     private func queueIncoming(_ url: URL) {
-        guard !reset.isResetting else { return }
+        guard !reset.isResetting, !demo.switching else { return }
         if let shortcut = LocusShortcut(url: url) { pendingShortcut = shortcut; drainIncoming(); return }
         guard url.isFileURL, ["plist", "mobiledevicepairing", "mobiledevicepair", "gpx"].contains(url.pathExtension.lowercased()) else { return }
         let item = PendingImport(url: url, holdsSecurityScope: url.startAccessingSecurityScopedResource())

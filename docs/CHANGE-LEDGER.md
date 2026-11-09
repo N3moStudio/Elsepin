@@ -1,9 +1,42 @@
 # Elsepin Change Ledger
 
-Updated through **7 November 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
+Updated through **8 November 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
 is the last recorded public release. Earlier entries retain their original validation context.
 
 See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all recorded 2.5.x/2.6.0 native runs.
+
+## Build 76 - Dev Mode, sweep selection and map hardening (8 November 2026)
+
+Private build validation pending. Owner reports build 75 still exits on satellite
+zoom and sometimes saving/zooming around a pin; no new incident export is present
+in Downloads. Owner currently reports no noticeable heat. These are device reports,
+not a confirmed crash cause or a measured energy result. No release is authorized.
+
+- Advanced & experimental -> Testing tools has Dev Mode. Demo library and ordinary
+  preferences use a separate defaults domain/file directory. Original library files
+  are never replaced. Stop/finish the session and recovery before switching; pending
+  saves finish first. Recreate drafts, reject stale library/import callbacks, refresh
+  widget snapshots, and reset demo edits on the next activation. Pairing, connected
+  accounts, security/icon settings, clear-state evidence and diagnostics stay global.
+- Fixtures include eight pins, six walk/run/cycle/e-bike/drive/mixed routes, second
+  and two-hour waits, folders, two areas, route history/recents and ten deleted items.
+  Synthetic paths are not verified roads. Real connection, cloud helper/signing
+  requirements and explicit Start/Teleport confirmation still apply.
+- Recently Deleted: drag the selection-circle gutter to select/deselect a contiguous
+  range, including fast/reversed gestures. Scroll normally elsewhere. Preserve
+  individual taps, accessibility actions, cancellation cleanup and deletion review.
+- Save a pin's full metadata with one publication/write. Delay native tap-coordinate
+  projection until a tap succeeds (not the first finger of a pinch). Pause covered
+  map callbacks and filter pin-editor annotations by the viewport. These remove
+  concrete churn/hazards but do not establish that the reported crash is resolved.
+- Opt-in diagnostics add current/peak memory footprint and advisory memory headroom;
+  map snapshots are rate limited to five seconds. No new polling loop. Numeric touch
+  formatting rejects nonfinite/out-of-range inputs instead of trapping.
+
+Local evidence: 17 packaging/resource tests, identity/appearance/helper checks and
+Swift syntax parsing passed. New Swift tests cover workspace separation/relaunch,
+failed seeds, demo fixture round-trips, drag ranges and diagnostic values. Native
+compilation, Swift test execution and real-device acceptance are still pending.
 
 ## GitHub source sync and blocked Actions attempt - 7 November
 

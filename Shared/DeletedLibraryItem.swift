@@ -39,6 +39,31 @@ struct DeletedItemsSelection: Equatable {
     }
 }
 
+/// A reversible sweep uses the starting selection, rather than toggling rows on
+/// every touch sample. Re-entering a row never toggles it twice; reversing back
+/// toward the anchor restores the rows no longer covered by the sweep.
+struct DeletedItemsSelectionSweep: Equatable {
+    private let orderedIDs: [UUID]
+    private let anchorIndex: Int
+    private let initialIDs: Set<UUID>
+    private let selecting: Bool
+
+    init?(anchor: UUID, orderedIDs: [UUID], selectedIDs: Set<UUID>) {
+        guard Set(orderedIDs).count == orderedIDs.count,
+              let index = orderedIDs.firstIndex(of: anchor) else { return nil }
+        self.orderedIDs = orderedIDs
+        anchorIndex = index
+        initialIDs = selectedIDs.intersection(orderedIDs)
+        selecting = !selectedIDs.contains(anchor)
+    }
+
+    func selection(through id: UUID) -> Set<UUID>? {
+        guard let index = orderedIDs.firstIndex(of: id) else { return nil }
+        let range = orderedIDs[min(anchorIndex, index)...max(anchorIndex, index)]
+        return selecting ? initialIDs.union(range) : initialIDs.subtracting(range)
+    }
+}
+
 /// Immutable confirmation scope. A newly deleted item is never added by Select All later.
 struct DeletedItemsDeletion: Identifiable {
     let id = UUID()

@@ -11,3 +11,5 @@
 - Group related editor controls with spacing/dividers; do not give every small control its own rounded card. Preserve native Back/edge-swipe in pushed editors. See UI-POLISH for the approved planner structure.
 - Deliver only the latest requested test IPA to `C:/Users/naith/Desktop/ipa/My Projects (N3mo Studio)`. Replace older Elsepin IPAs there only after the replacement is complete; leave other apps untouched. No checksum sidecars, ZIP bundles, logs or extra files in that folder. Keep build diagnostics in ignored `.build/artifacts/`.
 - For battery work, consult [energy review](docs/ENERGY-REVIEW.md) and the installed Axiom performance/location guidance; source review is not measured battery evidence.
+
+- Before changing library/preference persistence, read [Dev Mode isolation](docs/DEV-MODE.md). Keep demo writes isolated, capture destinations before async work, and preserve real session-clear evidence and credentials.

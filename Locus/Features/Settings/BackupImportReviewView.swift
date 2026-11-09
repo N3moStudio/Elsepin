@@ -183,6 +183,9 @@ struct BackupImportReviewView: View {
         }.buttonStyle(.borderless).frame(minHeight: 44)
     }
     private func apply() {
+        guard library.isCurrentWorkspace, !DevModeController.shared.switching else {
+            message = "The data workspace changed. Reopen the backup and review it again."; return
+        }
         let context = current
         guard context == confirmedContext else {
             message = "Your library or settings changed while reviewing. Check the updated preview and confirm again."

@@ -3,24 +3,35 @@ import Foundation
 
 @MainActor
 final class TripRecoveryStore: ObservableObject {
-    let resumePolicy = TripResumePolicy(defaults: .standard)
+    var resumePolicy: TripResumePolicy { TripResumePolicy(defaults: AppDataWorkspace.defaults) }
     @Published private(set) var checkpoint: TripCheckpoint?
     @Published private(set) var error: String?
-    @Published var enabled = UserDefaults.standard.object(forKey: "locus.tripRecovery") as? Bool ?? true {
+    @Published var enabled = AppDataWorkspace.defaults.object(forKey: "locus.tripRecovery") as? Bool ?? true {
         didSet {
-            UserDefaults.standard.set(enabled, forKey: "locus.tripRecovery")
+            guard !reloadingWorkspace else { return }
+            AppDataWorkspace.defaults.set(enabled, forKey: "locus.tripRecovery")
             if !enabled { discard() }
         }
     }
     private let queue = DispatchQueue(label: "locus.trip-checkpoint", qos: .utility)
     private var revision = UUID()
     private var lastWrite = Date.distantPast
-    private let file: URL
+    private var file: URL { AppDataWorkspace.file("TripCheckpoint.json") }
+    private let pending = DispatchGroup()
+    private var reloadingWorkspace = false
 
-    init() {
-        file = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Locus/TripCheckpoint.json")
-        guard enabled, UserDefaults.standard.bool(forKey: "locus.checkpointAvailable"), FileManager.default.fileExists(atPath: file.path) else { return }
+    init() { reloadWorkspace() }
+    func finishPendingWrites() async {
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            pending.notify(queue: queue) { continuation.resume() }
+        }
+    }
+    func reloadWorkspace() {
+        revision = UUID(); checkpoint = nil; error = nil; lastWrite = .distantPast
+        reloadingWorkspace = true
+        enabled = AppDataWorkspace.defaults.object(forKey: "locus.tripRecovery") as? Bool ?? true
+        reloadingWorkspace = false
+        guard enabled, AppDataWorkspace.defaults.bool(forKey: "locus.checkpointAvailable"), FileManager.default.fileExists(atPath: file.path) else { return }
         do {
             let size = try file.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
             guard size <= LibraryBackup.maximumBytes else { throw BackupError.tooLarge }
@@ -40,6 +51,8 @@ final class TripRecoveryStore: ObservableObject {
         revision = token
         lastWrite = Date()
         let file = file
+        let defaults = AppDataWorkspace.defaults
+        let pending = pending; pending.enter()
         queue.async { [weak self] in
             do {
                 try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
@@ -48,13 +61,15 @@ final class TripRecoveryStore: ObservableObject {
                 var values = URLResourceValues(); values.isExcludedFromBackup = true
                 try protected.setResourceValues(values)
                 Task { @MainActor [weak self] in
+                    defer { pending.leave() }
                     guard let self, self.revision == token else { return }
-                    UserDefaults.standard.set(true, forKey: "locus.checkpointAvailable")
+                    defaults.set(true, forKey: "locus.checkpointAvailable")
                     self.checkpoint = value
                     self.error = nil
                 }
             } catch {
                 Task { @MainActor [weak self] in
+                    defer { pending.leave() }
                     guard let self, self.revision == token else { return }
                     self.error = "Couldn't save the latest recovery point. Movement can continue, but recovery may use an older point."
                 }
@@ -63,19 +78,22 @@ final class TripRecoveryStore: ObservableObject {
     }
     func discard() {
         resumePolicy.setAllowed(false)
-        UserDefaults.standard.set(false, forKey: "locus.checkpointAvailable")
+        AppDataWorkspace.defaults.set(false, forKey: "locus.checkpointAvailable")
         revision = UUID()
         checkpoint = nil
         let file = file
         let token = revision
+        let pending = pending; pending.enter()
         queue.async { [weak self] in
             do {
                 if FileManager.default.fileExists(atPath: file.path) { try FileManager.default.removeItem(at: file) }
                 Task { @MainActor [weak self] in
+                    defer { pending.leave() }
                     guard self?.revision == token else { return }; self?.error = nil
                 }
             } catch {
                 Task { @MainActor [weak self] in
+                    defer { pending.leave() }
                     guard self?.revision == token else { return }
                     self?.error = "Couldn't remove the saved recovery point. Try again in Trip recovery."
                 }
@@ -97,6 +115,6 @@ final class TripRecoveryStore: ObservableObject {
             }
         }
         checkpoint = nil; error = nil; lastWrite = .distantPast
-        UserDefaults.standard.removeObject(forKey: "locus.checkpointAvailable")
+        AppDataWorkspace.defaults.removeObject(forKey: "locus.checkpointAvailable")
     }
 }

@@ -35,7 +35,7 @@ final class SpoofSession: ObservableObject {
     @Published var pin: CLLocationCoordinate2D?
     @Published private(set) var pinIsPreview = false
     @Published private(set) var namedAreas: [NamedArea] = {
-        guard let data = UserDefaults.standard.data(forKey: "locus.namedAreas"),
+        guard let data = AppDataWorkspace.defaults.data(forKey: "locus.namedAreas"),
               let values = try? JSONDecoder().decode([NamedArea].self, from: data),
               values.count <= 100, values.allSatisfy(\.isValid) else { return [] }
         return values
@@ -49,15 +49,15 @@ final class SpoofSession: ObservableObject {
     @Published private(set) var simulated: CLLocationCoordinate2D?
     @Published var travelMode: TravelMode = .walk
     @Published var eBikeSpeedMPH = EBikeSpeed.defaultMPH {
-        didSet { UserDefaults.standard.set(EBikeSpeed.clamped(eBikeSpeedMPH), forKey: EBikeSpeed.preferenceKey) }
+        didSet { AppDataWorkspace.defaults.set(EBikeSpeed.clamped(eBikeSpeedMPH), forKey: EBikeSpeed.preferenceKey) }
     }
-    @Published private var modeSpeeds = UserDefaults.standard.dictionary(forKey: "locus.modeSpeeds") as? [String: Double] ?? [:] {
-        didSet { UserDefaults.standard.set(modeSpeeds, forKey: "locus.modeSpeeds") }
+    @Published private var modeSpeeds = AppDataWorkspace.defaults.dictionary(forKey: "locus.modeSpeeds") as? [String: Double] ?? [:] {
+        didSet { AppDataWorkspace.defaults.set(modeSpeeds, forKey: "locus.modeSpeeds") }
     }
     @Published private(set) var routeJumping = false
     @Published private(set) var routeRerouting = false
-    @Published var smoothMovement = MovementDefaults.loadSmoothMovement(from: .standard) {
-        didSet { UserDefaults.standard.set(smoothMovement, forKey: "locus.smoothMovement") }
+    @Published var smoothMovement = MovementDefaults.loadSmoothMovement(from: AppDataWorkspace.defaults) {
+        didSet { AppDataWorkspace.defaults.set(smoothMovement, forKey: "locus.smoothMovement") }
     }
     // The persisted value is a default for future plans/backups. A route's
     // prepared/recovered choice and in-flight edits must never overwrite it.
@@ -66,8 +66,8 @@ final class SpoofSession: ObservableObject {
     private var motionSpeed = 0.0
     @Published private var measuredRouteSpeed = 0.0
     private var speedRevision = 0
-    @Published private var usualSpeeds = UserDefaults.standard.dictionary(forKey: UsualSpeedRules.preferenceKey) as? [String: Double] ?? [:] {
-        didSet { UserDefaults.standard.set(usualSpeeds, forKey: UsualSpeedRules.preferenceKey) }
+    @Published private var usualSpeeds = AppDataWorkspace.defaults.dictionary(forKey: UsualSpeedRules.preferenceKey) as? [String: Double] ?? [:] {
+        didSet { AppDataWorkspace.defaults.set(usualSpeeds, forKey: UsualSpeedRules.preferenceKey) }
     }
     private var pendingRouteTarget: Double?
     var currentRouteSpeed: Double {
@@ -171,7 +171,7 @@ final class SpoofSession: ObservableObject {
     }
 
     init() {
-        if let saved = UserDefaults.standard.object(forKey: EBikeSpeed.preferenceKey) as? Double {
+        if let saved = AppDataWorkspace.defaults.object(forKey: EBikeSpeed.preferenceKey) as? Double {
             eBikeSpeedMPH = EBikeSpeed.clamped(saved)
         } else { eBikeSpeedMPH = UsualSpeedRules.value(for: .eBike, stored: usualSpeeds) }
         for mode in TravelMode.allCases where mode != .eBike && modeSpeeds[mode.rawValue] == nil {
@@ -311,7 +311,7 @@ final class SpoofSession: ObservableObject {
     var backupPreferences: BackupPreferences {
         BackupPreferences(usualSpeeds: usualSpeeds, glassPanel: preferences.glassPanel,
             appearance: preferences.appearance, smoothMovement: smoothMovement,
-            preferWalkingPaths: UserDefaults.standard.bool(forKey: "locus.preferWalkingPaths"), shortcuts: preferences.panelShortcuts,
+            preferWalkingPaths: AppDataWorkspace.defaults.bool(forKey: "locus.preferWalkingPaths"), shortcuts: preferences.panelShortcuts,
             display: BackupDisplayPreferences(liveActivities: preferences.liveActivities, hideLocation: preferences.hideLocation,
                 hideIslandLocation: preferences.hideIslandLocation, lockScreenProgress: preferences.lockScreenProgress,
                 islandProgress: preferences.islandProgress, islandTimer: preferences.islandTimer,
@@ -356,7 +356,7 @@ final class SpoofSession: ObservableObject {
                 mapStyleIndex = display.mapStyle
                 refreshRecentHistory()
             }
-            UserDefaults.standard.set(settings.preferWalkingPaths, forKey: "locus.preferWalkingPaths")
+            AppDataWorkspace.defaults.set(settings.preferWalkingPaths, forKey: "locus.preferWalkingPaths")
         }
     }
     func moveFavorite(_ place: SavedPlace, folder: String) {
@@ -1082,7 +1082,7 @@ final class SpoofSession: ObservableObject {
                         waitSeconds: $0.id == self.stopProgress.currentID ? self.stopProgress.remainingSeconds : $0.waitSeconds)
                 }
                 let routes = try await RouteBuilder.itinerary(from: start, to: plan.destination, via: remainingStops,
-                    mode: mode, preferWalkingPaths: UserDefaults.standard.bool(forKey: "locus.preferWalkingPaths"))
+                    mode: mode, preferWalkingPaths: AppDataWorkspace.defaults.bool(forKey: "locus.preferWalkingPaths"))
                 try Task.checkCancellation()
                 while sendInFlight {
                     try await Task.sleep(nanoseconds: 100_000_000)
@@ -1568,7 +1568,8 @@ final class SpoofSession: ObservableObject {
     }
 
     @discardableResult
-    func savePin(name: String, coordinate: CLLocationCoordinate2D, favorite: Bool? = nil) -> Bool {
+    func savePin(name: String, coordinate: CLLocationCoordinate2D, favorite: Bool? = nil,
+                 icon: SavedPlaceSymbol? = nil, tint: SavedPlaceTint? = nil, replaceName: Bool = false) -> Bool {
         guard CLLocationCoordinate2DIsValid(coordinate) else { return false }
         let trimmed = String(name.trimmingCharacters(in: .whitespacesAndNewlines).prefix(120))
         var place = SavedPlace(
@@ -1577,22 +1578,27 @@ final class SpoofSession: ObservableObject {
             longitude: coordinate.longitude
         )
         // Don't let a generic star overwrite a named favorite for the same spot.
-        if let existing = savedPins.first(where: { $0.id == place.id }),
+        let existing = savedPins.first(where: { $0.id == place.id })
+        if !replaceName, let existing,
            Self.isGenericFavoriteName(place.name),
            !Self.isGenericFavoriteName(existing.name) {
             place.name = existing.name
         }
-        place.favorite = favorite ?? savedPins.first(where: { $0.id == place.id })?.isFavorite ?? false
-        place.folder = savedPins.first(where: { $0.id == place.id })?.folder
-        place.icon = savedPins.first(where: { $0.id == place.id })?.icon
-        place.color = savedPins.first(where: { $0.id == place.id })?.color
-        if savedPins.count >= 1000, !savedPins.contains(where: { $0.id == place.id }) {
+        place.favorite = favorite ?? existing?.isFavorite ?? false
+        place.folder = existing?.folder
+        place.icon = icon?.rawValue ?? existing?.icon
+        place.color = tint?.rawValue ?? existing?.color
+        if savedPins.count >= 1000, existing == nil {
             lastError = "You have 1,000 saved places. Remove one before saving another."
             return false
         }
-        savedPins.removeAll { $0.id == place.id }
-        savedPins.insert(place, at: 0)
-        SavedPlace.save(savedPins, key: favoritesKey)
+        // Publish the complete edit once. Maps must not observe a temporary
+        // removal/reinsertion or the name and appearance arriving separately.
+        var updated = savedPins.filter { $0.id != place.id }
+        updated.insert(place, at: 0)
+        if updated != savedPins { savedPins = updated }
+        SavedPlace.save(updated, key: favoritesKey)
+        if replaceName || icon != nil || tint != nil { publishActivity(force: true) }
         return true
     }
 
@@ -1617,11 +1623,13 @@ final class SpoofSession: ObservableObject {
         let trimmed = String(name.trimmingCharacters(in: .whitespacesAndNewlines).prefix(120))
         guard !trimmed.isEmpty,
               let index = savedPins.firstIndex(where: { $0.id == place.id }) else { return false }
-        savedPins[index].name = trimmed
-        if let icon { savedPins[index].icon = icon.rawValue }
-        if let tint { savedPins[index].color = tint.rawValue }
+        var updated = savedPins
+        updated[index].name = trimmed
+        if let icon { updated[index].icon = icon.rawValue }
+        if let tint { updated[index].color = tint.rawValue }
+        if updated != savedPins { savedPins = updated }
         publishActivity(force: true)
-        SavedPlace.save(savedPins, key: favoritesKey)
+        SavedPlace.save(updated, key: favoritesKey)
         return true
     }
 
@@ -1664,14 +1672,14 @@ final class SpoofSession: ObservableObject {
     func clearRecentHistory() {
         recentRoutes = []; recentRouteStore.save([])
         recents = []
-        UserDefaults.standard.removeObject(forKey: recentsKey)
+        AppDataWorkspace.defaults.removeObject(forKey: recentsKey)
     }
     /// Called only by the confirmed reset coordinator after it verifies no session remains.
     func resetPlacesAndAreas() {
         precondition(!hasSession && !isBusy)
         clearRecentHistory()
         savedPins = []; recents = []; namedAreas = []; chosenNames = []
-        for key in [favoritesKey, recentsKey, "locus.namedAreas"] { UserDefaults.standard.removeObject(forKey: key) }
+        for key in [favoritesKey, recentsKey, "locus.namedAreas"] { AppDataWorkspace.defaults.removeObject(forKey: key) }
         pinSelectionID = UUID(); pin = nil; pinIsPreview = false
         previewSpotName = nil; sessionSpotName = nil; activeSavedTripID = nil
         epoch += 1
@@ -1682,6 +1690,43 @@ final class SpoofSession: ObservableObject {
         stopJoystick()
         simulated = nil; lastConfirmedAt = nil; startedAt = nil; status = .idle
         verification.reset(); deviceLocationFix = nil; lastError = nil
+    }
+    /// Only the Dev Mode coordinator calls this, after movement is stopped and
+    /// queued persistence has finished. Do not erase the original library here.
+    func finishWorkspaceWrites() async {
+        await recentRouteStore.finishPendingWrites()
+        await recovery.finishPendingWrites()
+    }
+    func reloadDataWorkspace() {
+        precondition(!hasSession && !isBusy && journey == nil)
+        automaticRecoveryPending = false
+        stopRecoveryMonitor()
+        cancelRoute(clearJourney: false)
+        preparedRouteConfirmation = nil; routeSmoothMovement = nil
+        activeRoute = nil; activeSavedTripID = nil; journey = nil
+        chosenNames = []; previewSpotName = nil; sessionSpotName = nil
+        pin = nil; pinIsPreview = false; pinSelectionID = UUID()
+        simulated = nil; lastConfirmedAt = nil; startedAt = nil
+        stopProgress = RouteStopProgress(); lastError = nil
+        routeSectionSettingsEnabled = false; sectionSpeedOverrides = [:]; appliedSectionID = nil
+        arrivalChoice = .stay
+        savedPins = SavedPlace.load(key: favoritesKey)
+        recents = SavedPlace.loadRecents(retention: preferences.recentHistoryRetention, saveEnabled: preferences.saveRecentLocations)
+        recentRoutes = RecentRoute.kept(recentRouteStore.load(), retention: preferences.recentHistoryRetention, enabled: preferences.saveRecentLocations)
+        let defaults = AppDataWorkspace.defaults
+        namedAreas = defaults.data(forKey: "locus.namedAreas")
+            .flatMap { try? JSONDecoder().decode([NamedArea].self, from: $0) }
+            .flatMap { $0.count <= 100 && $0.allSatisfy(\.isValid) ? $0 : nil } ?? []
+        usualSpeeds = defaults.dictionary(forKey: UsualSpeedRules.preferenceKey) as? [String: Double] ?? [:]
+        modeSpeeds = defaults.dictionary(forKey: "locus.modeSpeeds") as? [String: Double] ?? [:]
+        eBikeSpeedMPH = EBikeSpeed.clamped((defaults.object(forKey: EBikeSpeed.preferenceKey) as? Double)
+            ?? UsualSpeedRules.value(for: .eBike, stored: usualSpeeds))
+        smoothMovement = MovementDefaults.loadSmoothMovement(from: defaults)
+        travelMode = .walk; mapStyleIndex = 0
+        recovery.reloadWorkspace()
+        recoveryAvailable = recovery.checkpoint != nil
+        // Switching datasets never grants permission to resume a checkpoint.
+        verification.reset()
     }
     func resetMovementPreferences() {
         precondition(!hasSession && !isBusy)
@@ -1741,7 +1786,7 @@ final class SpoofSession: ObservableObject {
             lastError = NamedArea.overlapMessage(conflict.name)
             return false
         }
-        UserDefaults.standard.set(data, forKey: "locus.namedAreas")
+        AppDataWorkspace.defaults.set(data, forKey: "locus.namedAreas")
         namedAreas = areas
         publishActivity(force: true)
         return true

@@ -20,6 +20,11 @@ final class AppResetController: ObservableObject {
     func perform(_ scope: AppResetScope, session: SpoofSession, pairing: PairingStore,
                  preferences: SessionPreferences, library: TripLibrary,
                  privacy: AppPrivacyController, updates: AppUpdateController) async {
+        guard !AppDataWorkspace.shared.isDemo, !DevModeController.shared.switching else {
+            noticeTitle = "Turn off Dev Mode first"
+            notice = "App-wide resets are unavailable while demo data is open. Turn Dev Mode off to manage your real data."
+            return
+        }
         guard !isResetting, canReset(session) else {
             noticeTitle = "Finish the current session first"
             notice = "Stop spoofing completely and finish any pairing, connection check or icon change before resetting. If pairing was cancelled but is still finishing, reopen Elsepin before trying again."

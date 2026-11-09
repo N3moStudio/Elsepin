@@ -12,9 +12,9 @@ struct AppResetSection: View {
                 Label("Wipe everything…", systemImage: "trash").foregroundStyle(.red)
             }.frame(minHeight: 44)
         } header: { Text("Reset Elsepin") } footer: {
-            Text("Review what will be removed before confirming. Stop spoofing completely first. Pairing and connection checks must also finish.")
+            Text(AppDataWorkspace.shared.isDemo ? "Turn off Dev Mode before resetting the app." : "Review what will be removed before confirming. Stop spoofing completely first. Pairing and connection checks must also finish.")
         }.shiftSettingsRows()
-        .disabled(reset.isResetting || session.hasSession || session.isBusy)
+        .disabled(reset.isResetting || session.hasSession || session.isBusy || AppDataWorkspace.shared.isDemo)
         .sheet(item: $reviewing) { AppResetReview(scope: $0) }
     }
 }
@@ -68,7 +68,7 @@ private struct AppResetReview: View {
                             await reset.perform(scope, session: session, pairing: pairing,
                                 preferences: preferences, library: library, privacy: privacy, updates: updates)
                         }
-                    }.frame(minHeight: 44).disabled(reset.isResetting || session.hasSession || session.isBusy)
+                    }.frame(minHeight: 44).disabled(reset.isResetting || session.hasSession || session.isBusy || AppDataWorkspace.shared.isDemo)
                 } footer: { Text("If a reset step fails, Elsepin stops and tells you which steps already finished. Pairing and setup are removed last.") }.shiftSettingsRows()
             }.shiftSettingsScreen().loggedNavigationTitle("Confirm reset").navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
