@@ -20,23 +20,23 @@ final class RecentRouteStore {
         }
     }
     func save(_ values: [RecentRoute]) {
-        let defaults = AppDataWorkspace.defaults
+        let workspace = AppDataWorkspace.shared.context
         let key = Self.key
         let availableKey = Self.availableKey
         let token = UUID(); revision = token
         // Revoke reads immediately. Even termination before the queued deletion
         // cannot make cleared history visible at the next launch.
-        if values.isEmpty { defaults.set(false, forKey: availableKey) }
+        if values.isEmpty { workspace.defaults.set(false, forKey: availableKey) }
         let pending = pending
         pending.enter()
         queue.async { [weak self] in
-            if values.isEmpty { defaults.removeObject(forKey: key); pending.leave() }
+            if values.isEmpty { workspace.defaults.removeObject(forKey: key); pending.leave() }
             else if let data = try? JSONEncoder().encode(values), data.count <= LibraryBackup.maximumBytes {
-                defaults.set(data, forKey: key)
+                workspace.defaults.set(data, forKey: key)
                 Task { @MainActor [weak self] in
                     defer { pending.leave() }
                     guard self?.revision == token else { return }
-                    defaults.set(true, forKey: availableKey)
+                    workspace.defaults.set(true, forKey: availableKey)
                 }
             } else { pending.leave() }
         }

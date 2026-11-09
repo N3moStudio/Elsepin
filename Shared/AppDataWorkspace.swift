@@ -4,6 +4,8 @@ import Foundation
 /// diagnostics and device security never use the demo workspace.
 /// Capture a Context before queued writes: a later switch must not redirect them.
 final class AppDataWorkspace: @unchecked Sendable {
+    // Immutable destination metadata; UserDefaults get/set operations are thread-safe.
+    // File mutations remain serialized by each owning store. Never swap this capture.
     struct Context: @unchecked Sendable {
         let generation = UUID()
         let id: UUID?

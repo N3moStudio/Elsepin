@@ -51,7 +51,7 @@ final class TripRecoveryStore: ObservableObject {
         revision = token
         lastWrite = Date()
         let file = file
-        let defaults = AppDataWorkspace.defaults
+        let workspace = AppDataWorkspace.shared.context
         let pending = pending; pending.enter()
         queue.async { [weak self] in
             do {
@@ -63,7 +63,7 @@ final class TripRecoveryStore: ObservableObject {
                 Task { @MainActor [weak self] in
                     defer { pending.leave() }
                     guard let self, self.revision == token else { return }
-                    defaults.set(true, forKey: "locus.checkpointAvailable")
+                    workspace.defaults.set(true, forKey: "locus.checkpointAvailable")
                     self.checkpoint = value
                     self.error = nil
                 }

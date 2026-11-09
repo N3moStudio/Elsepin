@@ -4,7 +4,11 @@ Updated 8 November 2026. Read AGENTS.md, inspect Git status, preserve newer work
 
 ## Build 76 - Dev Mode, sweep selection and map hardening (8 November 2026)
 
-Private build validation pending. Owner reports build 75 still exits on satellite
+Private run `6af1674a154a790c0488506a` passed 513 Swift tests and helper/resource
+checks, then failed native compilation on the root SwiftUI expression complexity;
+it also reported two non-Sendable defaults captures. Split the presentation shell
+from lifecycle observers and capture the immutable workspace context. Retry pending.
+Owner reports build 75 still exits on satellite
 zoom and sometimes saving/zooming around a pin; no new incident export is present
 in Downloads. Owner currently reports no noticeable heat. These are device reports,
 not a confirmed crash cause or a measured energy result. No release is authorized.

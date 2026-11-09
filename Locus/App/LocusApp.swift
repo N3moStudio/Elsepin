@@ -25,58 +25,7 @@ struct LocusApp: App {
 
     var body: some Scene {
         WindowGroup {
-            Group {
-                if showMap {
-                    RootView(incomingShortcut: $pendingShortcut, incomingSessionDetails: $notificationNavigation.pendingSessionDetails)
-                } else {
-                    SetupFlowView(initialStep: SetupGate.initialStep(hasPairingFile: pairing.hasPairingFile), onFinished: {
-                        finishInitialSetup(verified: true)
-                    }, onSkip: {
-                        finishInitialSetup(verified: false)
-                    })
-                }
-            }
-            .id(reset.revision.uuidString + demo.revision.uuidString)
-            .modifier(ElsepinResourceUsage())
-            .onAppear { lifecycle.session = session }
-            .disabled(reset.isResetting || demo.switching)
-            .overlay {
-                if reset.isResetting || demo.switching {
-                    ZStack {
-                        Color.black.opacity(0.12).ignoresSafeArea().contentShape(Rectangle())
-                        ProgressView(demo.switching ? "Switching data…" : "Resetting Elsepin…").padding(24).background(ShiftPalette.surface, in: RoundedRectangle(cornerRadius: 16))
-                    }.accessibilityAddTraits(.isModal)
-                }
-            }
-            .opacity(privacy.access.isLocked ? 0 : 1)
-            .allowsHitTesting(!privacy.access.isLocked)
-            .accessibilityHidden(privacy.access.isLocked)
-            .modifier(AppearancePresentation())
-            .environmentObject(session)
-            .environmentObject(session.recovery)
-            .environmentObject(session.reliability)
-            .environmentObject(pairing)
-            .environmentObject(preferences)
-            .environmentObject(privacy)
-            .environmentObject(appUpdates)
-            .environmentObject(reset)
-            .loggedAlert(reset.noticeTitle, isPresented: Binding(get: { reset.notice != nil }, set: { if !$0 { reset.notice = nil } })) {
-                Button("OK", role: .cancel) { reset.notice = nil }
-            } message: { Text(reset.notice ?? "") }
-            .onChange(of: reset.revision.uuidString + demo.revision.uuidString) { _, _ in
-                pendingShortcut = nil
-                notificationNavigation.pendingSessionDetails = false
-                for item in pendingImports where item.holdsSecurityScope { item.url.stopAccessingSecurityScopedResource() }
-                pendingImports.removeAll()
-            }
-            .background(PrivacyWindowAnchor(controller: privacy).frame(width: 0, height: 0))
-            .background(DeveloperTouchAnchor().frame(width: 0, height: 0))
-            .privacySensitive()
-            .environment(\.shiftVisualStyle, preferences.visualStyle)
-            .environment(\.shiftIconDesign, preferences.iconSelection.design)
-            .background(ShiftAppearanceAnchor(style: preferences.visualStyle).frame(width: 0, height: 0))
-            .preferredColorScheme(preferences.colorScheme)
-            .tint(ShiftPalette.color(.accent, style: preferences.visualStyle))
+            styledContent
             .onChange(of: scenePhase) { _, phase in
                 DeveloperLogStore.shared.record("scene_changed", ["phase": String(describing: phase)])
                 DeveloperLogStore.shared.maintenance(flush: phase != .active)
@@ -168,6 +117,63 @@ struct LocusApp: App {
                 session.refreshRecentHistory()
             }
         }
+    }
+
+    // Keep the presentation shell separate from lifecycle observers so SwiftUI's
+    // generic view type stays tractable for the native compiler.
+    private var styledContent: some View {
+        Group {
+            if showMap {
+                RootView(incomingShortcut: $pendingShortcut, incomingSessionDetails: $notificationNavigation.pendingSessionDetails)
+            } else {
+                SetupFlowView(initialStep: SetupGate.initialStep(hasPairingFile: pairing.hasPairingFile), onFinished: {
+                    finishInitialSetup(verified: true)
+                }, onSkip: {
+                    finishInitialSetup(verified: false)
+                })
+            }
+        }
+        .id(reset.revision.uuidString + demo.revision.uuidString)
+        .modifier(ElsepinResourceUsage())
+        .onAppear { lifecycle.session = session }
+        .disabled(reset.isResetting || demo.switching)
+        .overlay {
+            if reset.isResetting || demo.switching {
+                ZStack {
+                    Color.black.opacity(0.12).ignoresSafeArea().contentShape(Rectangle())
+                    ProgressView(demo.switching ? "Switching data…" : "Resetting Elsepin…").padding(24).background(ShiftPalette.surface, in: RoundedRectangle(cornerRadius: 16))
+                }.accessibilityAddTraits(.isModal)
+            }
+        }
+        .opacity(privacy.access.isLocked ? 0 : 1)
+        .allowsHitTesting(!privacy.access.isLocked)
+        .accessibilityHidden(privacy.access.isLocked)
+        .modifier(AppearancePresentation())
+        .environmentObject(session)
+        .environmentObject(session.recovery)
+        .environmentObject(session.reliability)
+        .environmentObject(pairing)
+        .environmentObject(preferences)
+        .environmentObject(privacy)
+        .environmentObject(appUpdates)
+        .environmentObject(reset)
+        .loggedAlert(reset.noticeTitle, isPresented: Binding(get: { reset.notice != nil }, set: { if !$0 { reset.notice = nil } })) {
+            Button("OK", role: .cancel) { reset.notice = nil }
+        } message: { Text(reset.notice ?? "") }
+        .onChange(of: reset.revision.uuidString + demo.revision.uuidString) { _, _ in
+            pendingShortcut = nil
+            notificationNavigation.pendingSessionDetails = false
+            for item in pendingImports where item.holdsSecurityScope { item.url.stopAccessingSecurityScopedResource() }
+            pendingImports.removeAll()
+        }
+        .background(PrivacyWindowAnchor(controller: privacy).frame(width: 0, height: 0))
+        .background(DeveloperTouchAnchor().frame(width: 0, height: 0))
+        .privacySensitive()
+        .environment(\.shiftVisualStyle, preferences.visualStyle)
+        .environment(\.shiftIconDesign, preferences.iconSelection.design)
+        .background(ShiftAppearanceAnchor(style: preferences.visualStyle).frame(width: 0, height: 0))
+        .preferredColorScheme(preferences.colorScheme)
+        .tint(ShiftPalette.color(.accent, style: preferences.visualStyle))
     }
 
     private func finishInitialSetup(verified: Bool) {
