@@ -1,6 +1,10 @@
 # Elsepin current handoff
 
-## Unbuilt follow-up - wider, adjustable pin visibility (13 November 2026)
+## Build 82 preparation - wider, adjustable pin visibility (13 November 2026)
+
+User authorized building and delivering this patch. Both targets request 2.6.1
+(82). Build/package checks remain pending the new GitHub run. Keep the release
+unpublished and replace only the older Elsepin IPA after successful verification.
 
 User found build 81 hides pins too soon and supplied a Library map screenshot
 with quarter-mile scale divisions. A scale division is only part of the visible
@@ -25,8 +29,8 @@ pass. Updated visibility tests cover the wider default, slider thresholds, local
 ground scale, invalid geometry and bounded preferences. Three new backup tests
 cover round-trip/selective import, legacy backups and invalid values; reset tests
 include the new key. Swift execution/native compilation and signed-phone layout
-remain pending. Build 81 remains the latest delivered IPA; no build or release
-started for this follow-up.
+remain pending. Build 81 remains the latest delivered IPA until the authorized
+build 82 passes. No release is authorized.
 
 ## Build 81 validated and delivered - 13 November 2026
 

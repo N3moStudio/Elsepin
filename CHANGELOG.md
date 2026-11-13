@@ -1,6 +1,6 @@
 # Elsepin changelog
 
-## Unreleased - wider pin visibility and map scale
+## Build 82 - wider pin visibility and map scale (validation pending)
 
 - Show saved pins at wider zoom levels using visible ground-map span instead of
   camera distance. Default to 5 miles across the map, adjustable from 0.5 to 20 mi
