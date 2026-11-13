@@ -34,7 +34,9 @@ is the official release. Earlier Shift entries retain their original names and r
 
 Native test/build evidence and phone acceptance are tracked in
 [build history](docs/BUILD-HISTORY.md) and [current work](docs/CURRENT-WORK.md).
-No release published.
+Final run 43356906705 passed 665 checks and native compilation with no compiler
+warnings/errors. Build 79 test IPA delivered; no release published. Physical
+gesture/layout/provider checks remain separate from automated validation.
 
 ## Build 78 - interaction fixes (12 November 2026)
 

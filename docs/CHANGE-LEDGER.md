@@ -13,8 +13,11 @@ New shared rules cover Redo history, row hit testing, emoji validation and bound
 next-route timing. Pin backup additions are optional; all existing storage IDs
 and compatibility identifiers are retained. Next-route automatic consent is
 explicit, one-shot and not persisted. No release or billing change authorized.
-See [current evidence](CURRENT-WORK.md) for the Mac run and delivery status;
-individual local-only notes below describe earlier stages of this work.
+Final source `9d64110`, GitHub run `43356906705`: 665 checks passed, zero compiler
+warnings/errors, both bundles/package verified, and build 79 delivered to the
+usual IPA folder replacing only build 78. See [current evidence](CURRENT-WORK.md)
+and [build history](BUILD-HISTORY.md) for every attempt. Phone acceptance remains
+pending. Individual local-only notes below describe earlier stages of this work.
 
 ## Build 78 interaction fixes (12 November 2026)
 

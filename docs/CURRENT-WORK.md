@@ -2,12 +2,12 @@
 
 Updated 12 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
 
-## Build 79 - integration and Mac validation in progress
+## Build 79 - validated and delivered (12 November 2026)
 
-User authorized all post-78 changes and a test IPA, not a release. Core changes
-are in `88d5282` on `codex/pins-search-69`, synced to public GitHub and private
-GitLab. Main is older. See CHANGELOG.md for the complete scope and APP-MAP.md
-for owners and compatibility boundaries.
+User authorized all post-78 changes and a test IPA, not a release. Final app source
+is `9d6411043771947a0643dc2bbd4fc70eff3ec154` on `codex/pins-search-69`, synced to
+public GitHub and private GitLab. Main is older. Subsequent documentation-only
+commits record this result. See CHANGELOG.md for scope and APP-MAP.md for owners.
 
 Includes area Redo, taller/full-screen pin/area maps, pin validation and automatic
 name/address hints, emoji/fixed colors, grouped Recents, route save/favorite
@@ -19,11 +19,19 @@ manual widget confirmation and demo isolation are retained.
 Initial Mac run `43355566346` stopped in portable Swift compilation: the new
 row hit-test helper needed an explicit CoreGraphics import. Corrected in
 `b9c4e6e`. Complete log remains in `.build/artifacts/github-43355566346/`.
-Run `43355966234` checks that correction; integration review is continuing.
-Local resource/identity/appearance checks passed. No new IPA delivered yet.
-Update this section with the final source, run, test counts and package receipt
-before delivery. Device UI/gesture and real VPN/provider behavior remain phone
-acceptance checks; a compiler pass does not prove them.
+Runs `43355966234` and `43356552566` passed native checks during integration.
+Final run `43356906705` passed 665 checks: 526 Swift, 104 cloud, 18 Companion and
+17 packaging/resource tests (one Windows-only Companion case skipped on Mac).
+Native app and extension compilation completed with zero compiler warnings/errors.
+Both IPA bundles are 2.6.1 (79), arm64; identities, entitlements, icon resources,
+helpers and notices passed package verification. Complete logs and the delivery
+receipt are in `.build/artifacts/github-43356906705/`.
+
+Delivered only `Elsepin 2.6.1 build 79.ipa` (19,005,315 bytes) to the usual Desktop
+IPA folder, replacing only Elsepin build 78. No release, main merge or billing
+change. Device UI/gesture, MapKit labels and real VPN/provider behavior remain
+phone acceptance checks; see [five focused spot checks](TESTING-BUILD-79.md).
+Compilation is not evidence of perfect physical-device behavior.
 
 ## Build 78 - public GitHub build (12 November 2026)
 

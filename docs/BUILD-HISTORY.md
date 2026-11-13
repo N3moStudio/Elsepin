@@ -4,6 +4,25 @@ Updated **12 November 2026**, America/Los_Angeles. Read the [full changelog](../
 for feature details. This page separates compilation, test artifacts and published
 releases so a successful check is not mistaken for an available download.
 
+## 12 November 2026 - Elsepin 2.6.1 (79), post-78 test build
+
+Final GitHub run `43356906705` built `9d6411043771947a0643dc2bbd4fc70eff3ec154`.
+665 checks passed: 526 Swift, 104 cloud, 18 Companion and 17 packaging/resource
+tests; one Windows-only Companion case skipped on Mac. Native app and extension
+compiled without compiler warnings/errors. Both bundles are 2.6.1 (79), arm64;
+identities, entitlements, icons, helpers, notices and IPA integrity verified.
+Delivered only `Elsepin 2.6.1 build 79.ipa` (19,005,315 bytes) to the usual Desktop
+IPA folder and replaced build 78. No release or main merge. Both remotes synced;
+Codemagic exhausted allowance and billing settings were left unchanged.
+
+Attempt history: `43355566346` failed Swift compilation because the new row
+hit-test helper lacked CoreGraphics import; fixed in `b9c4e6e`. Runs `43355966234`
+and `43356552566` passed 665 checks and native compilation during integration.
+Final source includes next-route handoff/save-flow review and removal of duplicate
+Recents icons. Complete original logs from all attempts are retained under
+`.build/artifacts/github-<run>/`; final package receipt uses the final run above.
+Phone acceptance remains pending; see [focused checks](TESTING-BUILD-79.md).
+
 ## 12 November 2026 - Elsepin 2.6.1 (78), public GitHub test build
 
 Owner authorized public source visibility; GitLab remains private and Veypax is

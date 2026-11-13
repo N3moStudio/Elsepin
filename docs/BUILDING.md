@@ -7,7 +7,7 @@ No Apple signing credentials or deployed helper are included.
 ## Current build access - 12 November 2026
 
 The owner authorized making `N3moStudio/Elsepin` public. GitHub Actions run
-`43348423568` succeeded on `xcode-27` for build 78 at `e3976f7`.
+`43356906705` succeeded on `xcode-27` for build 79 at `9d64110`.
 Use the manual workflow on `codex/pins-search-69` for the current development
 source; `main` is older. This does not publish a release. GitLab remains private.
 The earlier private-build billing failures below are historical. Codemagic's
@@ -15,13 +15,11 @@ personal free allowance is exhausted; do not enable paid billing or retry it
 until capacity changes. See BUILD-HISTORY.md for the final build result.
 ## GitHub Actions — works from Windows
 
-**Current status, 7 November:** GitHub repository access has been restored and the
-private `codex/pins-search-69` branch is synced through build 75. Actions run
-`42448203209` was still rejected before execution for failed payments or a spending
-limit. Account recovery alone did not restore usable build access. Keep Codemagic
-as the working build path; do not change billing or repeatedly retry that block.
+**Historical status, 7 November:** private Actions run `42448203209` was rejected
+before execution for failed payments or a spending limit. The owner's subsequent
+public-source approval restored the working build path described above.
 
-1. Open the private Elsepin repository and choose **Actions → Build Elsepin IPA → Run workflow**.
+1. Open the Elsepin repository and choose **Actions → Build Elsepin IPA → Run workflow**.
 2. Select `main` (or the specific branch you intend to build). There is no packaging checkbox: every run checks, builds and packages the IPA.
 3. After success, download **Elsepin <version>.ipa** under Artifacts. This is the only downloadable build artifact; there is no outer ZIP to extract. Sign it with SideStore and retain the extension.
 
@@ -55,7 +53,7 @@ source control. Since 5 November, the delivery folder is
 Elsepin test IPA, replacing older Elsepin IPAs after a complete replacement.
 Leave other apps untouched; no checksum sidecars, ZIP bundles or diagnostic files.
 
-The GitHub workflow remains available once its account restriction is resolved. Removing `codemagic.yaml` removes this
+The GitHub workflow is currently the verified build path. Removing `codemagic.yaml` removes this
 alternative without changing app behavior. Account allowance and runner availability
 still apply; see [Codemagic pricing](https://docs.codemagic.io/billing/pricing/).
 
