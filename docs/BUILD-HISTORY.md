@@ -1,5 +1,17 @@
 # Elsepin build history
 
+## Build 80 validated and delivered - 12 November 2026
+
+GitHub run 43376928555 succeeded at 6a1a29c: 686 checks passed (547 Swift,
+104 cloud, 18 Companion, 17 resources; one Windows-only case skipped).
+Native app/extension compiled with zero compiler warnings/errors. Both bundles
+are 2.6.1 (80); arm64, entitlements, icons, helpers and notices verified.
+Delivered Elsepin 2.6.1 build 80.ipa to the usual Desktop IPA folder, replacing
+build 79. Logs/receipt: .build/artifacts/github-43376928555/.
+No release published. Physical-device acceptance remains pending. Earlier
+not-built/pending-native notes below are superseded by this result.
+
+
 Updated **12 November 2026**, America/Los_Angeles. Read the [full changelog](../CHANGELOG.md)
 for feature details. This page separates compilation, test artifacts and published
 releases so a successful check is not mistaken for an available download.
