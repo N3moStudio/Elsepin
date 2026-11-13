@@ -325,7 +325,7 @@ final class SpoofSession: ObservableObject {
                 mapStyle: mapStyleIndex, connectionCheckSeconds: preferences.connectionCheckSeconds,
                 showFindMyStatus: preferences.showFindMyStatus, showLife360Status: preferences.showLife360Status,
                 showSavedPinsOnMap: preferences.showSavedPinsOnMap, showNamedAreasOnMap: preferences.showNamedAreasOnMap,
-                mapPinSize: preferences.mapPinSize), speedUnit: preferences.speedUnit,
+                mapPinSize: preferences.mapPinSize, mapPinVisibilityMiles: preferences.mapPinVisibilityMiles), speedUnit: preferences.speedUnit,
             visualStyle: preferences.visualStyle, material: preferences.appearanceOverrides.material,
             font: AppearanceFixed.font, textSize: AppearanceFixed.textSize)
     }
@@ -353,6 +353,7 @@ final class SpoofSession: ObservableObject {
                 if let show = display.showSavedPinsOnMap { preferences.showSavedPinsOnMap = show }
                 if let show = display.showNamedAreasOnMap { preferences.showNamedAreasOnMap = show }
                 if let size = display.mapPinSize { preferences.mapPinSize = size }
+                if let miles = display.mapPinVisibilityMiles { preferences.mapPinVisibilityMiles = miles }
                 preferences.connectionAlerts = display.connectionAlerts
                 preferences.reminderMinutes = display.reminderMinutes
                 if let seconds = display.connectionCheckSeconds { preferences.connectionCheckSeconds = seconds }

@@ -3,13 +3,23 @@
 Read this before applying new design skills or continuing the video-inspired
 polish. Current implementation and device evidence are in [CURRENT-WORK](CURRENT-WORK.md).
 
+## Post-build-81 visibility feedback (unbuilt)
+
+- Keep pins visible across wider neighborhood views. Base the cutoff on visible
+  ground-map span, not camera height. Expose a 0.5-20 mi slider under the existing
+  Map pins group; default 5 mi. One explanatory line distinguishes span from radius.
+- Use MapKit's own compact scale below the main toolbar, leading aligned and
+  noninteractive. Do not add a competing map, timer or large new status panel.
+- The same range applies to neighboring Library pins while editing; the draft pin
+  and route/current-location markers stay visible independently of this filter.
+
 ## Build 81 pin feedback (compiled; phone acceptance pending)
 
 - No address row or address request in the Library pin editor. Address lookup
   belongs to main-map selection; retain addresses in Recents where useful.
 - Show emoji input only after choosing Custom emoji in Symbol. Reject invalid
   input before display; selecting a standard symbol clears the custom emoji.
-- Hide saved pins beyond neighborhood zoom. Keep the edited/selected pin and
+- Hide saved pins beyond the configured zoom span. Keep the edited/selected pin and
   route/current-location markers visible; retain the Pins visibility toggle.
 - Put queued next-route cancellation in the route menu as well as its arrival
   controls. Canceling the queued trip must not stop the current one.

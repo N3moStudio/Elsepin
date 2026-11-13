@@ -75,10 +75,12 @@ struct BackupDisplayPreferences: Codable, Equatable {
     var showSavedPinsOnMap: Bool? = nil
     var showNamedAreasOnMap: Bool? = nil
     var mapPinSize: Double? = nil
+    var mapPinVisibilityMiles: Double? = nil
     var isValid: Bool {
         [0, 15, 30, 60, 120].contains(reminderMinutes) && (0...2).contains(mapStyle) &&
             (connectionCheckSeconds.map { (3...15).contains($0) } ?? true) &&
-            (mapPinSize.map { $0.isFinite && MapPinSize.range.contains($0) } ?? true)
+            (mapPinSize.map { $0.isFinite && MapPinSize.range.contains($0) } ?? true) &&
+            (mapPinVisibilityMiles.map { $0.isFinite && SavedPinVisibility.rangeMiles.contains($0) } ?? true)
     }
 }
 

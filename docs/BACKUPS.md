@@ -37,6 +37,13 @@ The historical instructions and examples below retain their original names.
 
 ## Map visibility choices (build 70)
 
+After build 81, optional `display.mapPinVisibilityMiles` stores the saved-pin
+visibility limit as the ground span across the map, in miles (0.5-20; default 5).
+It is reviewed/imported independently from pin size and visibility toggles. Missing
+legacy fields and unchecked selections preserve the current value. Reject invalid
+or nonfinite values before import. It belongs to the active personal/demo workspace;
+settings reset removes its key and reloads the default. The backup version is unchanged.
+
 Build 71 adds optional `display.mapPinSize` (22–64 points). Old backups leave the
 current size alone; new backups can review/import the size independently. The
 default is 34 points and reset restores it. No file format or identity changes.

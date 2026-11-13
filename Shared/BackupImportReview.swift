@@ -20,12 +20,12 @@ enum BackupSettingGroup: String, CaseIterable, Identifiable {
 }
 
 enum BackupSettingKey: String, CaseIterable, Identifiable {
-    case mapPinSize
+    case mapPinSize, mapPinVisibilityMiles
     case visualStyle, material, glassPanel, speedUnit, smoothMovement, preferWalkingPaths, shortcuts, walkSpeed, runSpeed, cycleSpeed, eBikeSpeed, driveSpeed, liveActivities, hideLocation, hideIslandLocation, lockScreenProgress, islandProgress, islandTimer, showFindMyStatus, showLife360Status, connectionAlerts, reminderMinutes, connectionCheckSeconds, saveRecentLocations, recentHistoryRetention, mapStyle, showSavedPinsOnMap, showNamedAreasOnMap
     var id: String { rawValue }
     var group: BackupSettingGroup {
         switch self {
-        case .visualStyle, .material, .glassPanel, .mapStyle, .showSavedPinsOnMap, .showNamedAreasOnMap, .mapPinSize:
+        case .visualStyle, .material, .glassPanel, .mapStyle, .showSavedPinsOnMap, .showNamedAreasOnMap, .mapPinSize, .mapPinVisibilityMiles:
             return .appearanceAndMap
         case .speedUnit, .smoothMovement, .preferWalkingPaths, .shortcuts, .walkSpeed, .runSpeed, .cycleSpeed, .eBikeSpeed, .driveSpeed:
             return .movement
@@ -68,6 +68,7 @@ enum BackupSettingKey: String, CaseIterable, Identifiable {
         case .showSavedPinsOnMap: return "Pins on map"
         case .showNamedAreasOnMap: return "Areas on map"
         case .mapPinSize: return "Map pin size"
+        case .mapPinVisibilityMiles: return "Pin visibility range"
         }
     }
     func value(in p: BackupPreferences) -> BackupSettingValue? {
@@ -101,6 +102,7 @@ enum BackupSettingKey: String, CaseIterable, Identifiable {
         case .showSavedPinsOnMap: return (p.display?.showSavedPinsOnMap).map { .boolean($0) }
         case .showNamedAreasOnMap: return (p.display?.showNamedAreasOnMap).map { .boolean($0) }
         case .mapPinSize: return p.display?.mapPinSize.map { .text("\(Int($0)) points") }
+        case .mapPinVisibilityMiles: return p.display?.mapPinVisibilityMiles.map { .number($0) }
         }
     }
     private func effectiveValue(in p: BackupPreferences) -> BackupSettingValue? {
@@ -117,6 +119,7 @@ enum BackupSettingKey: String, CaseIterable, Identifiable {
         case .boolean(let flag): return flag ? "On" : "Off"
         case .text(let text): return text
         case .number(let speed):
+            if self == .mapPinVisibilityMiles { return SavedPinVisibility.label(miles: speed) }
             let unit = p.speedUnit ?? .mph
             return unit.formatted(mph: speed)
         case nil: return "Not included"
@@ -159,6 +162,7 @@ enum BackupSettingKey: String, CaseIterable, Identifiable {
             case .showSavedPinsOnMap: target.showSavedPinsOnMap = source.showSavedPinsOnMap
             case .showNamedAreasOnMap: target.showNamedAreasOnMap = source.showNamedAreasOnMap
             case .mapPinSize: target.mapPinSize = source.mapPinSize
+            case .mapPinVisibilityMiles: target.mapPinVisibilityMiles = source.mapPinVisibilityMiles
             default: break
             }
             current.display = target

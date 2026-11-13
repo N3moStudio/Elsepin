@@ -34,9 +34,11 @@ struct PinEditor: View {
     @ObservedObject var draft: PinDraft
     @EnvironmentObject private var session: SpoofSession
     @EnvironmentObject private var library: TripLibrary
+    @EnvironmentObject private var preferences: SessionPreferences
     @Environment(\.dismiss) private var dismiss
     @State private var position: MapCameraPosition = .automatic
     @State private var visibleMapRect: MKMapRect?
+    @State private var visibleMapWidthMeters: Double?
     @State private var search = false
     @State private var expanded = false
     @State private var retainedCamera: MapCamera?
@@ -148,11 +150,16 @@ struct PinEditor: View {
                       CLLocationCoordinate2DIsValid(coordinate) else { return }
                 select(coordinate)
             }
-            .onMapCameraChange(frequency: .onEnd) { visibleMapRect = $0.rect; retainedCamera = $0.camera }
+            .onMapCameraChange(frequency: .onEnd) { context in
+                visibleMapRect = context.rect; retainedCamera = context.camera
+                visibleMapWidthMeters = SavedPinVisibility.mapWidthMeters(mapPoints: context.rect.size.width,
+                    metersPerMapPoint: MKMetersPerMapPointAtLatitude(context.region.center.latitude))
+            }
         }
     }
     private var visiblePins: [SavedPlace] {
-        guard SavedPinVisibility.isVisible(cameraDistance: retainedCamera?.distance) else { return [] }
+        guard SavedPinVisibility.isVisible(mapWidthMeters: visibleMapWidthMeters,
+            maximumMiles: preferences.mapPinVisibilityMiles) else { return [] }
         return session.savedPins.filter { pin in
             pin.id != draft.existing?.id && (visibleMapRect?.contains(MKMapPoint(pin.coordinate)) ?? true)
         }

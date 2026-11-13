@@ -1,5 +1,33 @@
 # Elsepin current handoff
 
+## Unbuilt follow-up - wider, adjustable pin visibility (13 November 2026)
+
+User found build 81 hides pins too soon and supplied a Library map screenshot
+with quarter-mile scale divisions. A scale division is only part of the visible
+map, not camera height or a radius from the phone.
+
+- Replace the 4,000 m camera-distance cutoff with visible map-bounds width in
+  ground meters, adjusted for the map center's latitude. Both the main map and
+  Library pin editor use the same policy. Default: 5 miles across the map.
+- Settings > Appearance > Map pins > Visible up to adjusts 0.5-20 miles in
+  half-mile steps. Keep current/draft pins and route/location markers separate.
+  The main-map list refreshes after camera movement or preference changes,
+  including returning from Settings; never scan the library on every zoom frame.
+- A native MapScaleView shares the main map's explicit namespace and sits below
+  its controls, leading aligned, noninteractive and always visible outside drawing.
+  Its ticks use MapKit's distance units/zoom; the slider explicitly uses miles.
+- `mapPinVisibilityMiles` persists in the active workspace, reloads after reset/
+  Dev Mode changes, and is an optional validated backup display field. Old backups
+  and unchecked imports preserve the current value. Settings reset restores 5 mi.
+
+Local validation: all 12 changed Swift files parse, source encoding/diff checks
+pass. Updated visibility tests cover the wider default, slider thresholds, local
+ground scale, invalid geometry and bounded preferences. Three new backup tests
+cover round-trip/selective import, legacy backups and invalid values; reset tests
+include the new key. Swift execution/native compilation and signed-phone layout
+remain pending. Build 81 remains the latest delivered IPA; no build or release
+started for this follow-up.
+
 ## Build 81 validated and delivered - 13 November 2026
 
 GitHub run 43493662140 succeeded at 2dc937e76df21f1d321c4eea1bfae5fb8a7f8572.

@@ -14,11 +14,21 @@ struct AppearanceSettingsView: View {
                         .frame(width: 72, height: 72)
                         .accessibilityHidden(true)
                 }
-                Slider(value: $preferences.mapPinSize, in: MapPinSize.range, step: 1) {
-                    Text("Map pin size")
-                } minimumValueLabel: { Text("Small").font(.caption) }
-                  maximumValueLabel: { Text("Large").font(.caption) }
+                Slider(value: $preferences.mapPinSize, in: MapPinSize.range, step: 1,
+                    label: { Text("Map pin size") },
+                    minimumValueLabel: { Text("Small").font(.caption) },
+                    maximumValueLabel: { Text("Large").font(.caption) })
                     .accessibilityValue("\(Int(preferences.mapPinSize)) points")
+                VStack(alignment: .leading, spacing: 8) {
+                    LabeledContent("Visible up to", value: SavedPinVisibility.label(miles: preferences.mapPinVisibilityMiles))
+                    Slider(value: $preferences.mapPinVisibilityMiles, in: SavedPinVisibility.rangeMiles, step: 0.5,
+                        label: { Text("Pin visibility range") },
+                        minimumValueLabel: { Text("Closer").font(.caption) },
+                        maximumValueLabel: { Text("Farther").font(.caption) })
+                        .accessibilityValue(SavedPinVisibility.label(miles: preferences.mapPinVisibilityMiles))
+                    Text("How far the map spans before saved pins hide. This isn't distance from you.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
             }.shiftSettingsRows()
             Section {
                 Picker("Surfaces", selection: $preferences.appearanceOverrides.material) {

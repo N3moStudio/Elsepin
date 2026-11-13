@@ -1,5 +1,17 @@
 # Elsepin changelog
 
+## Unreleased - wider pin visibility and map scale
+
+- Show saved pins at wider zoom levels using visible ground-map span instead of
+  camera distance. Default to 5 miles across the map, adjustable from 0.5 to 20 mi
+  in Settings > Appearance > Map pins. Apply the same range in the Library editor.
+- Add a compact native distance scale below the main map controls.
+- Preserve the new range through relaunch/Dev Mode, selective backup import/export
+  and settings reset. Older backups preserve the phone's current range.
+
+Local source checks pass; new/updated Swift cases and native/device checks await
+the next build. These changes are not in the delivered build 81 IPA.
+
 ## Build 81 - pin editing and search clarity (unpublished test build)
 
 - Keep the Library pin editor steady by removing address lookup and its changing

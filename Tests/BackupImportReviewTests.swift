@@ -2,6 +2,42 @@ import XCTest
 @testable import SessionPresentation
 
 final class BackupImportReviewTests: XCTestCase {
+    func testPinVisibilityRangeRoundTripsAndImportsIndependently() throws {
+        var current = try context()
+        current.preferences.display?.mapPinVisibilityMiles = 5
+        current.preferences.display?.mapPinSize = 34
+        var backup = try sample("Shift-Settings-Test")
+        backup.preferences?.display?.mapPinVisibilityMiles = 12
+        backup.preferences?.display?.mapPinSize = 56
+        let decoded = try LibraryBackup.decode(backup.encoded())
+        XCTAssertEqual(decoded.preferences?.display?.mapPinVisibilityMiles, 12)
+        let review = BackupImportReview(backup: decoded, current: current)
+        let selected = try XCTUnwrap(review.plan(BackupImportSelection(settings: [.mapPinVisibilityMiles])).preferences)
+        XCTAssertEqual(selected.display?.mapPinVisibilityMiles, 12)
+        XCTAssertEqual(selected.display?.mapPinSize, 34)
+        let unselected = try XCTUnwrap(review.plan(BackupImportSelection(settings: [.walkSpeed])).preferences)
+        XCTAssertEqual(unselected.display?.mapPinVisibilityMiles, 5)
+    }
+
+    func testOldBackupsPreservePinVisibilityRange() throws {
+        var current = try context()
+        current.preferences.display?.mapPinVisibilityMiles = 8.5
+        let old = try sample("Shift-Settings-Test")
+        XCTAssertNil(old.preferences?.display?.mapPinVisibilityMiles)
+        let review = BackupImportReview(backup: old, current: current)
+        XCTAssertFalse(review.changes.contains { $0.key == .mapPinVisibilityMiles })
+        let result = try XCTUnwrap(review.plan(BackupImportSelection(settings: [.walkSpeed])).preferences)
+        XCTAssertEqual(result.display?.mapPinVisibilityMiles, 8.5)
+    }
+
+    func testInvalidPinVisibilityRangeRejectedBeforeImport() throws {
+        var backup = try sample("Shift-Settings-Test")
+        for value in [-1.0, 0, 20.5, .infinity, .nan] {
+            backup.preferences?.display?.mapPinVisibilityMiles = value
+            XCTAssertFalse(backup.isValid)
+        }
+    }
+
     func testPinSizeRoundTripSelectionAndOldBackupPreservation() throws {
         var current = try context()
         current.preferences.display?.mapPinSize = 34

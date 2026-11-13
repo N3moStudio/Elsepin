@@ -21,7 +21,8 @@ struct MapHomeView: View {
     @State private var selectedSavedPin: String?
     @State private var thermallyLimited = ProcessInfo.processInfo.thermalState.rawValue >= ProcessInfo.ThermalState.serious.rawValue
     @State private var visibleMapRect: MKMapRect?
-    @State private var visibleCameraDistance: Double?
+    @State private var visibleMapWidthMeters: Double?
+    @Namespace private var mapScope
     @State private var visibleSavedPins: [SavedPlace] = []
     @State private var savedMapAreas: [SavedMapArea] = []
     @State private var pendingBrowsePin: PinDraft?
@@ -191,7 +192,7 @@ struct MapHomeView: View {
     }
 
     private var baseMap: some View {
-        Map(position: $position, interactionModes: interactionModes) { mapAnnotations }
+        Map(position: $position, interactionModes: interactionModes, scope: mapScope) { mapAnnotations }
             .mapStyle(mapStyle)
             .mapControlVisibility(.hidden)
     }
@@ -210,7 +211,8 @@ struct MapHomeView: View {
             .onMapCameraChange(frequency: .onEnd) { context in
                 guard visualUpdatesEnabled else { return }
                 visibleMapRect = context.rect
-                visibleCameraDistance = context.camera.distance
+                visibleMapWidthMeters = SavedPinVisibility.mapWidthMeters(mapPoints: context.rect.size.width,
+                    metersPerMapPoint: MKMetersPerMapPointAtLatitude(context.region.center.latitude))
                 refreshSavedPins(session.savedPins)
                 DeveloperLogStore.shared.record("map_viewport_settled", [
                     "style": String(session.mapStyleIndex), "distance": String(context.camera.distance),
@@ -245,7 +247,8 @@ struct MapHomeView: View {
         guard visualUpdatesEnabled else { return }
         // Refresh only after a pan, library edit or visibility change. Movement
         // ticks reuse this list instead of repeatedly scanning the whole library.
-        let visible = preferences.showSavedPinsOnMap && SavedPinVisibility.isVisible(cameraDistance: visibleCameraDistance)
+        let visible = preferences.showSavedPinsOnMap && SavedPinVisibility.isVisible(
+            mapWidthMeters: visibleMapWidthMeters, maximumMiles: preferences.mapPinVisibilityMiles)
             ? pins.filter { visibleMapRect?.contains(MKMapPoint($0.coordinate)) ?? true } : []
         if visibleSavedPins != visible { visibleSavedPins = visible }
         if let selectedSavedPin, !visible.contains(where: { $0.id == selectedSavedPin }) {
@@ -388,6 +391,7 @@ struct MapHomeView: View {
             }
         }
         .animation(drawingAnimation, value: planner.isDrawing)
+        .mapScope(mapScope)
     }
 
     // Opaque boundaries keep the SwiftUI type checker from solving the map,
@@ -475,6 +479,7 @@ struct MapHomeView: View {
             savedMapAreas = areas.map(SavedMapArea.init)
         }
         .onChange(of: preferences.showSavedPinsOnMap) { _, _ in refreshSavedPins(session.savedPins) }
+        .onChange(of: preferences.mapPinVisibilityMiles) { _, _ in refreshSavedPins(session.savedPins) }
         .onChange(of: session.mapStyleIndex) { _, value in
             DeveloperLogStore.shared.record("map_style_changed", ["style": String(value), "route": String(displayedRoute != nil)])
             DeveloperLogObserver.shared.recordMapEnergy(reason: "map_style")
@@ -566,6 +571,11 @@ struct MapHomeView: View {
                     .buttonStyle(.plain).locusGlass(.interactive, in: Circle())
                     .accessibilityLabel("Follow latest location")
                 }
+                MapScaleView(scope: mapScope)
+                    .mapControlVisibility(.visible)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.leading, 8)
+                    .allowsHitTesting(false)
                 if session.activeRoute != nil, selection == nil {
                     Text("Hold the route to place a jump marker")
                         .font(.footnote).padding(.horizontal, 12).padding(.vertical, 6)

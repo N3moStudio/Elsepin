@@ -22,6 +22,13 @@ final class SessionPreferences: ObservableObject {
             defaults.set(value, forKey: "locus.mapPinSize")
         }
     }
+    @Published var mapPinVisibilityMiles: Double {
+        didSet {
+            let value = SavedPinVisibility.boundedMiles(mapPinVisibilityMiles)
+            if value != mapPinVisibilityMiles { mapPinVisibilityMiles = value }
+            defaults.set(value, forKey: "locus.mapPinVisibilityMiles")
+        }
+    }
     // Legacy backup field remains writable; all surfaces now use one policy.
     var glassPanel: Bool {
         get { appearanceOverrides.material(for: visualStyle) == .glass }
@@ -121,6 +128,7 @@ final class SessionPreferences: ObservableObject {
         showSavedPinsOnMap = defaults.bool(forKey: "locus.showSavedPinsOnMap")
         showNamedAreasOnMap = defaults.bool(forKey: "locus.showNamedAreasOnMap")
         mapPinSize = MapPinSize.bounded((defaults.object(forKey: "locus.mapPinSize") as? Double) ?? MapPinSize.defaultValue)
+        mapPinVisibilityMiles = SavedPinVisibility.boundedMiles((defaults.object(forKey: "locus.mapPinVisibilityMiles") as? Double) ?? SavedPinVisibility.defaultMiles)
         connectionAlerts = defaults.bool(forKey: "locus.connectionAlerts")
         reminderMinutes = defaults.integer(forKey: "locus.reminderMinutes")
         // Legacy color preferences remain readable in backups; themes now own color mode.
@@ -146,6 +154,7 @@ final class SessionPreferences: ObservableObject {
         showFindMyStatus = fresh.showFindMyStatus; showLife360Status = fresh.showLife360Status
         showSavedPinsOnMap = fresh.showSavedPinsOnMap; showNamedAreasOnMap = fresh.showNamedAreasOnMap
         mapPinSize = fresh.mapPinSize
+        mapPinVisibilityMiles = fresh.mapPinVisibilityMiles
         appearanceOverrides = fresh.appearanceOverrides; connectionAlerts = fresh.connectionAlerts
         connectionCheckSeconds = fresh.connectionCheckSeconds; reminderMinutes = fresh.reminderMinutes
         appearance = fresh.appearance; appLockEnabled = fresh.appLockEnabled
