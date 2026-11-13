@@ -1,6 +1,6 @@
 # Elsepin changelog
 
-## Unreleased - pin editing and search clarity (after build 80)
+## Build 81 - pin editing and search clarity (validation pending)
 
 - Keep the Library pin editor steady by removing address lookup and its changing
   address row. Main-map selection can still resolve an address later.

@@ -1,6 +1,11 @@
 # Elsepin current handoff
 
-## Unbuilt follow-up - pin editing, map visibility and search clarity (13 November 2026)
+## Build 81 preparation - pin editing, map visibility and search clarity (13 November 2026)
+
+User authorized building and delivering this patch. Both targets now request
+2.6.1 (81); native compilation/package verification remain pending until the
+new GitHub run succeeds. Keep the release unpublished. Deliver only the verified
+IPA to the usual Desktop folder, replacing build 80 only after verification.
 
 New device feedback confirms bike/e-bike walking fallback, route Save / Favorite /
 Unfavorite, and Recently Deleted worked in build 80. This is focused acceptance,
@@ -31,8 +36,8 @@ User confirmed the screenshot selected the Demo Garden pin, not Demo Garden Walk
 `RoutePlaceSearchSheet.swift` now separates recent pins/routes and labels their
 types; saved search sections use Saved pins / Saved routes. The location action
 reads Plan a route here. Selection callbacks and stored data are unchanged.
-Syntax/encoding and diff checks pass. No IPA/release requested for this follow-up;
-build 80 remains installed/delivered. Native rendering still needs the next build.
+Syntax/encoding and diff checks pass. Build 80 remains the latest delivered IPA
+until the authorized build 81 passes. Native rendering still needs phone acceptance.
 
 ## Build 80 validated and delivered - 12 November 2026
 
