@@ -9,6 +9,10 @@ review and better bike/e-bike routing. Latest instruction: finish fixes and wait
 for the user to say when to build. Do not dispatch a workflow/package/release.
 `project.yml` reserves 2.6.1 (80); this is not build evidence. Build 79 remains
 the latest delivered IPA. Current source branch is still `codex/pins-search-69`.
+Repair source `7e4c328` is synced to GitHub and GitLab. Local checks: 17 resource
+tests passed, identity/appearance/helper archives passed, 25 changed/new Swift
+files passed syntax parsing, and local documentation links resolved. The 21 new
+Swift cases and native app/extension compilation remain pending the Mac run.
 
 See [build 80 review](BUILD-80-REVIEW.md) for fixes, evidence and outstanding
 native/device checks, and CHANGELOG.md for the complete user-visible scope.
