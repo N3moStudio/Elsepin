@@ -116,9 +116,9 @@ enum RoutePathSource: Equatable, Codable {
     }
     func playbackNote(mode: TravelMode) -> String? {
         if self == .mixedModes { return "This path includes sections with different travel modes." }
-        if self == .mixedCyclingWalking { return "Some legs use walking paths where cycling directions were unavailable." }
+        if self == .mixedCyclingWalking { return "Some legs use walking paths. These may include steps or bike restrictions." }
         if case .walkingForCycling(let fallback) = self {
-            return "\(fallback ? "Cycling unavailable. " : "")Using a walking path at \(mode.title.lowercased()) speed."
+            return "\(fallback ? "Cycling unavailable. " : "")Walking path at \(mode.title.lowercased()) speed; may include steps or bike restrictions."
         }
         if let network = pathNetwork, network != mode.routeNetwork {
             return "Keeping the \(network.title.lowercased()) at \(mode.title.lowercased()) speed."

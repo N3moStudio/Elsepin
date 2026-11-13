@@ -29,15 +29,19 @@ struct RoutePlaceSearchSheet: View {
     @State private var pendingDeviceOrigin: RoutePlace?
     @State private var searchResults: [PlaceSearchResult] = []
     @State private var submittedQuery: String?
+    @State private var searchArea: MKCoordinateRegion?
+    @State private var showSearchArea = false
     @FocusState private var searchFocused: Bool
 
     init(title: String, onPreviewTeleport: ((RoutePlace) -> Void)? = nil, allowsDeviceOrigin: Bool = false,
-         onChooseTrip: ((SavedTrip) -> Void)? = nil, onChoose: @escaping (RoutePlace) -> Void) {
+         onChooseTrip: ((SavedTrip) -> Void)? = nil, initialSearchRegion: MKCoordinateRegion? = nil,
+         onChoose: @escaping (RoutePlace) -> Void) {
         self.title = title
         self.onChooseTrip = onChooseTrip
         self.onPreviewTeleport = onPreviewTeleport
         self.allowsDeviceOrigin = allowsDeviceOrigin
         self.onChoose = onChoose
+        _searchArea = State(initialValue: initialSearchRegion)
     }
 
     var body: some View {
@@ -125,8 +129,21 @@ struct RoutePlaceSearchSheet: View {
                 }
             }
             .safeAreaInset(edge: .top, spacing: 0) {
+                VStack(spacing: 0) {
                 RouteSearchField(query: $query, focused: $searchFocused,
                                  prompt: "Saved name, address, or place", submit: searchAll)
+                HStack {
+                    Button { searchFocused = false; cancelSearch(); showSearchArea = true } label: {
+                        Label(searchArea == nil ? "Choose search area" : "Search in map area", systemImage: "map")
+                    }
+                    Spacer()
+                    if searchArea != nil { Button("Reset") { changeSearchArea(nil) } }
+                }.font(.caption).buttonStyle(.borderless).frame(minHeight: 44).padding(.horizontal, 16)
+                }.background(ShiftCanvas())
+            }
+            .onAppear { completer.setRegion(searchArea) }
+            .sheet(isPresented: $showSearchArea) {
+                PlaceSearchAreaPicker(initialRegion: searchArea ?? nearbyRegion) { changeSearchArea($0) }
             }
             .onChange(of: query) { _, value in
                 cancelSearch()
@@ -195,11 +212,20 @@ struct RoutePlaceSearchSheet: View {
         searchFocused = false
         let request = MKLocalSearch.Request()
         PlaceSearchRequest.configure(request, query: text)
-        if let center = session.pin ?? session.defaultRouteOrigin?.coordinate ?? session.realCoordinate,
-           CLLocationCoordinate2DIsValid(center) {
-            request.region = MKCoordinateRegion(center: center, latitudinalMeters: 12_000, longitudinalMeters: 12_000)
-        }
+        request.region = searchArea ?? nearbyRegion
+        if searchArea != nil { request.regionPriority = .required }
         resolve(request, chooseSingleResult: false)
+    }
+
+    private var nearbyRegion: MKCoordinateRegion {
+        let center = session.pin ?? session.defaultRouteOrigin?.coordinate ?? session.realCoordinate ??
+            CLLocationCoordinate2D(latitude: 0, longitude: 0)
+        return MKCoordinateRegion(center: center, latitudinalMeters: 12_000, longitudinalMeters: 12_000)
+    }
+    private func changeSearchArea(_ area: MKCoordinateRegion?) {
+        cancelSearch(); searchArea = area; completer.setRegion(area)
+        searchResults = []; submittedQuery = nil; resultNote = nil; error = nil
+        if !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { searchAll() }
     }
 
     @ViewBuilder private var savedMatches: some View {
@@ -283,15 +309,16 @@ struct RoutePlaceSearchSheet: View {
         guard general else { throw firstError ?? NSError(domain: MKErrorDomain, code: Int(MKError.Code.placemarkNotFound.rawValue)) }
         let fallback: PlaceSearchRequest
         if let category = PlaceSearchIntent.category(for: query), request.region.span.latitudeDelta > 0 {
-            let nearby = MKLocalPointsOfInterestRequest(center: request.region.center, radius: 12_000)
+            let nearby = MKLocalPointsOfInterestRequest(coordinateRegion: request.region)
             nearby.pointOfInterestFilter = MKPointOfInterestFilter(including: category.mapCategories)
             fallback = PlaceSearchRequest(pointsOfInterest: nearby)
-            resultNote = category == .food ? "Nearby restaurants. Check each place for its menu and opening hours." : "Nearby places in this category."
+            resultNote = category == .food ? "Restaurants in this search area. Check each place for its menu and opening hours." : "Places in this search area."
         } else {
             let wider = MKLocalSearch.Request()
             PlaceSearchRequest.configure(wider, query: query)
             if request.region.span.latitudeDelta > 0 {
-                wider.region = MKCoordinateRegion(center: request.region.center, latitudinalMeters: 40_000, longitudinalMeters: 40_000)
+                wider.region = searchArea ?? MKCoordinateRegion(center: request.region.center, latitudinalMeters: 40_000, longitudinalMeters: 40_000)
+                if searchArea != nil { wider.regionPriority = .required }
             }
             fallback = PlaceSearchRequest(wider)
         }
@@ -301,6 +328,8 @@ struct RoutePlaceSearchSheet: View {
 
     private func resolve(_ request: MKLocalSearch.Request, chooseSingleResult: Bool) {
         cancelSearch()
+        let requestedArea = searchArea
+        if let requestedArea { request.region = requestedArea; request.regionPriority = .required }
         let generation = searchGeneration
         let fallbackName = query
         let search = PlaceSearchRequest(request)
@@ -319,6 +348,7 @@ struct RoutePlaceSearchSheet: View {
                 let matches = response.mapItems.compactMap { item -> PlaceSearchResult? in
                     let coordinate = item.placemark.coordinate
                     guard CLLocationCoordinate2DIsValid(coordinate) else { return nil }
+                    guard requestedArea?.containsPlace(coordinate) != false else { return nil }
                     let saved = session.savedPins.first { RoutePoint($0.coordinate).distance(to: RoutePoint(coordinate)) <= 5 && !PlaceLabel.isCoordinate($0.name) }
                     let street = [item.placemark.subThoroughfare, item.placemark.thoroughfare].compactMap { $0 }.joined(separator: " ")
                     let address = [street, item.placemark.locality, item.placemark.administrativeArea]
@@ -328,7 +358,9 @@ struct RoutePlaceSearchSheet: View {
                 DeveloperLogStore.shared.record("place_search_finished", ["results": String(matches.count)])
                 guard !matches.isEmpty else {
                     searchResults = []; submittedQuery = fallbackName
-                    error = "No matching places found. Try adding a city or a more specific address."
+                    error = requestedArea == nil
+                        ? "No matching places found. Try adding a city or a more specific address."
+                        : "No matches in this map area. Choose a larger area or tap Reset to search elsewhere."
                     return
                 }
                 if chooseSingleResult, matches.count == 1, let result = matches.first { choose(result.place) }

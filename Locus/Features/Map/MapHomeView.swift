@@ -1091,6 +1091,11 @@ final class PlaceSearchCompleter: NSObject, ObservableObject, MKLocalSearchCompl
     @Published var results: [MKLocalSearchCompletion] = []
     private let completer = MKLocalSearchCompleter()
 
+    func setRegion(_ region: MKCoordinateRegion?) {
+        completer.region = region ?? MKCoordinateRegion(.world)
+        completer.regionPriority = region == nil ? .default : .required
+    }
+
     var query: String = "" {
         didSet {
             completer.queryFragment = query

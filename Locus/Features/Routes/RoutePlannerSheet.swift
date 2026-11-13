@@ -14,7 +14,6 @@ struct RoutePlannerSheet: View {
     @EnvironmentObject private var library: TripLibrary
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var searchEndpoint: Endpoint?
     @State private var stopSearchRoute: PlannedRoute?
     @State private var replacingStopID: UUID?
@@ -45,6 +44,11 @@ struct RoutePlannerSheet: View {
     @State private var editingStop: StopEdit?
     @State private var advancedExpanded = false
     @State private var previewLine: (id: UUID, line: MKPolyline)?
+    @State private var previewPosition: MapCameraPosition = .automatic
+    @State private var previewRegion: MKCoordinateRegion?
+    @State private var endpointSearchArea: MKCoordinateRegion?
+    @State private var confirmStoredRecalculation = false
+    @State private var swapBeforeRecalculation = false
     private struct SectionEdit: Identifiable, Hashable {
         let id: UUID; let title: String; let choice: RouteLegChoice
         static func == (lhs: Self, rhs: Self) -> Bool { lhs.id == rhs.id }
@@ -82,7 +86,7 @@ struct RoutePlannerSheet: View {
     var body: some View {
         NavigationStack {
             List {
-                if let route { routePreview(route) }
+                routePreview(route)
                 routeTimeline.shiftSettingsRows()
                 if hasJourney { movement.shiftSettingsRows() }
                 if planner.isLoading {
@@ -130,6 +134,13 @@ struct RoutePlannerSheet: View {
             .onChange(of: planner.selectedID) { _, _ in
                 if !hasJourney && !nextRouteMode { planner.rememberDraft(in: session) }
             }
+            .confirmationDialog("Replace this saved path with new directions?", isPresented: $confirmStoredRecalculation, titleVisibility: .visible) {
+                Button("Recalculate directions") {
+                    if swapBeforeRecalculation { planner.swap(mode: displayMode) }
+                    else { planner.rebuild(mode: displayMode) }
+                }
+                Button("Keep current path", role: .cancel) { }
+            } message: { Text("Saved and demo paths can differ from Apple's available directions. Your Library copy stays unchanged until you save changes.") }
             .navigationDestination(item: $searchEndpoint) { endpoint in
                 // Freeze the route for this navigation visit. Rebuilding the
                 // parent must not replace a mounted search screen's identity.
@@ -139,13 +150,14 @@ struct RoutePlannerSheet: View {
                     }
                 } else {
                     RoutePlaceSearchSheet(title: endpoint == .origin ? "Starting point" : endpoint == .stop ? "Add stop" : "Destination",
-                                          allowsDeviceOrigin: endpoint == .origin) { place in
+                                          allowsDeviceOrigin: endpoint == .origin,
+                                          initialSearchRegion: endpointSearchArea) { place in
                         pendingSearchChoice = (endpoint, place, false)
                     }
                 }
             }
             .onChange(of: searchEndpoint) { _, endpoint in
-                if endpoint == nil { applyPendingSearchChoice() }
+                if endpoint == nil { endpointSearchArea = nil; applyPendingSearchChoice() }
             }
             .navigationDestination(isPresented: $showPractice) {
                 if let route { RoutePracticeSheet(route: route, mode: displayMode, speed: SpeedConversion.metresPerSecond(mph: displaySpeed)) }
@@ -339,9 +351,9 @@ struct RoutePlannerSheet: View {
                     Button("Pause on this path", systemImage: "pause.circle") { showPathStop = true }
                         .disabled(route == nil || timelineStops.count >= 20 || (hasJourney && !session.canAddRouteStop))
                     if !hasJourney {
-                        Button("Swap start and destination", systemImage: "arrow.up.arrow.down") { planner.swap(mode: displayMode) }
+                        Button("Swap start and destination", systemImage: "arrow.up.arrow.down") { requestRecalculation(swap: true) }
                             .disabled(planner.origin == nil || planner.destination == nil)
-                        Button("Refresh directions", systemImage: "arrow.clockwise") { planner.rebuild(mode: displayMode) }
+                        Button("Refresh directions", systemImage: "arrow.clockwise") { requestRecalculation(swap: false) }
                             .disabled(planner.origin == nil || planner.destination == nil)
                     }
                 } label: {
@@ -358,6 +370,13 @@ struct RoutePlannerSheet: View {
         replacingStopID = nil
         stopSearchRoute = planner.selectedRoute
         searchEndpoint = .stop
+    }
+
+    private func requestRecalculation(swap: Bool) {
+        if planner.usesStoredPath {
+            swapBeforeRecalculation = swap; confirmStoredRecalculation = true
+        } else if swap { planner.swap(mode: displayMode) }
+        else { planner.rebuild(mode: displayMode) }
     }
 
     private func editTimelinePlace(_ place: TimelinePlace) {
@@ -532,12 +551,25 @@ struct RoutePlannerSheet: View {
         }
     }
 
-    private func routePreview(_ route: PlannedRoute) -> some View {
+    private func routePreview(_ route: PlannedRoute?) -> some View {
         Section {
-            Map(initialPosition: .automatic, interactionModes: [.pan, .zoom]) {
-                if let previewLine, previewLine.id == route.id {
+            HStack {
+                Text(route == nil ? "Map" : "Route preview").font(.subheadline.weight(.semibold))
+                Spacer()
+                if !hasJourney {
+                    Button("Search this area") {
+                        endpointSearchArea = previewRegion
+                        searchEndpoint = planner.origin == nil ? .origin : .destination
+                    }
+                }
+                Button("Fit", systemImage: "arrow.up.left.and.arrow.down.right") { fitPreview(route) }
+                    .labelStyle(.iconOnly).frame(width: 44, height: 44)
+            }.buttonStyle(.borderless).padding(.horizontal, 12)
+            Map(position: $previewPosition, interactionModes: [.pan, .zoom]) {
+                if let route, let previewLine, previewLine.id == route.id {
                     MapPolyline(previewLine.line).stroke(LocusTheme.accent, lineWidth: 5)
                 }
+                if let route {
                 ForEach(Array(route.stops.enumerated()), id: \.element.id) { index, stop in
                     Annotation(stop.name, coordinate: route.track.point(at: stop.metres).coordinate) {
                         Text("\(index + 2)").font(.caption.weight(.bold)).foregroundStyle(LocusTheme.onAccent)
@@ -548,33 +580,64 @@ struct RoutePlannerSheet: View {
                 }
                 Marker("Start", systemImage: "circle.fill", coordinate: route.origin.coordinate).tint(.secondary)
                 Marker("Finish", systemImage: "flag.checkered", coordinate: route.destination.coordinate).tint(LocusTheme.accent)
+                } else {
+                    if let origin = planner.origin { Marker("Start", systemImage: "circle.fill", coordinate: origin.coordinate).tint(.secondary) }
+                    if let destination = planner.destination { Marker("Finish", systemImage: "flag.checkered", coordinate: destination.coordinate).tint(LocusTheme.accent) }
+                    ForEach(planner.editableWaypoints) { stop in Marker(stop.name, coordinate: stop.point.coordinate) }
+                }
                 if hasJourney, let coordinate = session.simulated {
                     Marker("Spoofed location", systemImage: displayMode.icon, coordinate: coordinate).tint(LocusTheme.accentSecondary)
                 }
             }
             .mapStyle(.standard(elevation: .flat))
             .mapControlVisibility(.hidden)
-            .id(route.id)
-            .frame(height: typeSize.isAccessibilitySize ? 170 : 140)
+            .frame(height: 220)
+            .onMapCameraChange(frequency: .onEnd) { context in
+                if context.region.searchBounds.isValid { previewRegion = context.region }
+            }
             .overlay(alignment: .topTrailing) {
+                if route != nil {
                 Button { showPractice = true } label: {
                     Label("Preview", systemImage: "play.fill").font(.caption.weight(.semibold))
                         .padding(.horizontal, 12).frame(minHeight: 44).contentShape(Capsule())
                 }.buttonStyle(.plain).locusGlass(.regular, in: Capsule())
                     .padding(10).accessibilityLabel("Preview without changing location")
+                }
             }
             .clipShape(RoundedRectangle(cornerRadius: 22))
             .accessibilityLabel("Simulated route preview")
         }
         .listRowInsets(EdgeInsets())
         .listRowBackground(Color.clear)
-        .onAppear { updatePreviewLine(route) }
-        .onChange(of: route.id) { _, _ in updatePreviewLine(route) }
+        .onAppear { fitPreview(route) }
+        .onChange(of: route?.id) { _, _ in fitPreview(route) }
+        .onChange(of: planner.origin.map { RoutePoint($0.coordinate) }) { _, _ in if route == nil { fitPreview(nil) } }
+        .onChange(of: planner.destination.map { RoutePoint($0.coordinate) }) { _, _ in if route == nil { fitPreview(nil) } }
     }
 
-    private func updatePreviewLine(_ route: PlannedRoute) {
-        guard previewLine?.id != route.id else { return }
-        previewLine = (route.id, MKPolyline(coordinates: route.coordinates, count: route.coordinates.count))
+    private func fitPreview(_ route: PlannedRoute?) {
+        if let route {
+            if previewLine?.id != route.id {
+                previewLine = (route.id, MKPolyline(coordinates: route.coordinates, count: route.coordinates.count))
+            }
+            if let rect = previewLine?.line.boundingMapRect { fitPreviewRect(rect) }
+        } else {
+            previewLine = nil
+            let points = [planner.origin?.coordinate, planner.destination?.coordinate].compactMap { $0 }
+            if points.count > 1 {
+                fitPreviewRect(MKPolyline(coordinates: points, count: points.count).boundingMapRect)
+            } else if let center = points.first ?? session.pin ?? session.defaultRouteOrigin?.coordinate ?? session.realCoordinate {
+                let region = MKCoordinateRegion(center: center, latitudinalMeters: 2000, longitudinalMeters: 2000)
+                previewPosition = .region(region); previewRegion = region
+            }
+        }
+    }
+
+    private func fitPreviewRect(_ rect: MKMapRect) {
+        guard !rect.isNull, rect.size.width.isFinite, rect.size.height.isFinite else { return }
+        let fitted = rect.insetBy(dx: -max(rect.size.width * 0.18, 1000), dy: -max(rect.size.height * 0.18, 1000))
+        previewPosition = .rect(fitted)
+        previewRegion = MKCoordinateRegion(fitted)
     }
 
     // Outside the scrolling list so choosing a mode never hides Show route.
@@ -587,11 +650,9 @@ struct RoutePlannerSheet: View {
                     Text(error).font(.caption).foregroundStyle(LocusTheme.statusWarn)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .lineLimit(4)
-                    if planner.cyclingUnavailable {
-                        Button("Use a walking path instead") {
-                            planner.preferWalkingPaths = true
-                            planner.rebuild(mode: displayMode)
-                        }.font(.subheadline.weight(.semibold)).frame(minHeight: 44)
+                    if planner.canRestorePreviousRoute {
+                        Button("Restore previous route") { planner.restorePreviousRoute() }
+                            .font(.subheadline.weight(.semibold)).frame(minHeight: 44)
                     }
                 }
                 if let route {
@@ -606,7 +667,7 @@ struct RoutePlannerSheet: View {
                 .buttonStyle(ShiftActionStyle(compact: true))
                 .disabled(!canShowRoute)
                 Text(planner.isLoading ? "Building your preview. No movement has started."
-                     : planner.cyclingUnavailable ? "Choose Walking path above or change your endpoints."
+                     : planner.cyclingUnavailable ? "Try a nearby street or path on the map."
                      : route == nil ? "Choose a start and destination."
                      : nextRouteMode ? "Returns to next-route setup." : "Next: tap Start route on the map.")
                     .font(.caption).foregroundStyle(.secondary)

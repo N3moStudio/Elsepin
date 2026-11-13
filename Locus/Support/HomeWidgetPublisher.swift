@@ -21,6 +21,15 @@ enum HomeWidgetPublisher {
         AppDataWorkspace.defaults.set(ids, forKey: "locus.widget.placeIDs")
         return id
     }
+    /// Keep configured widget shortcuts attached when an editor moves a pin.
+    /// Call only after collision validation and before publishing the new list.
+    static func relocatePlaceID(from oldID: String, to newID: String) {
+        guard oldID != newID else { return }
+        var ids = AppDataWorkspace.defaults.dictionary(forKey: "locus.widget.placeIDs") as? [String: String] ?? [:]
+        guard let id = ids.removeValue(forKey: oldID) else { return }
+        ids[newID] = id
+        AppDataWorkspace.defaults.set(ids, forKey: "locus.widget.placeIDs")
+    }
     static func place(for id: UUID, among places: [SavedPlace]) -> SavedPlace? {
         let ids = AppDataWorkspace.defaults.dictionary(forKey: "locus.widget.placeIDs") as? [String: String] ?? [:]
         return places.first { ids[$0.id] == id.uuidString }

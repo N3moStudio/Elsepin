@@ -30,6 +30,58 @@ final class RouteLegEditingTests: XCTestCase {
     private let walk = RouteLegChoice(mode: .walk, speedMPH: 3)
     private let bike = RouteLegChoice(mode: .eBike, speedMPH: 10)
 
+    func testSwapWithoutStopsPreservesWholeRouteChoiceOrImplicitDefault() {
+        let empty = RouteLegEditing.reversed(waypoints: [], choices: [:])
+        XCTAssertTrue(empty.waypoints.isEmpty)
+        XCTAssertTrue(empty.choices.isEmpty)
+        let explicit = RouteLegEditing.reversed(waypoints: [], choices: [RouteLegChoice.destinationID: bike])
+        XCTAssertTrue(explicit.waypoints.isEmpty)
+        XCTAssertEqual(explicit.choices, [RouteLegChoice.destinationID: bike])
+    }
+
+    func testSwapOneStopMovesFinalLegChoiceToIncomingStopLeg() {
+        let stop = TripWaypoint(name: "Transfer", point: .init(latitude: 40, longitude: -74), waitSeconds: 90)
+        let drive = RouteLegChoice(mode: .drive, speedMPH: 35)
+        let swapped = RouteLegEditing.reversed(waypoints: [stop], choices: [stop.id: walk, RouteLegChoice.destinationID: drive])
+        XCTAssertEqual(swapped.waypoints, [stop])
+        XCTAssertEqual(swapped.choices, [stop.id: drive, RouteLegChoice.destinationID: walk])
+    }
+
+    func testSwapMixedLegsReversesModeAndSpeedButRetainsPlaceWaitsAndIDs() {
+        let first = TripWaypoint(name: "Bike pickup", point: .init(latitude: 40, longitude: -74), waitSeconds: 15)
+        let second = TripWaypoint(name: "Car pickup", point: .init(latitude: 40.01, longitude: -74), waitSeconds: 120)
+        let drive = RouteLegChoice(mode: .drive, speedMPH: 41)
+        let swapped = RouteLegEditing.reversed(waypoints: [first, second],
+            choices: [first.id: walk, second.id: bike, RouteLegChoice.destinationID: drive])
+        XCTAssertEqual(swapped.waypoints, [second, first])
+        XCTAssertEqual(swapped.choices[second.id], drive)
+        XCTAssertEqual(swapped.choices[first.id], bike)
+        XCTAssertEqual(swapped.choices[RouteLegChoice.destinationID], walk)
+    }
+
+    func testSwapPartialChoicesKeepsUnconfiguredLegsImplicit() {
+        let first = TripWaypoint(name: "First", point: .init(latitude: 40, longitude: -74))
+        let second = TripWaypoint(name: "Second", point: .init(latitude: 40.01, longitude: -74))
+        let swapped = RouteLegEditing.reversed(waypoints: [first, second], choices: [first.id: bike])
+        XCTAssertEqual(swapped.waypoints, [second, first])
+        XCTAssertEqual(swapped.choices, [RouteLegChoice.destinationID: bike])
+        let defaults = RouteLegEditing.reversed(waypoints: [first, second], choices: [:])
+        XCTAssertTrue(defaults.choices.isEmpty)
+    }
+
+    func testSwappingTwiceRestoresFullAndPartialLegAssignments() {
+        let first = TripWaypoint(name: "First", point: .init(latitude: 40, longitude: -74), waitSeconds: 0)
+        let second = TripWaypoint(name: "Second", point: .init(latitude: 40.01, longitude: -74), waitSeconds: 86_400)
+        let originals: [[UUID: RouteLegChoice]] = [[:], [second.id: bike],
+            [first.id: walk, second.id: bike, RouteLegChoice.destinationID: .init(mode: .drive, speedMPH: 30)]]
+        for choices in originals {
+            let swapped = RouteLegEditing.reversed(waypoints: [first, second], choices: choices)
+            let restored = RouteLegEditing.reversed(waypoints: swapped.waypoints, choices: swapped.choices)
+            XCTAssertEqual(restored.waypoints, [first, second])
+            XCTAssertEqual(restored.choices, choices)
+        }
+    }
+
     func testEditingMiddleLegKeepsBothNeighborsAndCorrectETA() throws {
         let id = UUID()
         let updated = try XCTUnwrap(RouteLegEditing.replacing([], in: 100...200, length: 300,

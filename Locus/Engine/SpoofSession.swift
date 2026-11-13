@@ -1668,7 +1668,7 @@ final class SpoofSession: ObservableObject {
     @discardableResult
     func savePin(name: String, coordinate: CLLocationCoordinate2D, favorite: Bool? = nil,
                  icon: SavedPlaceSymbol? = nil, tint: SavedPlaceTint? = nil, replaceName: Bool = false,
-                 address: String? = nil, emoji: String? = nil) -> Bool {
+                 address: String? = nil, emoji: String? = nil, replacingID: String? = nil) -> Bool {
         guard CLLocationCoordinate2DIsValid(coordinate) else { return false }
         let trimmed = String(name.trimmingCharacters(in: .whitespacesAndNewlines).prefix(120))
         var place = SavedPlace(
@@ -1677,7 +1677,14 @@ final class SpoofSession: ObservableObject {
             longitude: coordinate.longitude
         )
         // Don't let a generic star overwrite a named favorite for the same spot.
-        let existing = savedPins.first(where: { $0.id == place.id })
+        if let issue = SavedPinReplacement.validate(sourceID: replacingID, destinationID: place.id,
+                                                   savedIDs: Set(savedPins.map(\.id))) {
+            lastError = issue == .missingSource ? "This pin was removed. Reopen its editor."
+                : "A saved pin already exists here. Choose a different spot; neither pin was changed."
+            return false
+        }
+        let existing = savedPins.first(where: { $0.id == (replacingID ?? place.id) })
+        let moved = existing.map { $0.id != place.id } ?? false
         if !replaceName, let existing,
            Self.isGenericFavoriteName(place.name),
            !Self.isGenericFavoriteName(existing.name) {
@@ -1687,7 +1694,13 @@ final class SpoofSession: ObservableObject {
         place.folder = existing?.folder
         place.icon = icon?.rawValue ?? existing?.icon
         place.color = tint?.rawValue ?? existing?.color
-        place.address = address ?? existing?.address ?? (pin.map { RoutePoint($0) == RoutePoint(coordinate) } == true ? selectedPinAddress : nil)
+        // An editor can save before lookup finishes. A moved pin must never
+        // inherit address metadata from the old coordinate or another preview.
+        if moved { place.address = address }
+        else {
+            place.address = address ?? existing?.address ??
+                (pin.map { RoutePoint($0) == RoutePoint(coordinate) } == true ? selectedPinAddress : nil)
+        }
         if let emoji {
             guard emoji.isEmpty || PinAppearance.isSingleEmoji(emoji) else { return false }
             place.emoji = emoji.isEmpty ? nil : emoji
@@ -1698,8 +1711,9 @@ final class SpoofSession: ObservableObject {
         }
         // Publish the complete edit once. Maps must not observe a temporary
         // removal/reinsertion or the name and appearance arriving separately.
-        var updated = savedPins.filter { $0.id != place.id }
+        var updated = savedPins.filter { $0.id != place.id && $0.id != replacingID }
         updated.insert(place, at: 0)
+        if moved, let existing { HomeWidgetPublisher.relocatePlaceID(from: existing.id, to: place.id) }
         if updated != savedPins { savedPins = updated }
         SavedPlace.save(updated, key: favoritesKey)
         if replaceName {

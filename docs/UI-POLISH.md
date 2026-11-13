@@ -3,6 +3,18 @@
 Read this before applying new design skills or continuing the video-inspired
 polish. Current implementation and device evidence are in [CURRENT-WORK](CURRENT-WORK.md).
 
+## Build 80 corrections (pending native/device validation)
+
+- Keep the route map visible before directions exist and after failures. Fit is
+  explicit; a saved path must not silently turn into fresh directions.
+- Pin expansion is a separate Search-row button, never an automatic Form-row
+  action. Keep the map camera across expansion; edited pins start zoomed in.
+- Manual pin-editor taps leave naming to the user. Search results may fill a
+  blank name. Address text belongs in editors/Recents, not the main-map bubble.
+- Show the existing pin symbol/emoji without an added white backing circle.
+- Scope search to a chosen map area only after an explicit user action. Opening
+  a normal Start/Destination editor must still allow a different city.
+
 ## Build 79 refinements
 
 - Keep the compact tray, but share header/action/footer spacing between one- and
@@ -10,7 +22,8 @@ polish. Current implementation and device evidence are in [CURRENT-WORK](CURRENT
 - Pin/area editors use taller maps and a full-screen expansion with search. Keep
   the same draft and camera, unmount the hidden map, and leave Save/Cancel explicit.
 - Pin names are persistent only when saved; a dropped-pin lookup is a label hint.
-  Preserve user names. Show addresses as secondary text and retain exact coordinates.
+  Preserve user names. Show addresses as secondary text in editors/Recents and
+  retain exact coordinates; main-map bubbles show only names.
 - Route stars first offer plain Save or Save & Favorite. Once saved, star toggles
   favorite status on the same record; it must not duplicate or delete the route.
 - Next-route planning is optional and separate from the first route's draft.

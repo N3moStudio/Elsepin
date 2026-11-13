@@ -14,6 +14,21 @@ enum RouteLegPathPolicy {
 /// Leg boundaries belong to the destination stop. Editing one leg must not
 /// reset speeds outside that interval, including older mixed-mode backups.
 enum RouteLegEditing {
+    /// Choices describe the segment *arriving at* a stop, not the stop itself.
+    /// Reverse the segment order, then re-key it to the reversed destinations.
+    /// Missing choices remain implicit defaults; waits and place IDs stay put.
+    static func reversed(waypoints: [TripWaypoint], choices: [UUID: RouteLegChoice])
+        -> (waypoints: [TripWaypoint], choices: [UUID: RouteLegChoice]) {
+        let reversedWaypoints = Array(waypoints.reversed())
+        let originalDestinations = waypoints.map(\.id) + [RouteLegChoice.destinationID]
+        let reversedDestinations = reversedWaypoints.map(\.id) + [RouteLegChoice.destinationID]
+        var reversedChoices: [UUID: RouteLegChoice] = [:]
+        for (destination, original) in zip(reversedDestinations, originalDestinations.reversed()) {
+            if let choice = choices[original] { reversedChoices[destination] = choice }
+        }
+        return (reversedWaypoints, reversedChoices)
+    }
+
     static func range(to id: UUID, stops: [RouteStop], length: Double) -> ClosedRange<Double>? {
         guard length.isFinite, length > 0,
               stops.allSatisfy({ $0.metres.isFinite && (0...length).contains($0.metres) }),

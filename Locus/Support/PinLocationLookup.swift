@@ -8,7 +8,7 @@ struct PinLocationDetails {
 /// Runs only for a selected pin, never movement ticks or map panning. Each
 /// request has a deadline and cancellation; callers must reject obsolete results.
 @MainActor enum PinLocationLookup {
-    static func resolve(_ coordinate: CLLocationCoordinate2D) async -> PinLocationDetails? {
+    static func resolve(_ coordinate: CLLocationCoordinate2D, includeNearbyName: Bool = true) async -> PinLocationDetails? {
         guard CLLocationCoordinate2DIsValid(coordinate), !Task.isCancelled else { return nil }
         let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
         var address: String?
@@ -46,12 +46,14 @@ struct PinLocationDetails {
         }
         guard !Task.isCancelled else { return nil }
         // A nearby business is a hint, not a claim the dropped coordinate is its entrance.
+        if includeNearbyName {
         let nearby = PlaceSearchRequest(pointsOfInterest: MKLocalPointsOfInterestRequest(center: coordinate, radius: 60))
         if let response = try? await nearby.start(seconds: 3), !Task.isCancelled,
            let item = response.mapItems.filter({ distance($0, from: location) <= 45 })
             .min(by: { distance($0, from: location) < distance($1, from: location) }),
            let name = item.name, !name.isEmpty {
             title = "Near \(name)"
+        }
         }
         guard !Task.isCancelled else { return nil }
         let name = String((title ?? address ?? "Dropped pin").prefix(120))

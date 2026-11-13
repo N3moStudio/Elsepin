@@ -120,16 +120,17 @@ enum RouteBuilder {
         mode: TravelMode,
         preferWalkingPaths: Bool = false
     ) async throws -> [PlannedRoute] {
-        if mode.routeNetwork == .cycling, preferWalkingPaths {
-            return try await requestRoutes(from: start, to: end, network: .walking, source: .walkingForCycling(fallback: false))
-        }
+        let cyclingAvailable: Bool
+        if #available(iOS 26, *) { cyclingAvailable = true } else { cyclingAvailable = false }
         do {
-            return try await requestRoutes(from: start, to: end, network: mode.routeNetwork, source: .apple(mode.routeNetwork))
-        } catch {
-            try Task.checkCancellation()
-            let nsError = error as NSError
-            let missing = error is MissingRoute || (nsError.domain == MKErrorDomain && nsError.code == MKError.Code.directionsNotFound.rawValue)
-            guard mode.routeNetwork == .cycling, missing else { throw error }
+            return try await RouteDirectionsPolicy.calculate(mode: mode, preferWalkingPaths: preferWalkingPaths,
+                cyclingAvailable: cyclingAvailable, isMissingPath: { error in
+                    let nsError = error as NSError
+                    return error is MissingRoute || (nsError.domain == MKErrorDomain && nsError.code == MKError.Code.directionsNotFound.rawValue)
+                }, request: { network, source in
+                    try await requestRoutes(from: start, to: end, network: network, source: source)
+                })
+        } catch is RouteDirectionsPolicy.NoBikePath {
             throw CyclingUnavailable()
         }
     }
@@ -139,7 +140,7 @@ enum RouteBuilder {
     }
 
     struct CyclingUnavailable: LocalizedError {
-        var errorDescription: String? { "Apple Maps couldn't find a cycling path here. Try other endpoints, draw a route, or explicitly choose a walking path. Walking paths may include steps or bike restrictions." }
+        var errorDescription: String? { "Apple Maps couldn't connect these points by cycling or walking. Move the start or destination closer to a street or path, or draw a route." }
     }
 
     private static func requestRoutes(from start: RoutePlace, to end: RoutePlace,
@@ -150,7 +151,9 @@ enum RouteBuilder {
         request.destination = MKMapItem(placemark: MKPlacemark(coordinate: end.coordinate))
         switch network {
         case .walking: request.transportType = .walking
-        case .cycling: request.transportType = .cycling
+        case .cycling:
+            if #available(iOS 26, *) { request.transportType = .cycling }
+            else { throw MissingRoute() }
         case .driving: request.transportType = .automobile
         }
         request.requestsAlternateRoutes = true

@@ -39,6 +39,7 @@ final class RoutePlanner: ObservableObject {
     @Published private(set) var isLoading = false
     @Published var error: String?
     @Published var cyclingUnavailable = false
+    @Published private(set) var canRestorePreviousRoute = false
     @Published var isPresented = false
     @Published var isDrawing = false
     @Published private(set) var waypoints: [TripWaypoint] = []
@@ -49,6 +50,60 @@ final class RoutePlanner: ObservableObject {
     }
     private var generation = UUID()
     private var task: Task<Void, Never>?
+    private var previousDraft: DraftSnapshot?
+
+    /// A failed directions request must not destroy a saved/drawn path or its
+    /// editing identity. Capture before mutating the requested endpoints/legs.
+    private struct DraftSnapshot {
+        let origin: RoutePlace?
+        let destination: RoutePlace?
+        let alternatives: [PlannedRoute]
+        let selectedID: UUID?
+        let waypoints: [TripWaypoint]
+        let sectionChoices: [UUID: RouteLegChoice]
+        let usesStoredPath: Bool
+        let mode: TravelMode
+        let speed: Double
+        let smooth: Bool
+        let arrival: ArrivalChoice
+        let nextRoute: NextRoutePlan?
+        let editingID: UUID?
+        let historyID: UUID
+        let name: String?
+        let continuationNote: String?
+        let savesToLibrary: Bool
+    }
+
+    private func draftSnapshot() -> DraftSnapshot? {
+        guard selectedRoute != nil else { return previousDraft }
+        return DraftSnapshot(origin: origin, destination: destination, alternatives: alternatives, selectedID: selectedID,
+            waypoints: waypoints, sectionChoices: sectionChoices, usesStoredPath: usesStoredPath,
+            mode: draftMode, speed: draftSpeedMPH, smooth: draftSmoothMovement, arrival: draftArrival,
+            nextRoute: draftNextRoute, editingID: editingTripID, historyID: draftHistoryID,
+            name: draftName, continuationNote: draftContinuationNote, savesToLibrary: savesToLibraryOnCompletion)
+    }
+
+    private func clearDirectionsRecovery() {
+        previousDraft = nil
+        canRestorePreviousRoute = false
+    }
+
+    func restorePreviousRoute() {
+        guard canRestorePreviousRoute, let previous = previousDraft else { return }
+        cancel()
+        origin = previous.origin; destination = previous.destination
+        alternatives = previous.alternatives; selectedID = previous.selectedID
+        waypoints = previous.waypoints; sectionChoices = previous.sectionChoices
+        usesStoredPath = previous.usesStoredPath
+        draftMode = previous.mode; draftSpeedMPH = previous.speed; draftSmoothMovement = previous.smooth
+        draftArrival = previous.arrival; draftNextRoute = previous.nextRoute
+        editingTripID = previous.editingID; draftHistoryID = previous.historyID
+        draftName = previous.name; draftContinuationNote = previous.continuationNote
+        savesToLibraryOnCompletion = previous.savesToLibrary
+        draftSettingsInitialized = true
+        error = nil; cyclingUnavailable = false
+        clearDirectionsRecovery()
+    }
 
     var selectedRoute: PlannedRoute? { alternatives.first { $0.id == selectedID } }
 
@@ -120,6 +175,8 @@ final class RoutePlanner: ObservableObject {
     func editPreparedRoute() {
         guard let preparedRoute else { return }
         cancel()
+        clearDirectionsRecovery()
+        cyclingUnavailable = false
         let route = preparedRoute.route
         origin = route.origin
         destination = route.destination
@@ -143,28 +200,34 @@ final class RoutePlanner: ObservableObject {
     }
 
     func plan(to place: RoutePlace, defaultOrigin: RoutePlace?, mode: TravelMode) {
+        let previous = draftSnapshot()
         destination = place
         origin = defaultOrigin ?? origin
         isPresented = true
-        rebuild(mode: mode)
+        rebuild(mode: mode, preserving: previous)
     }
     func setOrigin(_ place: RoutePlace, mode: TravelMode) {
+        let previous = draftSnapshot()
         origin = place
-        rebuild(mode: mode)
+        rebuild(mode: mode, preserving: previous)
     }
     func setDestination(_ place: RoutePlace, defaultOrigin: RoutePlace?, mode: TravelMode) {
+        let previous = draftSnapshot()
         destination = place
         if origin == nil { origin = defaultOrigin }
-        rebuild(mode: mode)
+        rebuild(mode: mode, preserving: previous)
     }
     func swap(mode: TravelMode) {
+        let previousDraft = draftSnapshot()
         syncPathStops()
+        let reversed = RouteLegEditing.reversed(waypoints: waypoints, choices: sectionChoices)
         usesStoredPath = false
-        waypoints.reverse()
+        waypoints = reversed.waypoints
+        sectionChoices = reversed.choices
         let previous = origin
         origin = destination
         destination = previous
-        rebuild(mode: mode)
+        rebuild(mode: mode, preserving: previousDraft)
     }
     func modeChanged(_ mode: TravelMode) {
         guard isPresented else { return }
@@ -186,11 +249,13 @@ final class RoutePlanner: ObservableObject {
         draftNextRoute = nil
         savesToLibraryOnCompletion = false
         cancel()
+        clearDirectionsRecovery()
         origin = nil
         destination = nil
         alternatives = []
         selectedID = nil
         error = nil
+        cyclingUnavailable = false
         waypoints = []
         sectionChoices = [:]
         usesStoredPath = false
@@ -209,7 +274,13 @@ final class RoutePlanner: ObservableObject {
         continuationLoading = false
     }
     func rebuild(mode: TravelMode) {
+        rebuild(mode: mode, preserving: draftSnapshot())
+    }
+
+    private func rebuild(mode: TravelMode, preserving previous: DraftSnapshot?) {
         cancel()
+        previousDraft = previous
+        canRestorePreviousRoute = false
         syncPathStops()
         usesStoredPath = false
         error = nil
@@ -243,6 +314,7 @@ final class RoutePlanner: ObservableObject {
                 self.selectedID = routes.first?.id
                 self.isLoading = false
                 self.task = nil
+                self.clearDirectionsRecovery()
             } catch {
                 DeveloperLogStore.shared.record("route_plan_failed", ["attempt": token.uuidString,
                     "domain": (error as NSError).domain, "code": String((error as NSError).code),
@@ -250,6 +322,7 @@ final class RoutePlanner: ObservableObject {
                 guard let self, !Task.isCancelled, self.generation == token else { return }
                 self.error = error.localizedDescription
                 self.cyclingUnavailable = error is RouteBuilder.CyclingUnavailable
+                self.canRestorePreviousRoute = self.previousDraft != nil
                 self.isLoading = false
                 self.task = nil
             }
@@ -262,6 +335,8 @@ final class RoutePlanner: ObservableObject {
             return
         }
         cancel()
+        clearDirectionsRecovery()
+        cyclingUnavailable = false
         waypoints = []
         editingTripID = nil
         draftHistoryID = route.id
@@ -281,6 +356,8 @@ final class RoutePlanner: ObservableObject {
         savesToLibraryOnCompletion = false
         guard let route = trip.plannedRoute else { error = "The saved trip is invalid."; return }
         cancel()
+        clearDirectionsRecovery()
+        cyclingUnavailable = false
         editingTripID = trip.id
         draftHistoryID = trip.id
         draftName = trip.name
@@ -315,6 +392,7 @@ final class RoutePlanner: ObservableObject {
     }
 
     func addWaypoint(_ place: RoutePlace, mode: TravelMode, speedMPH: Double? = nil, insertAlongRoute: Bool = false) {
+        let previous = draftSnapshot()
         syncPathStops()
         guard waypoints.count < 8, CLLocationCoordinate2DIsValid(place.coordinate) else { return }
         DeveloperLogStore.shared.record("route_stop_inserting", ["count_before": String(waypoints.count),
@@ -330,17 +408,19 @@ final class RoutePlanner: ObservableObject {
             }
         }
         waypoints.insert(waypoint, at: insertion)
-        rebuild(mode: mode)
+        rebuild(mode: mode, preserving: previous)
     }
     func removeWaypoint(_ id: UUID, mode: TravelMode) {
+        let previous = draftSnapshot()
         waypoints.removeAll { $0.id == id }
         sectionChoices.removeValue(forKey: id)
-        rebuild(mode: mode)
+        rebuild(mode: mode, preserving: previous)
     }
     func moveWaypoint(_ id: UUID, offset: Int, mode: TravelMode) {
         guard let index = waypoints.firstIndex(where: { $0.id == id }), waypoints.indices.contains(index + offset) else { return }
+        let previous = draftSnapshot()
         waypoints.swapAt(index, index + offset)
-        rebuild(mode: mode)
+        rebuild(mode: mode, preserving: previous)
     }
     func setWait(_ id: UUID, seconds: Double) {
         guard seconds.isFinite else { return }
@@ -387,17 +467,19 @@ final class RoutePlanner: ObservableObject {
     }
 
     func replaceWaypoint(_ id: UUID, with place: RoutePlace, mode: TravelMode) {
+        let previous = draftSnapshot()
         syncPathStops()
         guard let index = waypoints.firstIndex(where: { $0.id == id }) else { return }
         waypoints[index].name = place.name
         waypoints[index].point = RoutePoint(place.coordinate)
         usesStoredPath = false
-        rebuild(mode: mode)
+        rebuild(mode: mode, preserving: previous)
     }
 
     func setSectionChoice(_ choice: RouteLegChoice, for id: UUID, defaultMode: TravelMode,
                           pathChoice: RouteLegPathChoice = .recalculate) {
         guard !isLoading, choice.isValid else { return }
+        let previousDraft = draftSnapshot()
         syncPathStops()
         let targets = waypoints.map(\.id) + [RouteLegChoice.destinationID]
         guard targets.contains(id) else { return }
@@ -434,12 +516,19 @@ final class RoutePlanner: ObservableObject {
                 "speed_mph": String(choice.speedMPH), "directions_requested": "false", "route": route.id.uuidString])
         } else {
             sectionChoices = choices
-            rebuild(mode: defaultMode)
+            rebuild(mode: defaultMode, preserving: previousDraft)
         }
     }
     func applyMapEdit(origin start: RoutePoint, destination end: RoutePoint, stops: [TripWaypoint], mode: TravelMode, speedMPH: Double? = nil) {
         guard start.isValid, end.isValid, stops.count <= 20, stops.allSatisfy({ $0.point.isValid }),
               Set(stops.map(\.id)).count == stops.count else { return }
+        if let route = selectedRoute {
+            let original = RouteMapGeometry(origin: RoutePoint(route.origin.coordinate), destination: RoutePoint(route.destination.coordinate),
+                stops: editableWaypoints.map { .init(id: $0.id, point: $0.point) })
+            let edited = RouteMapGeometry(origin: start, destination: end, stops: stops.map { .init(id: $0.id, point: $0.point) })
+            guard original != edited else { return }
+        }
+        let previous = draftSnapshot()
         cancel()
         let oldStart = origin, oldEnd = destination
         origin = RoutePlace(name: oldStart.map { RoutePoint($0.coordinate) == start ? $0.name : "Edited start" } ?? "Start", coordinate: start.coordinate)
@@ -453,7 +542,7 @@ final class RoutePlanner: ObservableObject {
                 sectionChoices[id] = RouteLegChoice(mode: mode, speedMPH: mode.clampedSpeedMPH(speedMPH ?? mode.defaultSpeedMPH))
             }
         }
-        rebuild(mode: mode)
+        rebuild(mode: mode, preserving: previous)
     }
 
     var editableWaypoints: [TripWaypoint] {
@@ -467,6 +556,7 @@ final class RoutePlanner: ObservableObject {
         guard places.count >= 2, places.count <= 22, let start = places.first, let end = places.last,
               places.allSatisfy({ $0.point.isValid && !$0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && $0.name.count <= 120 && StopDuration.isValid($0.waitSeconds) }),
               let route = selectedRoute else { return }
+        let previous = draftSnapshot()
         let stops = Array(places.dropFirst().dropLast())
         let old = editableWaypoints
         let sameGeometry = RoutePoint(route.origin.coordinate) == start.point && RoutePoint(route.destination.coordinate) == end.point &&
@@ -491,7 +581,7 @@ final class RoutePlanner: ObservableObject {
             waypoints = stops
             let allowed = Set(stops.map(\.id) + [RouteLegChoice.destinationID])
             sectionChoices = sectionChoices.filter { allowed.contains($0.key) }
-            rebuild(mode: mode)
+            rebuild(mode: mode, preserving: previous)
         }
     }
 

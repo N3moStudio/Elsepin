@@ -2,6 +2,20 @@
 
 Updated 12 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
 
+## Build 80 preparation - not built (12 November 2026)
+
+User reported build-79 planner/pin regressions and requested adjacent regression
+review and better bike/e-bike routing. Latest instruction: finish fixes and wait
+for the user to say when to build. Do not dispatch a workflow/package/release.
+`project.yml` reserves 2.6.1 (80); this is not build evidence. Build 79 remains
+the latest delivered IPA. Current source branch is still `codex/pins-search-69`.
+
+See [build 80 review](BUILD-80-REVIEW.md) for fixes, evidence and outstanding
+native/device checks, and CHANGELOG.md for the complete user-visible scope.
+Manual pin-editor taps now leave names blank; search suggestions may fill them.
+This supersedes build 79's manual-editor automatic naming. Main-map label hints
+remain. Do not reintroduce required environment objects in MapKit annotations.
+
 ## Build 79 - validated and delivered (12 November 2026)
 
 User authorized all post-78 changes and a test IPA, not a release. Final app source

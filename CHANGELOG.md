@@ -5,6 +5,33 @@ is the official release. Earlier Shift entries retain their original names and r
 
 [App introduction](README.md) · [Build history](docs/BUILD-HISTORY.md) · [Detailed Change Ledger](docs/CHANGE-LEDGER.md)
 
+## Build 80 - planner and pin regression fixes (not built yet)
+
+- Always show a larger route-planning map, including before endpoints are chosen
+  and when directions fail. Fit explicitly frames the route or draft endpoints.
+- Keep exact saved/demo paths when accepting an unchanged map editor. Confirm
+  Refresh/Swap before replacing stored geometry; failed recalculations offer
+  Restore previous route, including its stops, speeds and Library identity.
+- Add a city/map-area picker for destination and stop searches. Category searches
+  stay in the explicitly selected area; ordinary searches remain unrestricted.
+- Try cycling directions first for bike/e-bike. If Apple reports no cycling path,
+  try a clearly labeled walking path without changing playback mode/speed.
+  Cancellation, offline errors and timeouts do not become invented routes.
+- Preserve per-leg mode/speed assignments when reversing a multi-stop route.
+- Open pin editors zoomed into the pin; allow existing pins to be repositioned.
+  Move full-screen expansion to a separate button beside Search, preserving the
+  camera and draft when returning. Tapping the map only places/moves the pin.
+- Leave manually placed pin names blank. A chosen search result may fill a blank
+  name; address lookup cannot overwrite it. Save still requires a name and pin.
+- Keep main-map pin labels name-only and remove the extra white symbol backing.
+- Move saved pins without duplicating them, overwriting another pin or retaining
+  the old address. Preserve favorite/style/folder and configured widget identity.
+- Avoid a redundant directions request when selecting a next-route destination.
+
+Local resource checks pass. New Swift regression cases and native compilation
+await the next authorized Mac run. No build 80 IPA or release exists yet; see
+[review and verification scope](docs/BUILD-80-REVIEW.md).
+
 ## Build 79 - library, pin and route refinements (unpublished test build)
 
 - Add Redo corner beside Undo, preserving existing Undo behavior. New edits clear

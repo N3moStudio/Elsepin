@@ -5,6 +5,14 @@ is the last recorded public release. Earlier entries retain their original valid
 
 See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all recorded 2.5.x/2.6.0 native runs.
 
+## Build 80 preparation - regressions (12 November 2026)
+
+The [review record](BUILD-80-REVIEW.md) maps the planner/pin/search fixes and
+bounded adjacent audit. Build number 80 is reserved, not built. User will request
+the next build; no release authorized. Existing backups, demo separation,
+confirmed location writes, widget confirmation and exact saved paths are retained.
+See [changelog](../CHANGELOG.md#build-80---planner-and-pin-regression-fixes-not-built-yet).
+
 ## Build 79 - post-78 integration (12 November 2026)
 
 Implemented the authorized library/pin/area and route changes listed in the

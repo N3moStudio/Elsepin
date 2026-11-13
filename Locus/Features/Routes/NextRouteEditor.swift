@@ -79,7 +79,8 @@ struct NextRouteEditor: View {
     }
     private func plan(to place: RoutePlace) {
         error = nil
-        nextPlanner.setOrigin(startingPlace, mode: nextPlanner.draftMode)
+        // plan sets both endpoints atomically; setOrigin first would start a
+        // directions request to the old destination only to cancel it here.
         nextPlanner.plan(to: place, defaultOrigin: startingPlace, mode: nextPlanner.draftMode)
         showPlanner = true
     }

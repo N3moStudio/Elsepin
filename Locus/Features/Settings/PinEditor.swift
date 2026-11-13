@@ -5,6 +5,7 @@ import SwiftUI
     let id = UUID()
     let existing: SavedPlace?
     let center: CLLocationCoordinate2D?
+    let workspaceGeneration = AppDataWorkspace.shared.context.generation
     @Published var name: String
     @Published var coordinate: CLLocationCoordinate2D?
     @Published var favorite: Bool
@@ -12,7 +13,6 @@ import SwiftUI
     @Published var tint: SavedPlaceTint
     @Published var emoji: String
     @Published var address: String?
-    var automaticName: String?
     init(place: SavedPlace?, center: CLLocationCoordinate2D?, selectedCoordinate: CLLocationCoordinate2D? = nil) {
         existing = place; self.center = center; name = place?.name ?? ""
         // Merely centering the map must not create a selected pin.
@@ -36,8 +36,15 @@ struct PinEditor: View {
     @State private var visibleMapRect: MKMapRect?
     @State private var search = false
     @State private var expanded = false
-    @State private var cameraInitialized = false
+    @State private var retainedCamera: MapCamera?
     @State private var error: String?
+    init(draft: PinDraft) {
+        self.draft = draft
+        let location = draft.coordinate ?? draft.center
+        _position = State(initialValue: location.map {
+            .region(MKCoordinateRegion(center: $0, latitudinalMeters: 600, longitudinalMeters: 600))
+        } ?? .automatic)
+    }
     var body: some View {
         NavigationStack {
             Form {
@@ -47,21 +54,23 @@ struct PinEditor: View {
                     Toggle("Favorite", isOn: $draft.favorite)
                 }
                 Section {
-                    if draft.existing == nil {
+                    HStack {
                         Button("Search for a location", systemImage: "magnifyingglass") { search = true }
+                            .frame(minHeight: 44)
+                        Spacer()
+                        Button("Expand map", systemImage: "arrow.up.left.and.arrow.down.right") {
+                            preserveCamera(); expanded = true
+                        }.labelStyle(.iconOnly).frame(width: 44, height: 44).contentShape(Rectangle())
                     }
+                    .buttonStyle(.borderless)
                     Group {
                         if expanded { Color.clear }
                         else { pinMap }
                     }
                     .frame(height: 380)
-                    .overlay(alignment: .bottomTrailing) {
-                        Button("Expand map", systemImage: "arrow.up.left.and.arrow.down.right") { expanded = true }
-                            .labelStyle(.iconOnly).padding(12).background(.regularMaterial, in: Circle()).padding(12)
-                    }
                     .listRowInsets(EdgeInsets())
                 } footer: {
-                    Text(draft.existing == nil ? "Tap to place a pin. Saving never teleports." : "Edit its name and appearance. The saved location stays fixed.")
+                    Text("Tap to place or move the pin. Saving never teleports.")
                 }
                 Section("Pin appearance") {
                     Picker("Symbol", selection: $draft.symbol) {
@@ -87,33 +96,28 @@ struct PinEditor: View {
                             .opacity(draft.canSave ? 1 : 0.4)
                     }
                 }
-                .onAppear {
-                    guard !cameraInitialized else { return }
-                    cameraInitialized = true
-                    if let coordinate = draft.coordinate ?? draft.center { center(coordinate) }
-                }
                 .sheet(isPresented: Binding(get: { search && !expanded }, set: { if !expanded { search = $0 } })) { searchSheet }
                 .fullScreenCover(isPresented: $expanded) {
                     NavigationStack {
                         pinMap
                             .safeAreaInset(edge: .top, spacing: 0) {
-                                if draft.existing == nil {
-                                    Button("Search for a location", systemImage: "magnifyingglass") { search = true }
-                                        .frame(maxWidth: .infinity, minHeight: 44).background(ShiftCanvas())
-                                }
+                                Button("Search for a location", systemImage: "magnifyingglass") { search = true }
+                                    .buttonStyle(.plain)
+                                    .frame(maxWidth: .infinity, minHeight: 44).background(ShiftCanvas())
                             }
                             .navigationTitle("Place pin").navigationBarTitleDisplayMode(.inline)
-                            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { expanded = false } } }
+                            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { preserveCamera(); expanded = false } } }
                             .sheet(isPresented: $search) { searchSheet }
                     }
                 }
-                .task(id: draft.coordinate.map(RoutePoint.init)) { await suggestName() }
+                .task(id: draft.coordinate.map(RoutePoint.init)) { await resolveAddress() }
         }
     }
     private var searchSheet: some View {
         RoutePlaceSearchSheet(title: "Place pin") { place in
             select(place.coordinate)
-            draft.name = place.name; draft.automaticName = nil
+            // A search suggestion may fill a blank name, never replace a custom one.
+            if draft.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { draft.name = place.name }
             center(place.coordinate)
         }
     }
@@ -128,15 +132,15 @@ struct PinEditor: View {
                         Group {
                             if PinAppearance.isSingleEmoji(draft.emoji) { Text(draft.emoji) }
                             else { Image(systemName: draft.symbol.rawValue).foregroundStyle(draft.tint.swatch) }
-                        }.font(.title).padding(10).background(.background, in: Circle())
+                        }.font(.title)
                     }
                 }
             }.onTapGesture { location in
-                guard draft.existing == nil, let coordinate = proxy.convert(location, from: .local),
+                guard let coordinate = proxy.convert(location, from: .local),
                       CLLocationCoordinate2DIsValid(coordinate) else { return }
                 select(coordinate)
             }
-            .onMapCameraChange(frequency: .onEnd) { visibleMapRect = $0.rect }
+            .onMapCameraChange(frequency: .onEnd) { visibleMapRect = $0.rect; retainedCamera = $0.camera }
         }
     }
     private var visiblePins: [SavedPlace] {
@@ -145,36 +149,43 @@ struct PinEditor: View {
         }
     }
     private func center(_ coordinate: CLLocationCoordinate2D) {
-        position = .region(MKCoordinateRegion(center: coordinate, latitudinalMeters: 2000, longitudinalMeters: 2000))
+        retainedCamera = nil
+        position = .region(MKCoordinateRegion(center: coordinate, latitudinalMeters: 600, longitudinalMeters: 600))
+    }
+    private func preserveCamera() {
+        if let retainedCamera { position = .camera(retainedCamera) }
     }
     private func select(_ coordinate: CLLocationCoordinate2D) {
-        if draft.name == draft.automaticName { draft.name = "" }
-        draft.automaticName = nil; draft.address = nil; draft.coordinate = coordinate
+        draft.address = nil; draft.coordinate = coordinate
     }
-    private func suggestName() async {
-        guard draft.existing == nil, let coordinate = draft.coordinate else { return }
+    private func resolveAddress() async {
+        guard let coordinate = draft.coordinate else { return }
+        // Existing metadata is already useful; don't refetch until the pin moves.
+        if draft.existing?.coordinate.latitude == coordinate.latitude,
+           draft.existing?.coordinate.longitude == coordinate.longitude { return }
         let point = RoutePoint(coordinate)
-        let originalName = draft.name
         do { try await Task.sleep(for: .milliseconds(350)) } catch { return }
-        let details = await PinLocationLookup.resolve(coordinate)
+        let details = await PinLocationLookup.resolve(coordinate, includeNearbyName: false)
         guard !Task.isCancelled, draft.coordinate.map(RoutePoint.init) == point else { return }
         draft.address = details?.address
-        if draft.name == originalName, originalName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            let name = details?.name ?? String(format: "Pin %.4f, %.4f", coordinate.latitude, coordinate.longitude)
-            draft.name = name; draft.automaticName = name
-        }
     }
     private func save() {
         guard draft.canSave, let coordinate = draft.coordinate else { return }
-        if let existing = draft.existing, !session.savedPins.contains(where: { $0.id == existing.id }) {
-            error = "This pin was removed. Close the editor and add it again."; return
+        guard draft.workspaceGeneration == AppDataWorkspace.shared.context.generation else {
+            error = "Your library changed. Close this editor and reopen the pin."; return
+        }
+        if let existing = draft.existing, !session.savedPins.contains(existing) {
+            error = "This pin changed or was removed. Close the editor and reopen it."; return
         }
         guard session.savePin(name: draft.name, coordinate: coordinate, favorite: draft.favorite,
                               icon: draft.symbol, tint: draft.tint, replaceName: true,
-                              address: draft.address, emoji: draft.emoji) else {
+                              address: draft.address, emoji: draft.emoji, replacingID: draft.existing?.id) else {
             error = session.lastError ?? "Couldn't save this pin."; return
         }
-        if let existing = draft.existing, existing.name != draft.name { library.renameLinkedPlace(existing, to: draft.name) }
+        if let existing = draft.existing, existing.name != draft.name,
+           RoutePoint(existing.coordinate) == RoutePoint(coordinate) {
+            library.renameLinkedPlace(existing, to: draft.name)
+        }
         DeveloperLogObserver.shared.recordMapEnergy(reason: "pin_saved")
         dismiss()
     }
