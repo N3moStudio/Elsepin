@@ -339,7 +339,9 @@ struct BottomControlsView: View {
     @State private var detailHeight: CGFloat = 0
 
     private var canCollapse: Bool {
-        planner.preparedRoute != nil || session.joystickActive || session.pinIsPreview || session.hasSession
+        // Pin/held-location details are already compact. Only substantial
+        // preview/joystick content needs the separate collapse control.
+        planner.preparedRoute != nil || session.joystickActive
     }
     private var expansion: CGFloat {
         guard canCollapse else { return 1 }
@@ -378,7 +380,7 @@ struct BottomControlsView: View {
                     .frame(height: detailHeight > 0 ? detailHeight * expansion : nil, alignment: .bottom)
                     .opacity(expansion)
                     .clipped()
-                    .allowsHitTesting(!collapsed && !handleTouchActive)
+                    .allowsHitTesting((!canCollapse || !collapsed) && !handleTouchActive)
                     .accessibilityHidden(canCollapse && collapsed)
                 if canCollapse { panelHandle }
                 }

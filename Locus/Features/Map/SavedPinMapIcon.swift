@@ -10,6 +10,7 @@ struct SavedPinMapIcon: View {
     // and traps while a pin reappears after zooming or starting a route (build 76).
     let pinSize: Double
     let labelBackground: Color
+    let preparesLocation: Bool
     let onTap: () -> Void
     var body: some View {
         Button(action: onTap) {
@@ -20,7 +21,7 @@ struct SavedPinMapIcon: View {
                 .frame(width: max(44, pinSize + 8), height: max(44, pinSize + 8))
                 .contentShape(Rectangle())
         }.buttonStyle(.plain).accessibilityLabel(pin.displayName)
-            .accessibilityHint("Selects this pin. Tap Teleport to move.")
+            .accessibilityHint(preparesLocation ? "Shows the name and selects this pin. Tap Teleport to move." : "Shows or hides the name without changing your route.")
             .overlay(alignment: .top) {
                 if selected {
                     Text(pin.displayName).font(.caption.weight(.semibold)).lineLimit(2)

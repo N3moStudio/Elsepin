@@ -99,4 +99,17 @@ final class RouteLegEditingTests: XCTestCase {
         XCTAssertFalse(MapPinPlacement.allowed(hasJourney: false, hasPreparedRoute: false, drawing: true, adjusting: false))
         XCTAssertTrue(MapPinPlacement.allowed(hasJourney: false, hasPreparedRoute: false, drawing: false, adjusting: false))
     }
+
+    func testSavedPinNamesDoNotRequirePermissionToReplaceRoute() {
+        for hasJourney in [false, true] {
+            for hasPreview in [false, true] {
+                XCTAssertEqual(MapPinPlacement.savedPinAction(hasJourney: hasJourney, hasPreparedRoute: hasPreview,
+                    drawing: false, adjusting: false), hasJourney || hasPreview ? .revealName : .prepareLocation)
+                XCTAssertEqual(MapPinPlacement.savedPinAction(hasJourney: hasJourney, hasPreparedRoute: hasPreview,
+                    drawing: true, adjusting: false), .ignore)
+                XCTAssertEqual(MapPinPlacement.savedPinAction(hasJourney: hasJourney, hasPreparedRoute: hasPreview,
+                    drawing: false, adjusting: true), .ignore)
+            }
+        }
+    }
 }

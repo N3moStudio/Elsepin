@@ -107,11 +107,11 @@ struct MovementSpeedControl: View {
             }
             .buttonStyle(.borderless)
             .disabled(!session.canEditRouteMovement)
-            Toggle("Smooth route movement", isOn: Binding(get: { session.currentSmoothMovement },
-                set: { session.setCurrentRouteSmoothing($0) }))
-                .font(.subheadline)
-                .disabled(!session.canEditRouteMovement)
             if session.journey != nil {
+                Toggle("Smooth route movement", isOn: Binding(get: { session.currentSmoothMovement },
+                    set: { session.setCurrentRouteSmoothing($0) }))
+                    .font(.subheadline)
+                    .disabled(!session.canEditRouteMovement)
                 Text("This route only.").font(.caption).foregroundStyle(.secondary)
             }
             if session.routeSectionSettingsEnabled {
@@ -122,10 +122,15 @@ struct MovementSpeedControl: View {
                 Text("Recent sent speed: \(preferences.speedUnit.formatted(mph: SpeedConversion.mph(metresPerSecond: session.currentRouteSpeed)))")
                     .font(.caption).foregroundStyle(.secondary)
             }
-            Text(session.currentSmoothMovement
+            if session.journey != nil {
+                Text(session.currentSmoothMovement
                  ? "Changes apply on the next update. Smooth movement speeds up gradually and slows for corners and stops, so the current speed can be below your target. Turn it off for a constant target speed."
                  : "Changes apply on the next update at the selected speed. Connection delays can still slow travel. Recent sent speed measures confirmed route distance over time, not another app's speed reading.")
                 .font(.caption2).foregroundStyle(.secondary)
+            } else if session.joystickActive {
+                Text("Push farther for more speed, up to your target. Release to stop moving.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
         }
         .tint(LocusTheme.accent)
     }

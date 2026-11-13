@@ -65,6 +65,15 @@ enum RouteLegEditing {
 }
 
 enum MapPinPlacement {
+    enum SavedPinAction: Equatable { case ignore, revealName, prepareLocation }
+
+    /// Reading a saved pin's label is independent of permission to move the
+    /// destination. A route/preview must survive inspecting another pin.
+    static func savedPinAction(hasJourney: Bool, hasPreparedRoute: Bool, drawing: Bool, adjusting: Bool) -> SavedPinAction {
+        if drawing || adjusting { return .ignore }
+        return hasJourney || hasPreparedRoute ? .revealName : .prepareLocation
+    }
+
     /// A staged route is dismissed only with its explicit X, never a map tap.
     static func allowed(hasJourney: Bool, hasPreparedRoute: Bool, drawing: Bool, adjusting: Bool) -> Bool {
         !hasJourney && !hasPreparedRoute && !drawing && !adjusting

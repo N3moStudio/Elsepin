@@ -16,6 +16,9 @@ struct RoutePlannerSheet: View {
     @State private var stopSearchRoute: PlannedRoute?
     @State private var replacingStopID: UUID?
     @State private var pendingSearchChoice: (endpoint: Endpoint, place: RoutePlace, alongRoute: Bool)?
+    @State private var pendingPathChange: PlaceChange?
+    @State private var confirmPathChange = false
+    @State private var pendingLiveAddStop = false
     @State private var showImporter = false
     @State private var showExporter = false
     @State private var exportDocument = GPXRouteDocument(text: "")
@@ -59,6 +62,13 @@ struct RoutePlannerSheet: View {
     private enum Endpoint: String, Identifiable, Hashable {
         case origin, destination, stop
         var id: String { rawValue }
+    }
+    private struct PlaceChange {
+        let endpoint: Endpoint
+        let place: RoutePlace
+        let alongRoute: Bool
+        let replacement: UUID?
+        let routeID: UUID?
     }
     private var hasJourney: Bool { session.journey != nil }
     private var route: PlannedRoute? { hasJourney ? session.activeRoute : planner.selectedRoute }
@@ -137,11 +147,23 @@ struct RoutePlannerSheet: View {
                     session.stopRoute()
                     finishLiveEditIfReady()
                 }
-                Button("Cancel", role: .cancel) { pendingLiveSection = nil; pendingLivePlace = nil }
+                Button("Cancel", role: .cancel) {
+                    pendingLiveSection = nil; pendingLivePlace = nil; pendingLiveAddStop = false
+                }
             } message: {
                 Text("This ends travel and holds your last sent location while you edit. Show route previews the changes. Start route begins again at the chosen start.")
             }
             .onChange(of: hasJourney) { _, active in if !active { finishLiveEditIfReady() } }
+            .loggedConfirmationDialog("Recalculate this path?", isPresented: $confirmPathChange, titleVisibility: .visible) {
+                Button("Recalculate route") {
+                    guard let change = pendingPathChange else { return }
+                    pendingPathChange = nil
+                    applyPlaceChange(change)
+                }
+                Button("Keep current path", role: .cancel) { pendingPathChange = nil }
+            } message: {
+                Text("Visiting a different place replaces the saved or drawn path with new directions. To wait on this exact path, use Pause on this path in the stop options.")
+            }
             .alert("Label in this route", isPresented: $showRenamePlace) {
                 TextField("Name", text: $placeName)
                 Button("Save") { renamePlace() }
@@ -211,6 +233,9 @@ struct RoutePlannerSheet: View {
         } else if let place = pendingLivePlace {
             pendingLivePlace = nil
             editTimelinePlace(place)
+        } else if pendingLiveAddStop {
+            pendingLiveAddStop = false
+            openStopSearch()
         }
     }
 
@@ -254,6 +279,7 @@ struct RoutePlannerSheet: View {
                                         .fixedSize(horizontal: false, vertical: true)
                                 }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
                             }
+                            .buttonStyle(.plain)
                             .disabled(hasJourney && (session.isBusy || session.routeStopping))
                             if place.id == RouteLegChoice.destinationID {
                                 arrivalPicker.font(.subheadline)
@@ -280,26 +306,40 @@ struct RoutePlannerSheet: View {
             }
             HStack {
                 Button {
-                    if hasJourney || (planner.usesStoredPath && (route?.source.isAutomatic == false || timelineStops.count >= 8)) { showPathStop = true }
-                    else { replacingStopID = nil; stopSearchRoute = planner.selectedRoute; searchEndpoint = .stop }
+                    if hasJourney {
+                        pendingLiveAddStop = true
+                        confirmLiveEdit = true
+                    } else { openStopSearch() }
                 } label: {
-                    Label(hasJourney ? "Add a stop ahead" : "Add stop", systemImage: "plus.circle")
+                    Label("Add stop", systemImage: "plus.circle")
                         .frame(minHeight: 44)
                 }
-                .disabled(hasJourney ? !session.canAddRouteStop || timelineStops.count >= 20 : timelineStops.count >= (planner.usesStoredPath ? 20 : 8))
+                .buttonStyle(.plain)
+                .disabled(timelineStops.count >= 8 || (hasJourney && (session.isBusy || session.routeStopping)))
                 Spacer()
-                if !hasJourney { Menu {
+                Menu {
+                    Button("Pause on this path", systemImage: "pause.circle") { showPathStop = true }
+                        .disabled(route == nil || timelineStops.count >= 20 || (hasJourney && !session.canAddRouteStop))
+                    if !hasJourney {
                         Button("Swap start and destination", systemImage: "arrow.up.arrow.down") { planner.swap(mode: displayMode) }
                             .disabled(planner.origin == nil || planner.destination == nil)
                         Button("Refresh directions", systemImage: "arrow.clockwise") { planner.rebuild(mode: displayMode) }
                             .disabled(planner.origin == nil || planner.destination == nil)
+                    }
                 } label: {
                     Image(systemName: "ellipsis").frame(width: 44, height: 44).contentShape(Rectangle())
-                }.accessibilityLabel("Route place options") }
+                }.buttonStyle(.plain).accessibilityLabel("Stop and route options")
             }
         } header: { Text("Stops") }
         .buttonStyle(.borderless)
         .disabled(!hasJourney && planner.isLoading)
+    }
+
+    private func openStopSearch() {
+        guard !hasJourney, !planner.isLoading, timelineStops.count < 8 else { return }
+        replacingStopID = nil
+        stopSearchRoute = planner.selectedRoute
+        searchEndpoint = .stop
     }
 
     private func editTimelinePlace(_ place: TimelinePlace) {
@@ -414,6 +454,11 @@ struct RoutePlannerSheet: View {
             set: { if hasJourney { session.arrivalChoice = $0 } else { planner.draftArrival = $0 } })) {
             ForEach(ArrivalChoice.allCases) { choice in Text(choice.title).tag(choice) }
         }
+        // Automatic picker style inside the compound destination List row can
+        // compete with its edit-place button. Arrival is a menu, never navigation.
+        .pickerStyle(.menu)
+        .buttonStyle(.plain)
+        .disabled(hasJourney && (session.isBusy || session.routeStopping))
     }
     @ViewBuilder private var routeOptions: some View {
         Section {
@@ -570,13 +615,30 @@ struct RoutePlannerSheet: View {
         Task { @MainActor in
             await Task.yield()
             guard planner.isPresented, !hasJourney else { return }
-            switch choice.endpoint {
-            case .origin: planner.setOrigin(choice.place, mode: displayMode)
-            case .stop:
-                if let replacement { planner.replaceWaypoint(replacement, with: choice.place, mode: displayMode) }
-                else { planner.addWaypoint(choice.place, mode: displayMode, speedMPH: displaySpeed, insertAlongRoute: choice.alongRoute) }
-            case .destination: planner.setDestination(choice.place, defaultOrigin: session.defaultRouteOrigin, mode: displayMode)
+            let change = PlaceChange(endpoint: choice.endpoint, place: choice.place, alongRoute: choice.alongRoute,
+                replacement: replacement, routeID: planner.selectedRoute?.id)
+            if planner.usesStoredPath {
+                guard timelineStops.count <= 8 else {
+                    planner.error = "New directions support up to eight stops. Remove stops first, or use Move places on map to keep this path."
+                    return
+                }
+                pendingPathChange = change
+                confirmPathChange = true
+            } else {
+                applyPlaceChange(change)
             }
+        }
+    }
+
+    private func applyPlaceChange(_ change: PlaceChange) {
+        guard planner.isPresented, !hasJourney, !planner.isLoading,
+              planner.selectedRoute?.id == change.routeID else { return }
+        switch change.endpoint {
+        case .origin: planner.setOrigin(change.place, mode: displayMode)
+        case .stop:
+            if let replacement { planner.replaceWaypoint(replacement, with: change.place, mode: displayMode) }
+            else { planner.addWaypoint(change.place, mode: displayMode, speedMPH: displaySpeed, insertAlongRoute: change.alongRoute) }
+        case .destination: planner.setDestination(change.place, defaultOrigin: session.defaultRouteOrigin, mode: displayMode)
         }
     }
 

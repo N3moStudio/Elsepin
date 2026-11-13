@@ -5,6 +5,16 @@ is the official release. Earlier Shift entries retain their original names and r
 
 [App introduction](README.md) · [Build history](docs/BUILD-HISTORY.md) · [Detailed Change Ledger](docs/CHANGE-LEDGER.md)
 
+## Unreleased local interaction fixes (12 November 2026)
+
+- Show saved-pin names during active/prepared routes without moving the destination.
+- Remove redundant collapse from dropped-pin and held-location trays.
+- Keep route smoothing out of joystick controls; clarify stick-controlled speed.
+- Make arrival an explicit menu and separate Add stop search from exact-path pauses.
+- Confirm recalculation before replacing saved/drawn geometry; preserve live-edit Hold.
+- Local resource/identity/appearance checks passed. Native build and phone checks
+  pending; no new IPA or release. Full scope and evidence are in the current handoff.
+
 ## Build 77 - saved-pin annotation crash fix (8 November 2026)
 
 The supplied developer export contains an iOS crash report for build 76 at the

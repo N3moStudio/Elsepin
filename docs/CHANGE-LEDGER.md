@@ -5,6 +5,16 @@ is the last recorded public release. Earlier entries retain their original valid
 
 See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all recorded 2.5.x/2.6.0 native runs.
 
+## Unreleased local interaction fixes (12 November 2026)
+
+- Show saved-pin names during active/prepared routes without moving the destination.
+- Remove redundant collapse from dropped-pin and held-location trays.
+- Keep route smoothing out of joystick controls; clarify stick-controlled speed.
+- Make arrival an explicit menu and separate Add stop search from exact-path pauses.
+- Confirm recalculation before replacing saved/drawn geometry; preserve live-edit Hold.
+- Local resource/identity/appearance checks passed. Native build and phone checks
+  pending; no new IPA or release. Full scope and evidence are in the current handoff.
+
 ## Build 77 - saved-pin annotation crash fix (8 November 2026)
 
 The supplied developer export contains an iOS crash report for build 76 at the

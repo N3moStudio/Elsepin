@@ -138,9 +138,13 @@ struct MapHomeView: View {
                 Annotation("", coordinate: pin.coordinate, anchor: .center) {
                     SavedPinMapIcon(pin: pin, selected: selectedSavedPin == pin.id,
                         pinSize: preferences.mapPinSize,
-                        labelBackground: ShiftPalette.color(.surface, style: preferences.visualStyle)) {
-                        guard canPlacePin else { return }
-                        selectedSavedPin = pin.id
+                        labelBackground: ShiftPalette.color(.surface, style: preferences.visualStyle),
+                        preparesLocation: canPlacePin) {
+                        let action = MapPinPlacement.savedPinAction(hasJourney: session.journey != nil,
+                            hasPreparedRoute: planner.preparedRoute != nil, drawing: planner.isDrawing, adjusting: pinAdjusting)
+                        guard action != .ignore else { return }
+                        selectedSavedPin = selectedSavedPin == pin.id ? nil : pin.id
+                        guard action == .prepareLocation else { return }
                         selection = nil
                         followMovement = false
                         session.selectPin(pin.coordinate, name: pin.displayName)

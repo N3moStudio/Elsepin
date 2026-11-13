@@ -1,6 +1,25 @@
 # Elsepin current handoff
 
-Updated 8 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
+Updated 12 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
+
+## Local interaction fixes after build 77 (12 November 2026)
+
+Baseline `073f8f4`; see [the assessment and blueprint](INTERACTION-REVIEW-2026-11-12.md).
+Pin taps now reveal names during active/prepared routes without changing destination.
+Dropped-pin/held-location trays no longer collapse. Joystick speed controls no longer
+show a route-only smoothing switch. Arrival uses an explicit menu; Add stop opens
+place search, while Pause on this path is a separate option. Stored-path changes
+require recalculation confirmation; live search edits first require Hold location.
+
+Local identity/appearance checks and 17 resource tests passed; seven changed Swift
+files parsed. Added a saved-pin interaction matrix Swift test, not executed here:
+no local Swift/Xcode. Native compilation and physical UI acceptance remain pending.
+No new IPA, push or publication. Source is in this local working tree; build 77's
+652-check receipt does not cover these newer changes. Use the existing private Mac
+workflow for the next explicitly requested build. Python in PATH is a broken Store
+alias and the old Python313 installation lacks its library; verified temporary
+runtime is `.build/python-3.13.7/python.exe`. Full local check log:
+`.build/interaction-review-tests.log`.
 
 ## Build 77 - saved-pin annotation crash fix (8 November 2026)
 
