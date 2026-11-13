@@ -74,7 +74,6 @@ struct RoutePlaceSearchSheet: View {
                             let current = session.savedPin(at: place.coordinate) ?? place
                             Button { choose(RoutePlace(name: current.displayName, coordinate: current.coordinate)) } label: {
                                 HStack(spacing: 10) {
-                                    Image(systemName: "mappin")
                                     placeRow(current.displayName, subtitle: current.address ?? "")
                                     if current.isFavorite && session.savedPin(at: current.coordinate) != nil {
                                         Image(systemName: "star.fill").font(.caption)
@@ -87,8 +86,7 @@ struct RoutePlaceSearchSheet: View {
                                 Button { chooseTrip(recent.trip) } label: {
                                     let current = library.trips.first { $0.id == recent.trip.id } ?? recent.trip
                                     HStack(spacing: 10) {
-                                        Image(systemName: "point.topleft.down.curvedto.point.bottomright.up")
-                                        placeRow(current.name, subtitle: "\(current.originName) → \(current.destinationName)")
+                                        placeRow(current.name, subtitle: "\(current.originName) → \(current.destinationName)", symbol: "point.topleft.down.curvedto.point.bottomright.up")
                                         if current.isFavorite { Image(systemName: "star.fill").font(.caption) }
                                     }
                                 }
@@ -179,9 +177,9 @@ struct RoutePlaceSearchSheet: View {
         }
     }
 
-    private func placeRow(_ name: String, subtitle: String) -> some View {
+    private func placeRow(_ name: String, subtitle: String, symbol: String = "mappin.and.ellipse") -> some View {
         HStack(spacing: 14) {
-            ShiftRowIcon(symbol: "mappin.and.ellipse")
+            Image(systemName: symbol).frame(width: 24).accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 Text(name).font(.body.weight(.medium)).foregroundStyle(.primary)
                 if !subtitle.isEmpty { Text(subtitle).font(.caption).foregroundStyle(.secondary) }
