@@ -1,10 +1,20 @@
 # Elsepin current handoff
 
-## Build 82 preparation - wider, adjustable pin visibility (13 November 2026)
+## Build 82 validated and delivered - 13 November 2026
 
-User authorized building and delivering this patch. Both targets request 2.6.1
-(82). Build/package checks remain pending the new GitHub run. Keep the release
-unpublished and replace only the older Elsepin IPA after successful verification.
+GitHub run 43525893260 succeeded at 1a3195273ffc7e8f692e91844d169530379f320a.
+697 checks passed: 558 Swift, 104 cloud, 18 Companion and 17 resource/package
+tests; one Windows-only Companion case skipped on Mac. Native app and extension
+compiled without compiler warnings/errors. Both bundles are 2.6.1 (82), arm64;
+entitlements, icons, helpers, notices and IPA integrity verified.
+
+Delivered only Elsepin 2.6.1 build 82.ipa (19,096,648 bytes) to
+C:/Users/naith/Desktop/ipa/My Projects (N3mo Studio), replacing build 81.
+Original logs/package receipt: .build/artifacts/github-43525893260/.
+No release published. Signed-phone scale placement, zoom and slider acceptance
+remain pending; native compilation is not proof of those interactions.
+
+### Changes included
 
 User found build 81 hides pins too soon and supplied a Library map screenshot
 with quarter-mile scale divisions. A scale division is only part of the visible
@@ -28,9 +38,8 @@ Local validation: all 12 changed Swift files parse, source encoding/diff checks
 pass. Updated visibility tests cover the wider default, slider thresholds, local
 ground scale, invalid geometry and bounded preferences. Three new backup tests
 cover round-trip/selective import, legacy backups and invalid values; reset tests
-include the new key. Swift execution/native compilation and signed-phone layout
-remain pending. Build 81 remains the latest delivered IPA until the authorized
-build 82 passes. No release is authorized.
+include the new key. These cases passed in the 558-case Swift suite above and
+both native targets compiled successfully. Signed-phone layout remains pending.
 
 ## Build 81 validated and delivered - 13 November 2026
 

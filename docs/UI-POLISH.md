@@ -3,7 +3,7 @@
 Read this before applying new design skills or continuing the video-inspired
 polish. Current implementation and device evidence are in [CURRENT-WORK](CURRENT-WORK.md).
 
-## Post-build-81 visibility feedback (unbuilt)
+## Build 82 visibility feedback (compiled; phone acceptance pending)
 
 - Keep pins visible across wider neighborhood views. Base the cutoff on visible
   ground-map span, not camera height. Expose a 0.5-20 mi slider under the existing

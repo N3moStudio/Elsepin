@@ -1,6 +1,6 @@
 # Elsepin changelog
 
-## Build 82 - wider pin visibility and map scale (validation pending)
+## Build 82 - wider pin visibility and map scale (unpublished test build)
 
 - Show saved pins at wider zoom levels using visible ground-map span instead of
   camera distance. Default to 5 miles across the map, adjustable from 0.5 to 20 mi
@@ -9,8 +9,10 @@
 - Preserve the new range through relaunch/Dev Mode, selective backup import/export
   and settings reset. Older backups preserve the phone's current range.
 
-Local source checks pass; new/updated Swift cases and native/device checks await
-the next build. These changes are not in the delivered build 81 IPA.
+GitHub run 43525893260 at 1a31952 passed 697 automated checks and compiled both
+native targets without compiler warnings/errors. Verified build 82 replaced
+build 81 in the personal delivery folder. Phone acceptance remains pending;
+no release published.
 
 ## Build 81 - pin editing and search clarity (unpublished test build)
 

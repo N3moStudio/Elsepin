@@ -4,10 +4,10 @@ The source includes the app, WidgetKit/Live Activity extension, tests, artwork,
 helper source/downloads, Xcode project, and the bundled idevice engine library.
 No Apple signing credentials or deployed helper are included.
 
-## Current build access - 12 November 2026
+## Current build access - 13 November 2026
 
 The owner authorized making `N3moStudio/Elsepin` public. GitHub Actions run
-`43356906705` succeeded on `xcode-27` for build 79 at `9d64110`.
+`43525893260` succeeded on `xcode-27` for build 82 at `1a31952`.
 Use the manual workflow on `codex/pins-search-69` for the current development
 source; `main` is older. This does not publish a release. GitLab remains private.
 The earlier private-build billing failures below are historical. Codemagic's
