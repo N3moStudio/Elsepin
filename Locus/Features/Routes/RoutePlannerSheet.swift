@@ -636,7 +636,7 @@ struct RoutePlannerSheet: View {
         switch change.endpoint {
         case .origin: planner.setOrigin(change.place, mode: displayMode)
         case .stop:
-            if let replacement { planner.replaceWaypoint(replacement, with: change.place, mode: displayMode) }
+            if let replacement = change.replacement { planner.replaceWaypoint(replacement, with: change.place, mode: displayMode) }
             else { planner.addWaypoint(change.place, mode: displayMode, speedMPH: displaySpeed, insertAlongRoute: change.alongRoute) }
         case .destination: planner.setDestination(change.place, defaultOrigin: session.defaultRouteOrigin, mode: displayMode)
         }
