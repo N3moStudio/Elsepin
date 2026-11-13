@@ -2,6 +2,21 @@
 
 Updated 12 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
 
+## Build 78 - public GitHub build (12 November 2026)
+
+The owner authorized public visibility for `N3moStudio/Elsepin`; GitLab remains
+private and Veypax is unchanged. Source `e3976f7` is local and pushed to both
+remotes on `codex/pins-search-69`. Main is older. No release is authorized.
+Codemagic is out of free minutes (HTTP 402); paid billing remains disabled.
+Public GitHub Actions now runs successfully past the earlier account block.
+The first run, `43347794492`, passed tests but caught a missing
+`change.replacement` qualification in the planner. This is corrected in `e3976f7`.
+Run `43348423568` succeeded: 653 checks passed (514 Swift, 104 cloud, 18
+Companion, 17 resources; one Windows-only case skipped on Mac). Native build had
+zero compiler warnings/errors. Both bundles are 2.6.1 (78), arm64; entitlements,
+icons, helpers and notices verified. Delivered only `Elsepin 2.6.1 build 78.ipa`
+to the usual Desktop IPA folder, replacing build 77. Phone acceptance remains pending. Raw logs and receipts belong in ignored
+`.build/artifacts/`; do not publish local diagnostic exports or credentials.
 ## Local interaction fixes after build 77 (12 November 2026)
 
 Baseline `073f8f4`; see [the assessment and blueprint](INTERACTION-REVIEW-2026-11-12.md).
@@ -12,10 +27,10 @@ place search, while Pause on this path is a separate option. Stored-path changes
 require recalculation confirmation; live search edits first require Hold location.
 
 Local identity/appearance checks and 17 resource tests passed; seven changed Swift
-files parsed. Added a saved-pin interaction matrix Swift test, not executed here:
+files parsed. Added a saved-pin interaction matrix Swift test; the public Mac run executes it:
 no local Swift/Xcode. Native compilation and physical UI acceptance remain pending.
-No new IPA, push or publication. Source is in this local working tree; build 77's
-652-check receipt does not cover these newer changes. Use the existing private Mac
+These were the pre-build local results; see the build 78 status above. Build 77's
+652-check receipt does not cover these newer changes. Use the existing public GitHub Mac
 workflow for the next explicitly requested build. Python in PATH is a broken Store
 alias and the old Python313 installation lacks its library; verified temporary
 runtime is `.build/python-3.13.7/python.exe`. Full local check log:

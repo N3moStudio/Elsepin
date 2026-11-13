@@ -1,9 +1,24 @@
 # Elsepin build history
 
-Updated **8 November 2026**, America/Los_Angeles. Read the [full changelog](../CHANGELOG.md)
+Updated **12 November 2026**, America/Los_Angeles. Read the [full changelog](../CHANGELOG.md)
 for feature details. This page separates compilation, test artifacts and published
 releases so a successful check is not mistaken for an available download.
 
+## 12 November 2026 - Elsepin 2.6.1 (78), public GitHub test build
+
+Owner authorized public source visibility; GitLab remains private and Veypax is
+unchanged. GitHub run `43348423568`, source `e3976f7`, passed 653 checks:
+514 Swift, 104 cloud, 18 Companion and 17 packaging/resource tests; one Windows-only
+case skipped on Mac. Native app/extension compilation passed without compiler
+warnings/errors. IPA arm64, 2.6.1 (78) identities, entitlements, icons, helper
+archives and notices verified. Delivered only `Elsepin 2.6.1 build 78.ipa`
+(18,857,063 bytes), replacing build 77. No release published; phone acceptance pending.
+
+First public run `43347794492` passed tests but caught a planner scope error;
+`e3976f7` qualifies the pending stop replacement correctly. Full original logs and
+package receipt remain in `.build/artifacts/github-43348423568/`. History scan
+found one false positive (a UserDefaults migration key), no detected credentials.
+Codemagic's allowance remains exhausted; paid billing was not enabled.
 ## 8 November 2026 - Elsepin 2.6.1 (77), private crash-fix IPA
 
 Codemagic `6af170c877f10fa3b05d9e17`, source `035a846`, passed all 652 checks and
