@@ -29,4 +29,26 @@ final class PinAppearanceTests: XCTestCase {
         current.emoji = "bad"
         XCTAssertFalse(current.isValid)
     }
+
+    func testEmojiFieldRejectsLettersNumbersAndMixedPaste() {
+        for rejected in ["1", "#", "abc", "🙂🙂", "🙂 home", " 🙂", "\n"] {
+            XCTAssertNil(PinAppearance.applyingEmojiEdit(to: "", range: NSRange(location: 0, length: 0), replacement: rejected))
+            XCTAssertNil(PinAppearance.applyingEmojiEdit(to: "🏡", range: NSRange(location: 2, length: 0), replacement: rejected))
+        }
+    }
+
+    func testEmojiFieldAcceptsWholeVariantsAndReplacesPreviousSymbol() {
+        for emoji in ["🙂", "👍🏽", "🇺🇸", "👨‍👩‍👧‍👦", "❤️", "1️⃣"] {
+            XCTAssertEqual(PinAppearance.applyingEmojiEdit(to: "", range: NSRange(location: 0, length: 0), replacement: emoji), emoji)
+            XCTAssertEqual(PinAppearance.applyingEmojiEdit(to: "🏡", range: NSRange(location: 2, length: 0), replacement: emoji), emoji)
+            XCTAssertEqual(PinAppearance.applyingEmojiEdit(to: "🏡", range: NSRange(location: 0, length: 2), replacement: emoji), emoji)
+        }
+    }
+
+    func testEmojiFieldCanClearComplexEmojiAndRejectsStaleRanges() {
+        let family = "👨‍👩‍👧‍👦"
+        XCTAssertEqual(PinAppearance.applyingEmojiEdit(to: family, range: NSRange(location: 0, length: family.utf16.count), replacement: ""), "")
+        XCTAssertEqual(PinAppearance.applyingEmojiEdit(to: "🏡", range: NSRange(location: 2, length: 0), replacement: ""), "🏡")
+        XCTAssertNil(PinAppearance.applyingEmojiEdit(to: "🏡", range: NSRange(location: 20, length: 1), replacement: "🙂"))
+    }
 }

@@ -3,14 +3,25 @@
 Read this before applying new design skills or continuing the video-inspired
 polish. Current implementation and device evidence are in [CURRENT-WORK](CURRENT-WORK.md).
 
-## Build 80 corrections (pending native/device validation)
+## Post-build-80 pin feedback (unbuilt)
+
+- No address row or address request in the Library pin editor. Address lookup
+  belongs to main-map selection; retain addresses in Recents where useful.
+- Show emoji input only after choosing Custom emoji in Symbol. Reject invalid
+  input before display; selecting a standard symbol clears the custom emoji.
+- Hide saved pins beyond neighborhood zoom. Keep the edited/selected pin and
+  route/current-location markers visible; retain the Pins visibility toggle.
+- Put queued next-route cancellation in the route menu as well as its arrival
+  controls. Canceling the queued trip must not stop the current one.
+
+## Build 80 corrections (compiled; device checks recorded in CURRENT-WORK)
 
 - Keep the route map visible before directions exist and after failures. Fit is
   explicit; a saved path must not silently turn into fresh directions.
 - Pin expansion is a separate Search-row button, never an automatic Form-row
   action. Keep the map camera across expansion; edited pins start zoomed in.
 - Manual pin-editor taps leave naming to the user. Search results may fill a
-  blank name. Address text belongs in editors/Recents, not the main-map bubble.
+  blank name. Main-map bubbles remain name-only; see the newer address rule above.
 - Show the existing pin symbol/emoji without an added white backing circle.
 - Scope search to a chosen map area only after an explicit user action. Opening
   a normal Start/Destination editor must still allow a different city.
@@ -22,8 +33,8 @@ polish. Current implementation and device evidence are in [CURRENT-WORK](CURRENT
 - Pin/area editors use taller maps and a full-screen expansion with search. Keep
   the same draft and camera, unmount the hidden map, and leave Save/Cancel explicit.
 - Pin names are persistent only when saved; a dropped-pin lookup is a label hint.
-  Preserve user names. Show addresses as secondary text in editors/Recents and
-  retain exact coordinates; main-map bubbles show only names.
+  Preserve user names and exact coordinates. Recents may show secondary addresses;
+  the Library editor follows the newer address rule above. Map bubbles show names.
 - Route stars first offer plain Save or Save & Favorite. Once saved, star toggles
   favorite status on the same record; it must not duplicate or delete the route.
 - Next-route planning is optional and separate from the first route's draft.

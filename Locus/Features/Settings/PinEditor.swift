@@ -1,5 +1,6 @@
 import MapKit
 import SwiftUI
+import UIKit
 
 @MainActor final class PinDraft: ObservableObject, Identifiable {
     let id = UUID()
@@ -12,6 +13,7 @@ import SwiftUI
     @Published var symbol: SavedPlaceSymbol
     @Published var tint: SavedPlaceTint
     @Published var emoji: String
+    @Published var usesCustomEmoji: Bool
     @Published var address: String?
     init(place: SavedPlace?, center: CLLocationCoordinate2D?, selectedCoordinate: CLLocationCoordinate2D? = nil) {
         existing = place; self.center = center; name = place?.name ?? ""
@@ -19,11 +21,12 @@ import SwiftUI
         coordinate = place?.coordinate ?? selectedCoordinate
         favorite = place?.isFavorite ?? false; symbol = place?.symbol ?? .pin; tint = place?.tint ?? .mint
         emoji = place?.emoji ?? ""; address = place?.address
+        usesCustomEmoji = place?.emoji != nil
     }
     var canSave: Bool {
         guard let coordinate, CLLocationCoordinate2DIsValid(coordinate) else { return false }
         return !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-            (emoji.isEmpty || PinAppearance.isSingleEmoji(emoji))
+            (!usesCustomEmoji || PinAppearance.isSingleEmoji(emoji))
     }
 }
 
@@ -50,7 +53,6 @@ struct PinEditor: View {
             Form {
                 Section {
                     TextField("Pin name", text: $draft.name)
-                    if let address = draft.address { Text(address).font(.caption).foregroundStyle(.secondary) }
                     Toggle("Favorite", isOn: $draft.favorite)
                 }
                 Section {
@@ -73,14 +75,15 @@ struct PinEditor: View {
                     Text("Tap to place or move the pin. Saving never teleports.")
                 }
                 Section("Pin appearance") {
-                    Picker("Symbol", selection: $draft.symbol) {
-                        ForEach(SavedPlaceSymbol.allCases) { symbol in Label(symbol.title, systemImage: symbol.rawValue).tag(symbol) }
+                    Picker("Symbol", selection: symbolChoice) {
+                        ForEach(SavedPlaceSymbol.allCases) { symbol in
+                            Label(symbol.title, systemImage: symbol.rawValue).tag(Optional(symbol))
+                        }
+                        Label("Custom emoji", systemImage: "face.smiling").tag(nil as SavedPlaceSymbol?)
                     }
-                    .onChange(of: draft.symbol) { _, _ in draft.emoji = "" }
-                    TextField("Or choose one emoji", text: $draft.emoji)
-                        .textInputAutocapitalization(.never).autocorrectionDisabled()
-                    if !draft.emoji.isEmpty, !PinAppearance.isSingleEmoji(draft.emoji) {
-                        Text("Choose one emoji using the emoji keyboard.").font(.caption).foregroundStyle(.secondary)
+                    if draft.usesCustomEmoji {
+                        SingleEmojiField(text: $draft.emoji)
+                            .frame(minHeight: 44)
                     }
                     Picker("Color", selection: $draft.tint) {
                         ForEach(SavedPlaceTint.allCases) { tint in Text(tint.title).tag(tint) }
@@ -110,8 +113,13 @@ struct PinEditor: View {
                             .sheet(isPresented: $search) { searchSheet }
                     }
                 }
-                .task(id: draft.coordinate.map(RoutePoint.init)) { await resolveAddress() }
         }
+    }
+    private var symbolChoice: Binding<SavedPlaceSymbol?> {
+        Binding(get: { draft.usesCustomEmoji ? nil : draft.symbol }, set: { symbol in
+            draft.usesCustomEmoji = symbol == nil
+            if let symbol { draft.symbol = symbol; draft.emoji = "" }
+        })
     }
     private var searchSheet: some View {
         RoutePlaceSearchSheet(title: "Place pin") { place in
@@ -144,7 +152,8 @@ struct PinEditor: View {
         }
     }
     private var visiblePins: [SavedPlace] {
-        session.savedPins.filter { pin in
+        guard SavedPinVisibility.isVisible(cameraDistance: retainedCamera?.distance) else { return [] }
+        return session.savedPins.filter { pin in
             pin.id != draft.existing?.id && (visibleMapRect?.contains(MKMapPoint(pin.coordinate)) ?? true)
         }
     }
@@ -157,17 +166,6 @@ struct PinEditor: View {
     }
     private func select(_ coordinate: CLLocationCoordinate2D) {
         draft.address = nil; draft.coordinate = coordinate
-    }
-    private func resolveAddress() async {
-        guard let coordinate = draft.coordinate else { return }
-        // Existing metadata is already useful; don't refetch until the pin moves.
-        if draft.existing?.coordinate.latitude == coordinate.latitude,
-           draft.existing?.coordinate.longitude == coordinate.longitude { return }
-        let point = RoutePoint(coordinate)
-        do { try await Task.sleep(for: .milliseconds(350)) } catch { return }
-        let details = await PinLocationLookup.resolve(coordinate, includeNearbyName: false)
-        guard !Task.isCancelled, draft.coordinate.map(RoutePoint.init) == point else { return }
-        draft.address = details?.address
     }
     private func save() {
         guard draft.canSave, let coordinate = draft.coordinate else { return }
@@ -188,5 +186,54 @@ struct PinEditor: View {
         }
         DeveloperLogObserver.shared.recordMapEnergy(reason: "pin_saved")
         dismiss()
+    }
+}
+
+/// A native field lets us reject invalid input before it appears, including paste.
+/// Updating a SwiftUI binding alone can leave rejected text in the backing field.
+private struct SingleEmojiField: UIViewRepresentable {
+    @Binding var text: String
+    @ScaledMetric(relativeTo: .body) private var fontSize: CGFloat = 17
+
+    func makeUIView(context: Context) -> UITextField {
+        let field = UITextField()
+        field.placeholder = "Choose an emoji"
+        field.accessibilityLabel = "Custom emoji"
+        field.accessibilityHint = "Use the emoji keyboard to choose one symbol."
+        field.autocorrectionType = .no
+        field.autocapitalizationType = .none
+        field.spellCheckingType = .no
+        field.returnKeyType = .done
+        field.delegate = context.coordinator
+        field.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        return field
+    }
+
+    func updateUIView(_ field: UITextField, context: Context) {
+        context.coordinator.text = $text
+        if field.text != text { field.text = text }
+        let descriptor = UIFont.systemFont(ofSize: fontSize).fontDescriptor
+        field.font = UIFont(descriptor: descriptor.withDesign(.rounded) ?? descriptor, size: fontSize)
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(text: $text) }
+
+    final class Coordinator: NSObject, UITextFieldDelegate {
+        var text: Binding<String>
+        init(text: Binding<String>) { self.text = text }
+
+        func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+            guard let accepted = PinAppearance.applyingEmojiEdit(to: textField.text ?? "", range: range, replacement: string) else {
+                return false
+            }
+            textField.text = accepted
+            text.wrappedValue = accepted
+            return false
+        }
+
+        func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+            textField.resignFirstResponder()
+            return true
+        }
     }
 }

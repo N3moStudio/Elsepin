@@ -1,6 +1,31 @@
 # Elsepin current handoff
 
-## Unbuilt follow-up - search clarity
+## Unbuilt follow-up - pin editing, map visibility and search clarity (13 November 2026)
+
+New device feedback confirms bike/e-bike walking fallback, route Save / Favorite /
+Unfavorite, and Recently Deleted worked in build 80. This is focused acceptance,
+not proof that every feature or crash scenario passed.
+
+- Library pin creation/editing no longer displays or requests addresses. Moving
+  a pin still clears its stale address; selecting it on the main map can resolve
+  an address. Search suggestions may fill a blank name; manual taps never do.
+- Symbol offers Custom emoji. Only that choice reveals a native emoji-only
+  field, rejecting letters, plain numbers and mixed/multiple-emoji paste before
+  display. A new emoji replaces the previous one; flags, skin tones and family
+  sequences remain intact. Save requires an emoji when Custom emoji is chosen.
+- Saved pins are viewport-filtered and hidden beyond a 4,000 m camera distance
+  on the main map and in the Library pin editor. This is camera zoom, not distance
+  from the phone. Draft/selected pins, route markers and current location remain
+  separate. Main-map filtering runs after camera movement, not on route ticks.
+- The active route's three-dot menu includes Cancel next route while one is
+  queued. It uses the existing cancellation path and leaves the current trip
+  running. Before starting: planner > After arrival > Remove next route.
+
+Validation: seven changed/new Swift files parse; source encoding and diff checks
+pass; 17 resource/package checks pass. Six new Swift regression cases cover emoji
+edits and zoom visibility, but require the next Mac run. No native compiler,
+keyboard/VoiceOver or physical map-layout verification performed for this patch.
+Do not count build 80's earlier compilation as validation of these changes.
 
 User confirmed the screenshot selected the Demo Garden pin, not Demo Garden Walk.
 `RoutePlaceSearchSheet.swift` now separates recent pins/routes and labels their

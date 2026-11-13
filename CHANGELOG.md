@@ -1,12 +1,22 @@
 # Elsepin changelog
 
-## Unreleased - clearer search item types (after build 80)
+## Unreleased - pin editing and search clarity (after build 80)
+
+- Keep the Library pin editor steady by removing address lookup and its changing
+  address row. Main-map selection can still resolve an address later.
+- Add Custom emoji to the Symbol menu; show its input only when selected and
+  reject non-emoji input before display. Keep full emoji variants and sequences.
+- Hide saved pins at city/country zoom levels in the main map and pin editor;
+  keep the selected pin, route markers and current location visible.
+- Add Cancel next route to the active route's three-dot menu without stopping
+  the current trip.
 
 - Separate Recent pins from Recent routes, label pin and saved-route rows, and
   distinguish Saved pins from Saved routes in search results. Pin actions now
   say Plan a route here. Existing callbacks, saved geometry and data are unchanged.
-- Source syntax/encoding checks passed; this UI-only follow-up is not in the
-  delivered build 80 IPA and has not undergone native/device validation.
+- Source syntax/encoding and 17 resource checks passed. Six new Swift regression
+  cases await execution on Mac. These changes are not in the delivered build 80
+  IPA and have not undergone native/device validation.
 
 ## Build 80 validated and delivered - 12 November 2026
 

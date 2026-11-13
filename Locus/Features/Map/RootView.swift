@@ -447,6 +447,9 @@ struct BottomControlsView: View {
                     Menu {
                         Button("Route details", systemImage: "list.bullet") { planner.isPresented = true }
                         Button("Mode & speed", systemImage: "speedometer") { showMovementSheet = true }
+                        if session.nextRoutePlan != nil {
+                            Button("Cancel next route", systemImage: "xmark.circle") { session.cancelNextRoute() }
+                        }
                         Button("End route and hold location", systemImage: "stop.fill") { session.stopRoute() }
                             .disabled(session.isBusy || session.routeStopping)
                         Divider()

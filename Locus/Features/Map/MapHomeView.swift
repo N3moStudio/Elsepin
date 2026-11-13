@@ -21,6 +21,7 @@ struct MapHomeView: View {
     @State private var selectedSavedPin: String?
     @State private var thermallyLimited = ProcessInfo.processInfo.thermalState.rawValue >= ProcessInfo.ThermalState.serious.rawValue
     @State private var visibleMapRect: MKMapRect?
+    @State private var visibleCameraDistance: Double?
     @State private var visibleSavedPins: [SavedPlace] = []
     @State private var savedMapAreas: [SavedMapArea] = []
     @State private var pendingBrowsePin: PinDraft?
@@ -209,6 +210,7 @@ struct MapHomeView: View {
             .onMapCameraChange(frequency: .onEnd) { context in
                 guard visualUpdatesEnabled else { return }
                 visibleMapRect = context.rect
+                visibleCameraDistance = context.camera.distance
                 refreshSavedPins(session.savedPins)
                 DeveloperLogStore.shared.record("map_viewport_settled", [
                     "style": String(session.mapStyleIndex), "distance": String(context.camera.distance),
@@ -243,7 +245,7 @@ struct MapHomeView: View {
         guard visualUpdatesEnabled else { return }
         // Refresh only after a pan, library edit or visibility change. Movement
         // ticks reuse this list instead of repeatedly scanning the whole library.
-        let visible = preferences.showSavedPinsOnMap
+        let visible = preferences.showSavedPinsOnMap && SavedPinVisibility.isVisible(cameraDistance: visibleCameraDistance)
             ? pins.filter { visibleMapRect?.contains(MKMapPoint($0.coordinate)) ?? true } : []
         if visibleSavedPins != visible { visibleSavedPins = visible }
         if let selectedSavedPin, !visible.contains(where: { $0.id == selectedSavedPin }) {
