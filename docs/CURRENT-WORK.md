@@ -834,3 +834,33 @@ Deleted arena branch remains deleted; recovery history is .build/elsepin-arena-3
    Along route/Everywhere, cancel/back, offline/retry and adding a second stop.
    Also test Places & stops → Add stop after Hold location and edit.
 4. Expand Advanced/More options on a small screen and at accessibility text sizes.
+
+## Connection-check follow-up (local, after build 78)
+
+The TCP liveness cache previously lasted 10 seconds regardless of a shorter
+selected check interval. It now respects 3-10 seconds (preserving the existing
+10-second maximum) and invalidates on foreground entry without tearing down a
+working route's developer connection. No new timer or idle network loop added.
+Explicit movement/Stop still require fresh connections; accepted writes still do
+not prove Find My/Life360 ingestion. Foreground invalidation affects the next
+write, not a write already in flight, and cannot guarantee instant VPN detection.
+Added two Swift regression tests for interval boundaries and invalid timing.
+Local diff checks passed. Three changed Swift files parse cleanly; LocationEngine
+has the same three parser limitations as HEAD, with no new parser errors. No local
+Swift/Xcode is installed: native compile, Swift test execution and phone validation
+remain pending. No IPA build, push or release requested/performed for this follow-up.
+
+## Drag-selection alignment follow-up (local, after build 78)
+
+Recently Deleted now measures both finger and row frames in global coordinates,
+avoiding named-space resolution across List cell hosting roots. Shared
+SelectionRowHitTest prefers the row containing the touch, then the nearest edge
+in a separator gap; variable-height rows no longer lose to a closer neighbor's
+center. Existing reversible range selection, cancellation, tap/VoiceOver controls,
+scrolling outside the circle gutter and deletion confirmation are preserved.
+Repository scan found this is the only drag-to-select list; map/joystick/tray drags
+are not bulk selection and were left alone. Three geometry regression tests added.
+Swift syntax checks passed for the three affected files and diff checks passed.
+No native Swift tests/compiler or phone gesture validation run yet; no build,
+push or release. Next device check: drag down/up across circles before and after
+scrolling, reverse direction, release/restart and confirm Delete count matches.

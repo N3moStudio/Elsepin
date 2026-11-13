@@ -10,6 +10,7 @@ struct PreparedRoute: Identifiable {
     var editingTripID: UUID? = nil
     var continuationNote: String? = nil
     var historyID: UUID? = nil
+    var nextRoute: NextRoutePlan? = nil
     let waypoints: [TripWaypoint]
     let usesStoredPath: Bool
     let sectionChoices: [UUID: RouteLegChoice]
@@ -20,6 +21,8 @@ struct PreparedRoute: Identifiable {
 final class RoutePlanner: ObservableObject {
     @Published private(set) var preparedRoute: PreparedRoute?
     @Published var editingTripID: UUID?
+    @Published var savesToLibraryOnCompletion = false
+    @Published var draftNextRoute: NextRoutePlan?
     private var draftContinuationNote: String?
     @Published var draftArrival: ArrivalChoice = .stay
     @Published private(set) var continuationLoading = false
@@ -59,8 +62,12 @@ final class RoutePlanner: ObservableObject {
     @discardableResult
     func prepareSelectedRoute(mode: TravelMode, speedMPH: Double, smoothMovement: Bool) -> Bool {
         guard !isLoading, let route = selectedRoute, route.supports(mode) else { return false }
+        if let next = draftNextRoute, !next.begins(at: route) {
+            error = "The destination changed. Edit or remove the next route before continuing."
+            return false
+        }
         preparedRoute = PreparedRoute(route: route, mode: mode, speedMPH: mode.clampedSpeedMPH(speedMPH), smoothMovement: smoothMovement,
-            arrival: draftArrival, editingTripID: editingTripID, continuationNote: draftContinuationNote, historyID: draftHistoryID,
+            arrival: draftArrival, editingTripID: editingTripID, continuationNote: draftContinuationNote, historyID: draftHistoryID, nextRoute: draftNextRoute,
             waypoints: waypoints, usesStoredPath: usesStoredPath, sectionChoices: sectionChoices)
         return true
     }
@@ -126,6 +133,7 @@ final class RoutePlanner: ObservableObject {
         draftName = route.name
         draftContinuationNote = preparedRoute.continuationNote
         draftArrival = preparedRoute.arrival
+        draftNextRoute = preparedRoute.nextRoute
         draftMode = preparedRoute.mode
         draftSpeedMPH = preparedRoute.speedMPH
         draftSmoothMovement = preparedRoute.smoothMovement
@@ -175,6 +183,8 @@ final class RoutePlanner: ObservableObject {
     /// Dismissing an unaccepted draft clears only that draft. A route explicitly
     /// staged with Show route stays on the map until Start or Discard.
     func discardDraft() {
+        draftNextRoute = nil
+        savesToLibraryOnCompletion = false
         cancel()
         origin = nil
         destination = nil
@@ -246,6 +256,7 @@ final class RoutePlanner: ObservableObject {
         }
     }
     func useCustom(_ coordinates: [CLLocationCoordinate2D], source: RoutePathSource) {
+        draftNextRoute = nil
         guard let route = RouteBuilder.customRoute(coordinates, source: source) else {
             error = "Choose at least two different, valid points for the path."
             return
@@ -266,6 +277,8 @@ final class RoutePlanner: ObservableObject {
     }
 
     func useSaved(_ trip: SavedTrip) {
+        draftNextRoute = nil
+        savesToLibraryOnCompletion = false
         guard let route = trip.plannedRoute else { error = "The saved trip is invalid."; return }
         cancel()
         editingTripID = trip.id

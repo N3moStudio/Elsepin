@@ -1105,3 +1105,33 @@ User chose the compact overall Settings layout but retained the original larger 
 ## 30 October 2026 — Authorized build 61 IPA delivery, unpublished
 Built source e7065f27ac863199b5d9a26ddcebe596a8154cc6 in native run 41103527856. All 551 tests passed (422 Swift, 14 packaging/icon, 19 Companion, 96 cloud), and app/extension Release compilation and package/signature checks succeeded. Recorded the three existing trust/delegate warnings in BUILD-HISTORY.md, retaining complete original logs under .build/artifacts/41103527856/.
 Downloaded artifact 13000346208, verified both bundles 2.6.1 (61)/SDK 27.1, all 13 icons, required resources and SHA-256 against GitHub, then copied the exact bytes to Downloads/Elsepin 2.6.1 build 61.ipa. Digest 59031619b950c09b915b9b70ca7a29501dbef3cf2df321356f7098740fe91cbc, 18,258,461 bytes. No public asset, release or deployment; old Drive IPA remains build 60. Device pairing, Island/UI behavior and battery are still acceptance checks.
+
+## Connection-check follow-up (local, after build 78)
+
+The TCP liveness cache previously lasted 10 seconds regardless of a shorter
+selected check interval. It now respects 3-10 seconds (preserving the existing
+10-second maximum) and invalidates on foreground entry without tearing down a
+working route's developer connection. No new timer or idle network loop added.
+Explicit movement/Stop still require fresh connections; accepted writes still do
+not prove Find My/Life360 ingestion. Foreground invalidation affects the next
+write, not a write already in flight, and cannot guarantee instant VPN detection.
+Added two Swift regression tests for interval boundaries and invalid timing.
+Local diff checks passed. Three changed Swift files parse cleanly; LocationEngine
+has the same three parser limitations as HEAD, with no new parser errors. No local
+Swift/Xcode is installed: native compile, Swift test execution and phone validation
+remain pending. No IPA build, push or release requested/performed for this follow-up.
+
+## Drag-selection alignment follow-up (local, after build 78)
+
+Recently Deleted now measures both finger and row frames in global coordinates,
+avoiding named-space resolution across List cell hosting roots. Shared
+SelectionRowHitTest prefers the row containing the touch, then the nearest edge
+in a separator gap; variable-height rows no longer lose to a closer neighbor's
+center. Existing reversible range selection, cancellation, tap/VoiceOver controls,
+scrolling outside the circle gutter and deletion confirmation are preserved.
+Repository scan found this is the only drag-to-select list; map/joystick/tray drags
+are not bulk selection and were left alone. Three geometry regression tests added.
+Swift syntax checks passed for the three affected files and diff checks passed.
+No native Swift tests/compiler or phone gesture validation run yet; no build,
+push or release. Next device check: drag down/up across circles before and after
+scrolling, reverse direction, release/restart and confirm Delete count matches.

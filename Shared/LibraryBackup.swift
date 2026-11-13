@@ -9,13 +9,16 @@ struct BackupPlace: Codable, Equatable {
     var color: String? = nil
     // Missing in older backups: saved places were always favorites.
     var favorite: Bool? = nil
+    var address: String? = nil
+    var emoji: String? = nil
     var isFavorite: Bool { favorite ?? true }
     var id: String { "\(latitude),\(longitude)" }
     var isValid: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && name.count <= 120 &&
         RoutePoint(latitude: latitude, longitude: longitude).isValid &&
         (folder.map { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && $0.count <= 60 } ?? true) &&
-        (icon.map { $0.count <= 64 } ?? true) && (color.map { $0.count <= 32 } ?? true)
+        (icon.map { $0.count <= 64 } ?? true) && (color.map { $0.count <= 32 } ?? true) &&
+        (address.map { $0.count <= 300 } ?? true) && (emoji.map(PinAppearance.isSingleEmoji) ?? true)
     }
 }
 

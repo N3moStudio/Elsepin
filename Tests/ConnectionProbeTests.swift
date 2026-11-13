@@ -5,6 +5,23 @@ import Darwin
 #endif
 
 final class ConnectionProbeTests: XCTestCase {
+    func testShorterCadenceExpiresCachedProbeAtSelectedBoundary() {
+        for seconds in 3...15 {
+            let lifetime = Double(min(seconds, 10))
+            XCTAssertFalse(ConnectionProbePolicy.needsProbe(explicit: false, endpoint: "a", previousEndpoint: "a",
+                checkedAt: 100, now: 100 + lifetime - 0.01, interval: Double(seconds)))
+            XCTAssertTrue(ConnectionProbePolicy.needsProbe(explicit: false, endpoint: "a", previousEndpoint: "a",
+                checkedAt: 100, now: 100 + lifetime, interval: Double(seconds)))
+        }
+    }
+
+    func testInvalidTimingNeverReusesConnectionEvidence() {
+        XCTAssertTrue(ConnectionProbePolicy.needsProbe(explicit: false, endpoint: "a", previousEndpoint: "a",
+            checkedAt: 100, now: .nan))
+        XCTAssertTrue(ConnectionProbePolicy.needsProbe(explicit: false, endpoint: "a", previousEndpoint: "a",
+            checkedAt: 100, now: 101, interval: .infinity))
+    }
+
     func testOnlyContinuousCommandsReuseRecentSameEndpointEvidence() {
         XCTAssertFalse(ConnectionProbePolicy.needsProbe(explicit: false, endpoint: "10.7.0.1", previousEndpoint: "10.7.0.1", checkedAt: 100, now: 101))
         XCTAssertTrue(ConnectionProbePolicy.needsProbe(explicit: true, endpoint: "10.7.0.1", previousEndpoint: "10.7.0.1", checkedAt: 100, now: 101))

@@ -162,3 +162,14 @@ actual recent-history entries and recovery points are outside this backup format
 A settings import does not transfer them. Reopen Shift and recheck the values to
 verify persistence, then reimport the same file to check that routes/places do not
 duplicate.
+
+## Pin name and appearance additions after build 78
+
+`address` and `emoji` are optional saved-pin/BackupPlace fields. Old backups decode
+with both absent; old readers ignore them. Emoji is one bounded extended grapheme,
+retaining native skin-tone/flag/family sequences. New import validation rejects
+multiple emoji or arbitrary strings. User-entered pin names still win over lookup.
+The existing serialized `mint` color continues to mean theme accent; its visible
+label is now Follow theme. All fixed color values and pin identities are unchanged.
+Automatic lookup changes labels only, never a coordinate, favorite status or saved
+identity. Fresh Library pin editors center the map without selecting that center.

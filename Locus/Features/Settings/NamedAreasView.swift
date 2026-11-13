@@ -38,13 +38,21 @@ struct NamedAreasSection: View {
 @MainActor final class NamedAreaDraft: ObservableObject, Identifiable {
     let id: UUID
     @Published var name: String
-    @Published var points: [RoutePoint]
+    @Published private var cornerHistory: AreaCornerHistory
+    var points: [RoutePoint] {
+        get { cornerHistory.points }
+        set { cornerHistory.replace(newValue) }
+    }
+    var canUndo: Bool { cornerHistory.canUndo }
+    var canRedo: Bool { cornerHistory.canRedo }
+    func undoCorner() { cornerHistory.undo() }
+    func redoCorner() { cornerHistory.redo() }
     let center: CLLocationCoordinate2D?
     let viewport = SketchMapViewport()
     init(area: NamedArea?, center: CLLocationCoordinate2D?) {
         id = area?.id ?? UUID()
         name = area?.name ?? ""
-        points = area?.points ?? []
+        cornerHistory = AreaCornerHistory(area?.points ?? [])
         self.center = center
     }
     var area: NamedArea {
@@ -61,6 +69,7 @@ struct NamedAreaEditor: View {
     @State private var confirmDiscard = false
     @State private var error: String?
     @State private var cameraRequest: SketchCameraRequest?
+    @State private var expandedMap = false
     private var otherAreas: [NamedArea] { session.namedAreas.filter { $0.id != draft.id } }
     var body: some View {
         NavigationStack {
@@ -73,24 +82,25 @@ struct NamedAreaEditor: View {
                 MapLocationSearch(center: draft.viewport.camera?.centerCoordinate ?? draft.center) { coordinate in
                     cameraRequest = SketchCameraRequest(center: coordinate)
                 }.padding(.horizontal)
-                SketchMapView(points: draft.points, outline: .area,
-                              referenceAreas: otherAreas,
-                              initialCamera: draft.viewport.camera, initialCenter: draft.center,
-                              cameraRequest: cameraRequest,
-                              onPoint: { coordinate in
-                    guard draft.points.count < 200 else { return }
-                    let point = RoutePoint(coordinate)
-                    if point.isValid, draft.points.last.map({ $0.distance(to: point) > 0.2 }) ?? true { draft.points.append(point) }
-                }, onCameraChanged: { draft.viewport.camera = $0.copy() as? MKMapCamera })
-                .frame(height: 300).clipShape(RoundedRectangle(cornerRadius: 20)).padding(.horizontal)
+                // Don't keep two live maps rendering behind the full-screen editor.
+                Group {
+                    if expandedMap { Color.clear }
+                    else { drawingMap }
+                }
+                .frame(height: 380).clipShape(RoundedRectangle(cornerRadius: 20))
+                .overlay(alignment: .bottomTrailing) {
+                    Button { cameraRequest = nil; expandedMap = true } label: {
+                        Image(systemName: "arrow.up.left.and.arrow.down.right")
+                            .frame(width: 44, height: 44).background(ShiftCanvas()).clipShape(Circle())
+                    }.accessibilityLabel("Expand area map").padding(10)
+                }.padding(.horizontal)
                 Text("Saved areas are outlined in gray. Separate areas may use the same name; borders can touch without overlapping.")
                     .font(.footnote).foregroundStyle(.secondary).padding(.horizontal)
                 if let error { Text(error).font(.footnote).foregroundStyle(LocusTheme.statusWarn).padding(.horizontal) }
+                cornerControls
                 HStack {
                     Button("Edit corners") { editingCorners = true }.frame(minHeight: 44).disabled(draft.points.count < 3)
-                    Button { if !draft.points.isEmpty { draft.points.removeLast() } } label: {
-                        Label("Undo corner", systemImage: "arrow.uturn.backward").frame(maxWidth: .infinity, minHeight: 44).contentShape(Rectangle())
-                    }.disabled(draft.points.isEmpty)
+                    Spacer()
                     Text("\(draft.points.count) corners").font(.caption).foregroundStyle(.secondary)
                 }.buttonStyle(.borderless).padding(.horizontal)
                 Text("Preview only. Drawing here never moves your spoofed location.").font(.caption).foregroundStyle(.secondary)
@@ -101,6 +111,30 @@ struct NamedAreaEditor: View {
                     var area = draft.area; area.points = edited
                     if let conflict = area.conflictingArea(in: otherAreas) { return NamedArea.overlapMessage(conflict.name) }
                     draft.points = edited; return nil
+                }
+            }
+            .fullScreenCover(isPresented: $expandedMap, onDismiss: { cameraRequest = nil }) {
+                NavigationStack {
+                    drawingMap
+                        .safeAreaInset(edge: .top, spacing: 0) {
+                            MapLocationSearch(center: draft.viewport.camera?.centerCoordinate ?? draft.center) { coordinate in
+                                cameraRequest = SketchCameraRequest(center: coordinate)
+                            }.padding(12).background(ShiftCanvas())
+                        }
+                        .safeAreaInset(edge: .bottom, spacing: 0) {
+                            VStack(spacing: 0) {
+                                Text("Tap to add a corner · Two fingers to move or zoom")
+                                    .font(.caption).foregroundStyle(.secondary).padding(.top, 8)
+                                cornerControls
+                            }.background(ShiftCanvas())
+                        }
+                        .loggedNavigationTitle("Draw area").navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .confirmationAction) {
+                                Button("Done") { cameraRequest = nil; expandedMap = false }
+                            }
+                        }
+                        .shiftScreen()
                 }
             }
             .shiftScreen().loggedNavigationTitle("Name an area").navigationBarTitleDisplayMode(.inline)
@@ -125,5 +159,30 @@ struct NamedAreaEditor: View {
             Button("Discard changes", role: .destructive) { dismiss() }
             Button("Keep drawing", role: .cancel) { }
         }
+    }
+
+    private var drawingMap: some View {
+        SketchMapView(points: draft.points, outline: .area, referenceAreas: otherAreas,
+                      initialCamera: draft.viewport.camera, initialCenter: draft.center,
+                      cameraRequest: cameraRequest, onPoint: { coordinate in
+            guard draft.points.count < 200 else { return }
+            let point = RoutePoint(coordinate)
+            if point.isValid, draft.points.last.map({ $0.distance(to: point) > 0.2 }) ?? true {
+                draft.points.append(point)
+            }
+        }, onCameraChanged: { draft.viewport.camera = $0.copy() as? MKMapCamera })
+    }
+
+    private var cornerControls: some View {
+        HStack(spacing: 16) {
+            Button { draft.undoCorner() } label: {
+                Label("Undo", systemImage: "arrow.uturn.backward")
+                    .frame(maxWidth: .infinity, minHeight: 44)
+            }.disabled(!draft.canUndo).accessibilityLabel("Undo corner")
+            Button { draft.redoCorner() } label: {
+                Label("Redo", systemImage: "arrow.uturn.forward")
+                    .frame(maxWidth: .infinity, minHeight: 44)
+            }.disabled(!draft.canRedo).accessibilityLabel("Redo corner")
+        }.buttonStyle(.borderless).padding(.horizontal)
     }
 }

@@ -121,6 +121,9 @@ final class SpoofSession: ObservableObject {
     @Published var arrivalChoice: ArrivalChoice = .stay {
         didSet { saveTripCheckpoint(force: true) }
     }
+    @Published private(set) var nextRoutePlan: NextRoutePlan?
+    @Published private(set) var nextRouteDueAt: Date?
+    private var nextRouteTask: Task<Void, Never>?
     let preferences = SessionPreferences.shared
     let activity = SessionActivityController.shared
     private var sessionID = UUID()
@@ -221,6 +224,7 @@ final class SpoofSession: ObservableObject {
     var restoredRouteAwaitingConnection: Bool { recoveryAvailable && journey != nil && !routeActive }
 
     private func restoreTripDisplay(_ saved: TripCheckpoint, plan: PlannedRoute) {
+        activeSavedTripID = saved.trip.id
         travelMode = saved.trip.mode
         setSpeedMPH(saved.trip.speedMPH, for: saved.trip.mode)
         routeSmoothMovement = saved.trip.smoothMovement
@@ -301,8 +305,9 @@ final class SpoofSession: ObservableObject {
               let route = activeRoute, let progress = journey, progress.state != .arrived,
               let confirmedAt = lastConfirmedAt, let simulated,
               RoutePoint(simulated).distance(to: route.track.point(at: progress.travelledMetres)) < 0.1 else { return }
-        let trip = route.savedTrip(name: route.name, mode: travelMode, speed: speedMPH(for: travelMode),
+        var trip = route.savedTrip(name: route.name, mode: travelMode, speed: speedMPH(for: travelMode),
                                   smooth: currentSmoothMovement, arrival: arrivalChoice)
+        if let activeSavedTripID { trip.id = activeSavedTripID }
         recovery.save(TripCheckpoint(trip: trip, metres: progress.travelledMetres, stops: stopProgress,
                                     confirmedAt: confirmedAt, savedAt: Date(), arrival: arrivalChoice),
                       resumeAutomatically: routeActive && !routePaused)
@@ -325,7 +330,7 @@ final class SpoofSession: ObservableObject {
             font: AppearanceFixed.font, textSize: AppearanceFixed.textSize)
     }
     func importLibraryPlaces(_ places: [BackupPlace], settings: BackupPreferences?) {
-        savedPins = places.map { SavedPlace(name: $0.name, latitude: $0.latitude, longitude: $0.longitude, folder: $0.folder, icon: $0.icon, color: $0.color, favorite: $0.favorite) }
+        savedPins = places.map { SavedPlace(name: $0.name, latitude: $0.latitude, longitude: $0.longitude, folder: $0.folder, icon: $0.icon, color: $0.color, favorite: $0.favorite, address: $0.address, emoji: $0.emoji) }
         SavedPlace.save(savedPins, key: favoritesKey)
         if let settings {
             usualSpeeds = settings.usualSpeeds
@@ -412,6 +417,9 @@ final class SpoofSession: ObservableObject {
         locationKeeper.requestPreciseFix()
     }
     func cancelDeviceLocationRefresh() { locationKeeper.cancelPreciseFix() }
+    @Published private(set) var selectedPinAddress: String?
+    private var pinLookupTask: Task<Void, Never>?
+
     func selectPin(_ coordinate: CLLocationCoordinate2D, name: String? = nil) {
         if automaticRecoveryPending {
             automaticRecoveryPending = false
@@ -424,6 +432,27 @@ final class SpoofSession: ObservableObject {
         if let name { rememberPlaceName(name, at: coordinate) }
         previewSpotName = previewSpotName.flatMap { $0.point.distance(to: RoutePoint(coordinate)) <= 5 ? $0 : nil }
         pinSelectionID = UUID()
+        selectedPinAddress = savedPin(at: coordinate)?.address
+        pinLookupTask?.cancel()
+        let selection = pinSelectionID
+        let workspace = AppDataWorkspace.shared.context.generation
+        pinLookupTask = Task { [weak self] in
+            do { try await Task.sleep(for: .milliseconds(350)) } catch { return }
+            guard let details = await PinLocationLookup.resolve(coordinate), !Task.isCancelled,
+                  let self, self.pinSelectionID == selection,
+                  AppDataWorkspace.shared.context.generation == workspace else { return }
+            self.selectedPinAddress = details.address
+            if self.placeName(at: coordinate) == nil { self.rememberPlaceName(details.name, at: coordinate) }
+            if let saved = self.savedPin(at: coordinate), Self.isGenericFavoriteName(saved.name) {
+                _ = self.savePin(name: details.name, coordinate: coordinate, address: details.address)
+            }
+            if let index = self.recents.firstIndex(where: { $0.id == "\(coordinate.latitude),\(coordinate.longitude)" }) {
+                if Self.isGenericFavoriteName(self.recents[index].name) { self.recents[index].name = self.suggestedFavoriteName(for: coordinate) }
+                self.recents[index].address = details.address
+                self.recents = SavedPlace.saveRecents(self.recents, retention: self.preferences.recentHistoryRetention,
+                    saveEnabled: self.preferences.saveRecentLocations)
+            }
+        }
     }
 
     var namingContext: UUID { pinIsPreview ? pinSelectionID : sessionID }
@@ -693,6 +722,10 @@ final class SpoofSession: ObservableObject {
             lastError = "Wait for the current operation to finish before starting this route."
             return false
         }
+        if let next = prepared.nextRoute, !next.begins(at: prepared.route) {
+            lastError = "The next route no longer starts at this destination. Edit or remove it before starting."
+            return false
+        }
         // This explicit second Start is the first point at which a draft can
         // change the current session's mode, speed, joystick, or location.
         changeTravelMode(prepared.mode, keepCurrentPath: true)
@@ -700,6 +733,7 @@ final class SpoofSession: ObservableObject {
         arrivalChoice = prepared.arrival
         let started = followRoute(prepared.route, pairing: pairing, smoothing: prepared.smoothMovement)
         if started {
+            nextRoutePlan = prepared.nextRoute
             // Queuing a worker is not confirmation that it reached the phone.
             // Keep the planner preview until apply receives the first success.
             preparedRouteConfirmation = (prepared.id, onStarted)
@@ -783,6 +817,9 @@ final class SpoofSession: ObservableObject {
                         self.journey?.state = .interrupted
                     }
                     self.publishActivity(force: true)
+                    if self.journey?.state == .arrived {
+                        self.scheduleNextRoute(after: plan.id, pairing: pairing)
+                    }
                 }
             }
             while !Task.isCancelled, ticket == epoch, workerID == routeWorkerID, !status.isDropped {
@@ -1140,6 +1177,7 @@ final class SpoofSession: ObservableObject {
     /// until it settles, then remove the route without issuing another point.
     func stopRoute() {
         DeveloperLogStore.shared.record("stop_route_tapped")
+        cancelNextRoute()
         guard journey != nil, !routeStopping, !isBusy else { return }
         discardRecovery()
         cancelReroute()
@@ -1155,6 +1193,7 @@ final class SpoofSession: ObservableObject {
     }
 
     private func cancelRoute(clearJourney: Bool = true) {
+        cancelNextRoute()
         recoveringRoute = false
         cancelReroute()
         routeWorkerID = UUID()
@@ -1178,6 +1217,51 @@ final class SpoofSession: ObservableObject {
             routeSectionSettingsEnabled = false; sectionSpeedOverrides = [:]; appliedSectionID = nil
         }
         else { journey?.state = .interrupted }
+    }
+
+    /// Clearing the queue never clears the currently held location or route.
+    /// This permission is deliberately absent from persistence and recovery.
+    func cancelNextRoute() {
+        nextRouteTask?.cancel(); nextRouteTask = nil
+        nextRoutePlan = nil; nextRouteDueAt = nil
+    }
+
+    @discardableResult
+    func startNextRoute(pairing: PairingStore) -> Bool {
+        guard let next = nextRoutePlan, let source = activeRoute,
+              journey?.state == .arrived, !routeActive, !isBusy, !sendInFlight,
+              !stopInFlight, effectivePhase == .active, next.begins(at: source),
+              let simulated, RoutePoint(simulated).distance(to: RoutePoint(next.route.origin.coordinate)) <= 5 else {
+            return false
+        }
+        // Consume before Start; failure or retry cannot launch the queue twice.
+        cancelNextRoute()
+        return startPreparedRoute(next.prepared, pairing: pairing)
+    }
+
+    private func scheduleNextRoute(after routeID: UUID, pairing: PairingStore) {
+        guard let next = nextRoutePlan, next.automatically, nextRouteTask == nil else { return }
+        let ticket = epoch
+        let due = ProcessInfo.processInfo.systemUptime + next.waitSeconds
+        nextRouteDueAt = Date().addingTimeInterval(next.waitSeconds)
+        nextRouteTask = Task { @MainActor [weak self] in
+            do { try await Task.sleep(nanoseconds: UInt64(next.waitSeconds * 1_000_000_000)) }
+            catch { return }
+            guard let self, !Task.isCancelled, self.epoch == ticket, self.nextRoutePlan != nil else { return }
+            let atOrigin = self.simulated.map {
+                RoutePoint($0).distance(to: RoutePoint(next.route.origin.coordinate)) <= 5
+            } ?? false
+            let decision = NextRouteTiming.decision(now: ProcessInfo.processInfo.systemUptime, due: due,
+                connected: self.effectivePhase == .active,
+                sameRoute: self.activeRoute?.id == routeID && self.journey?.state == .arrived, atOrigin: atOrigin)
+            self.nextRouteTask = nil
+            guard decision == .start, self.startNextRoute(pairing: pairing) else {
+                self.cancelNextRoute()
+                self.lastError = "The next route was cancelled because its connection or timing changed. Your current location was not moved by this plan."
+                return
+            }
+            DeveloperLogStore.shared.record("next_route_started", ["mode": next.mode.rawValue])
+        }
     }
 
     private func beginSession() {
@@ -1237,7 +1321,8 @@ final class SpoofSession: ObservableObject {
             "latitude": String(coordinate.latitude), "longitude": String(coordinate.longitude), "epoch": String(ticket)])
         let result = await LocationEngine.set(latitude: coordinate.latitude, longitude: coordinate.longitude,
                                               pairingPath: pairing.pairingPath, deviceIP: TunnelConfig.targetIP,
-                                              explicit: markRecent || status == .connecting || status == .reconnecting)
+                                              explicit: markRecent || status == .connecting || status == .reconnecting,
+                                              checkInterval: connectionCheckInterval)
         var details = ["id": writeID.uuidString, "duration_ms": String(Int(Date().timeIntervalSince(commandStart) * 1000)),
                        "current_operation": String(ticket == epoch && sessionRequested)]
         switch result {
@@ -1393,6 +1478,7 @@ final class SpoofSession: ObservableObject {
         let timedOut = operationStartedAt.map { Date().timeIntervalSince($0) >= SessionTiming.operationDeadline } == true
         let stale = status == .active && !SessionTiming.isFresh(lastConfirmedAt, lifetime: connectionEvidenceLifetime)
         if (timedOut || stale), status != .unverified, !status.isDropped {
+            cancelNextRoute()
             status = .unverified
             if !warnedUnverified {
                 warnedUnverified = true
@@ -1403,6 +1489,7 @@ final class SpoofSession: ObservableObject {
     }
 
     func becameActive(pairing: PairingStore) {
+        LocationEngine.invalidateProbe()
         appActive = true
         routeControls.signal()
         reliability.setAppActive(true, configuration: reliabilityConfiguration)
@@ -1569,7 +1656,8 @@ final class SpoofSession: ObservableObject {
 
     @discardableResult
     func savePin(name: String, coordinate: CLLocationCoordinate2D, favorite: Bool? = nil,
-                 icon: SavedPlaceSymbol? = nil, tint: SavedPlaceTint? = nil, replaceName: Bool = false) -> Bool {
+                 icon: SavedPlaceSymbol? = nil, tint: SavedPlaceTint? = nil, replaceName: Bool = false,
+                 address: String? = nil, emoji: String? = nil) -> Bool {
         guard CLLocationCoordinate2DIsValid(coordinate) else { return false }
         let trimmed = String(name.trimmingCharacters(in: .whitespacesAndNewlines).prefix(120))
         var place = SavedPlace(
@@ -1588,6 +1676,11 @@ final class SpoofSession: ObservableObject {
         place.folder = existing?.folder
         place.icon = icon?.rawValue ?? existing?.icon
         place.color = tint?.rawValue ?? existing?.color
+        place.address = address ?? existing?.address ?? (pin.map { RoutePoint($0) == RoutePoint(coordinate) } == true ? selectedPinAddress : nil)
+        if let emoji {
+            guard emoji.isEmpty || PinAppearance.isSingleEmoji(emoji) else { return false }
+            place.emoji = emoji.isEmpty ? nil : emoji
+        } else { place.emoji = existing?.emoji }
         if savedPins.count >= 1000, existing == nil {
             lastError = "You have 1,000 saved places. Remove one before saving another."
             return false
@@ -1598,6 +1691,12 @@ final class SpoofSession: ObservableObject {
         updated.insert(place, at: 0)
         if updated != savedPins { savedPins = updated }
         SavedPlace.save(updated, key: favoritesKey)
+        if replaceName {
+            let point = RoutePoint(coordinate)
+            if previewSpotName?.point == point { previewSpotName = SessionSpotName(place.name, at: point) }
+            if sessionSpotName?.point == point { sessionSpotName = SessionSpotName(place.name, at: point) }
+            rememberPlaceName(place.name, at: coordinate)
+        }
         if replaceName || icon != nil || tint != nil { publishActivity(force: true) }
         return true
     }
@@ -1615,7 +1714,7 @@ final class SpoofSession: ObservableObject {
     /// Favoriting never opens an editor or changes a location/session.
     func toggleFavorite(at coordinate: CLLocationCoordinate2D) {
         if let existing = savedPin(at: coordinate) { togglePinFavorite(existing) }
-        else { _ = savePin(name: placeName(at: coordinate) ?? "Unnamed pin", coordinate: coordinate, favorite: true) }
+        else { _ = savePin(name: suggestedFavoriteName(for: coordinate), coordinate: coordinate, favorite: true) }
     }
 
     @discardableResult
@@ -1646,7 +1745,7 @@ final class SpoofSession: ObservableObject {
         guard place.isValid, savedPins.count < 1000, !savedPins.contains(where: { $0.id == place.id }) else {
             lastError = "Couldn't restore this place. Check your saved places and the 1,000-place limit."; return false
         }
-        savedPins.insert(SavedPlace(name: place.name, latitude: place.latitude, longitude: place.longitude, folder: place.folder, icon: place.icon, color: place.color, favorite: place.favorite), at: 0)
+        savedPins.insert(SavedPlace(name: place.name, latitude: place.latitude, longitude: place.longitude, folder: place.folder, icon: place.icon, color: place.color, favorite: place.favorite, address: place.address, emoji: place.emoji), at: 0)
         SavedPlace.save(savedPins, key: favoritesKey)
         return true
     }

@@ -500,7 +500,7 @@ struct MapHomeView: View {
             if let route = session.activeRoute {
                 NavigationStack {
                     RouteStopSearchSheet(route: route, browsing: true) { place, _ in
-                        let draft = PinDraft(place: session.savedPins.first { $0.id == "\(place.coordinate.latitude),\(place.coordinate.longitude)" }, center: place.coordinate)
+                        let draft = PinDraft(place: session.savedPins.first { $0.id == "\(place.coordinate.latitude),\(place.coordinate.longitude)" }, center: place.coordinate, selectedCoordinate: place.coordinate)
                         draft.name = place.name
                         // Present the editor after the route-search sheet has dismissed.
                         pendingBrowsePin = draft

@@ -394,7 +394,7 @@ struct PlacesView: View {
         HStack {
             Button { onPlace(place); if !isRoot { dismiss() } } label: {
                 HStack(spacing: 12) {
-                    SavedPlaceBadge(symbol: place.symbol, tint: place.tint)
+                    SavedPlaceBadge(symbol: place.symbol, tint: place.tint, emoji: place.emoji)
                     Text(place.displayName).foregroundStyle(.primary)
                     Spacer()
                 }.frame(minHeight: 48).contentShape(Rectangle())

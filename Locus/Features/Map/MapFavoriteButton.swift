@@ -6,11 +6,13 @@ struct MapFavoriteButton: View {
     @EnvironmentObject private var session: SpoofSession
     @EnvironmentObject private var planner: RoutePlanner
     @EnvironmentObject private var library: TripLibrary
+    @State private var saveChoice = false
+    @State private var pendingRouteID: UUID?
 
     private var route: PlannedRoute? { session.activeRoute ?? planner.preparedRoute?.route }
     private var coordinate: CLLocationCoordinate2D? { session.pinIsPreview ? session.pin : session.simulated ?? session.pin }
     private var savedRoute: SavedTrip? {
-        let id = session.activeRoute == nil ? planner.preparedRoute?.editingTripID : session.activeSavedTripID
+        let id = session.activeRoute == nil ? (planner.preparedRoute?.editingTripID ?? planner.preparedRoute?.historyID) : session.activeSavedTripID
         return library.trips.first { $0.id == id }
     }
     private var isFavorite: Bool {
@@ -25,20 +27,32 @@ struct MapFavoriteButton: View {
             }.buttonStyle(.plain)
                 .accessibilityLabel((isFavorite ? "Unfavorite " : "Favorite ") + (route == nil ? "pin" : "route"))
                 .accessibilityValue(isFavorite ? "Favorited" : "Not favorited")
+                .confirmationDialog("Save this route", isPresented: $saveChoice, titleVisibility: .visible) {
+                    Button("Save to Library") { saveRoute(favorite: false) }
+                    Button("Save & Favorite") { saveRoute(favorite: true) }
+                    Button("Cancel", role: .cancel) { pendingRouteID = nil }
+                }
         }
     }
     private func toggle() {
         if let route {
             if let savedRoute { library.toggleFavorite(savedRoute); return }
+            pendingRouteID = route.id
+            saveChoice = true
+        } else if let coordinate { session.toggleFavorite(at: coordinate) }
+    }
+    private func saveRoute(favorite: Bool) {
+        defer { pendingRouteID = nil }
+        if let route, route.id == pendingRouteID {
             let active = session.activeRoute != nil
             let mode = active ? session.travelMode : planner.preparedRoute?.mode ?? .walk
             guard library.save(route: route, name: route.name, mode: mode,
                 speed: active ? session.speedMPH(for: mode) : planner.preparedRoute?.speedMPH ?? 3,
                 smooth: active ? session.currentSmoothMovement : planner.preparedRoute?.smoothMovement ?? false,
-                arrival: active ? session.arrivalChoice : planner.preparedRoute?.arrival ?? .stay, favorite: true),
+                arrival: active ? session.arrivalChoice : planner.preparedRoute?.arrival ?? .stay, favorite: favorite),
                 let id = library.lastSavedID else { session.lastError = library.error; return }
             if active { session.rememberSavedTrip(id, routeID: route.id) }
             else { planner.rememberSavedTrip(id, routeID: route.id) }
-        } else if let coordinate { session.toggleFavorite(at: coordinate) }
+        }
     }
 }

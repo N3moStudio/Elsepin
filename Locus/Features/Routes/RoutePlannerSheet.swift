@@ -5,6 +5,9 @@ import UniformTypeIdentifiers
 
 struct RoutePlannerSheet: View {
     var onDraw: () -> Void = {}
+    var nextRouteMode = false
+    var onPrepared: ((PreparedRoute) -> Void)? = nil
+    @State private var showNextRoute = false
     @EnvironmentObject private var session: SpoofSession
     @EnvironmentObject private var preferences: SessionPreferences
     @EnvironmentObject private var planner: RoutePlanner
@@ -70,7 +73,7 @@ struct RoutePlannerSheet: View {
         let replacement: UUID?
         let routeID: UUID?
     }
-    private var hasJourney: Bool { session.journey != nil }
+    private var hasJourney: Bool { !nextRouteMode && session.journey != nil }
     private var route: PlannedRoute? { hasJourney ? session.activeRoute : planner.selectedRoute }
     private var displayMode: TravelMode { hasJourney ? session.travelMode : planner.draftMode }
     private var displaySpeed: Double { hasJourney ? session.speedMPH(for: session.travelMode) : planner.draftSpeedMPH }
@@ -88,13 +91,28 @@ struct RoutePlannerSheet: View {
                 }
                 if !hasJourney && planner.alternatives.count > 1 { alternatives.shiftSettingsRows() }
                 if let route { routeSummary(route).shiftSettingsRows() }
+                if !nextRouteMode, !hasJourney, route != nil {
+                    Section("After arrival") {
+                        Button { showNextRoute = true } label: {
+                            LabeledContent("Next route", value: planner.draftNextRoute?.summary ?? "None")
+                        }
+                        if planner.draftNextRoute != nil {
+                            Button("Remove next route", role: .destructive) { planner.draftNextRoute = nil }
+                        }
+                    }.shiftSettingsRows()
+                }
                 routeOptions
             }
             .shiftSettingsScreen().textCase(nil)
             .loggedNavigationTitle(hasJourney ? "Your route" : "Plan a route")
             .navigationBarTitleDisplayMode(.inline)
+            .sheet(isPresented: $showNextRoute) {
+                if let route {
+                    NextRouteEditor(source: route, existing: planner.draftNextRoute) { planner.draftNextRoute = $0 }
+                }
+            }
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(hasJourney ? "Done" : "Cancel") {
-                if !hasJourney { planner.rememberDraft(in: session) }
+                if !hasJourney && !nextRouteMode { planner.rememberDraft(in: session) }
                 dismiss()
             } } }
             .safeAreaInset(edge: .bottom, spacing: 0) { routeActions }
@@ -107,10 +125,10 @@ struct RoutePlannerSheet: View {
                 if !hasJourney, planner.origin == nil, let current = session.defaultRouteOrigin {
                     planner.setOrigin(current, mode: displayMode)
                 }
-                if !hasJourney { planner.rememberDraft(in: session) }
+                if !hasJourney && !nextRouteMode { planner.rememberDraft(in: session) }
             }
             .onChange(of: planner.selectedID) { _, _ in
-                if !hasJourney { planner.rememberDraft(in: session) }
+                if !hasJourney && !nextRouteMode { planner.rememberDraft(in: session) }
             }
             .navigationDestination(item: $searchEndpoint) { endpoint in
                 // Freeze the route for this navigation visit. Rebuilding the
@@ -431,7 +449,7 @@ struct RoutePlannerSheet: View {
         guard !name.isEmpty else { return }
         places[index].name = String(name.prefix(120))
         planner.applyPlaceEdits(places, mode: displayMode)
-        planner.rememberDraft(in: session)
+        if !nextRouteMode { planner.rememberDraft(in: session) }
         renamePlaceID = nil
     }
 
@@ -582,7 +600,7 @@ struct RoutePlannerSheet: View {
                     }
                 }
                 Button(action: showRoute) {
-                    Label(planner.isLoading ? "Finding route…" : "Show route", systemImage: "map")
+                    Label(planner.isLoading ? "Finding route…" : planner.savesToLibraryOnCompletion ? "Save route & preview" : "Show route", systemImage: "map")
                         .font(.subheadline.weight(.semibold)).frame(maxWidth: .infinity, minHeight: 44).contentShape(Rectangle())
                 }
                 .buttonStyle(ShiftActionStyle(compact: true))
@@ -644,8 +662,20 @@ struct RoutePlannerSheet: View {
 
     private func showRoute() {
         guard canShowRoute else { return }
+        if planner.savesToLibraryOnCompletion, let route {
+            guard library.save(route: route, name: route.name, mode: displayMode,
+                speed: displaySpeed, smooth: displaySmooth, arrival: planner.draftArrival,
+                favorite: false, replacingID: planner.editingTripID) else {
+                planner.error = library.error; return
+            }
+            planner.editingTripID = library.lastSavedID
+            planner.savesToLibraryOnCompletion = false
+        }
         if planner.prepareSelectedRoute(mode: displayMode, speedMPH: displaySpeed, smoothMovement: displaySmooth) {
-            planner.rememberDraft(in: session)
+            if let onPrepared, let prepared = planner.preparedRoute {
+                onPrepared(prepared); dismiss(); return
+            }
+            if !nextRouteMode { planner.rememberDraft(in: session) }
             dismiss()
         }
     }
@@ -658,7 +688,7 @@ struct RoutePlannerSheet: View {
             await Task.yield()
             guard planner.isPresented, !hasJourney else { return }
             planner.setSectionChoice(pending.choice, for: pending.id, defaultMode: displayMode, pathChoice: pending.path)
-            planner.rememberDraft(in: session)
+            if !nextRouteMode { planner.rememberDraft(in: session) }
         }
     }
 

@@ -71,12 +71,26 @@ struct RoutePlaceSearchSheet: View {
                     }
                     Section("Recent pins & routes") {
                         ForEach(session.recents.prefix(8)) { place in
-                            Button(place.displayName) { choose(RoutePlace(name: place.displayName, coordinate: place.coordinate)) }
+                            let current = session.savedPin(at: place.coordinate) ?? place
+                            Button { choose(RoutePlace(name: current.displayName, coordinate: current.coordinate)) } label: {
+                                HStack(spacing: 10) {
+                                    Image(systemName: "mappin")
+                                    placeRow(current.displayName, subtitle: current.address ?? "")
+                                    if current.isFavorite && session.savedPin(at: current.coordinate) != nil {
+                                        Image(systemName: "star.fill").font(.caption)
+                                    }
+                                }
+                            }
                         }
                         if onChooseTrip != nil {
                             ForEach(session.recentRoutes.prefix(8)) { recent in
                                 Button { chooseTrip(recent.trip) } label: {
-                                    Label(recent.trip.name, systemImage: "point.topleft.down.curvedto.point.bottomright.up")
+                                    let current = library.trips.first { $0.id == recent.trip.id } ?? recent.trip
+                                    HStack(spacing: 10) {
+                                        Image(systemName: "point.topleft.down.curvedto.point.bottomright.up")
+                                        placeRow(current.name, subtitle: "\(current.originName) → \(current.destinationName)")
+                                        if current.isFavorite { Image(systemName: "star.fill").font(.caption) }
+                                    }
                                 }
                                 .disabled(session.journey != nil || session.isBusy)
                                 .contextMenu {
@@ -126,7 +140,7 @@ struct RoutePlaceSearchSheet: View {
                 resultNote = nil
                 error = nil
             }
-            .shiftScreen().loggedNavigationTitle(title)
+            .shiftSettingsScreen().loggedNavigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { if !embedded { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { cancelSearch(); dismiss() } } } }
             .loggedConfirmationDialog(selectedPlace?.name ?? "Selected place", isPresented: $showPlaceActions, titleVisibility: .visible) {
@@ -138,9 +152,9 @@ struct RoutePlaceSearchSheet: View {
                         dismiss()
                     }
                     Button("Plan a route") { openPlanner(place) }
-                    Button("Name pin") {
+                    Button(session.savedPin(at: place.coordinate) == nil ? "Save pin" : "Rename pin") {
                         let saved = session.savedPins.first { $0.id == "\(place.coordinate.latitude),\(place.coordinate.longitude)" }
-                        let draft = PinDraft(place: saved, center: place.coordinate)
+                        let draft = PinDraft(place: saved, center: place.coordinate, selectedCoordinate: place.coordinate)
                         draft.name = saved?.name ?? place.name
                         pinEditor = draft
                     }
@@ -227,7 +241,7 @@ struct RoutePlaceSearchSheet: View {
         guard session.journey == nil, !session.isBusy, let onChooseTrip else { return }
         cancelSearch(); searchFocused = false
         DeveloperLogStore.shared.record("recent_route_opened", ["route": trip.id.uuidString])
-        onChooseTrip(trip)
+        onChooseTrip(library.trips.first(where: { $0.id == trip.id }) ?? trip)
         dismiss()
     }
 

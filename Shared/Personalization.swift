@@ -17,7 +17,7 @@ enum SavedPlaceSymbol: String, CaseIterable, Identifiable {
 enum SavedPlaceTint: String, CaseIterable, Identifiable {
     case mint, blue, purple, pink, orange, red
     var id: String { rawValue }
-    var title: String { self == .mint ? "Elsepin accent" : rawValue.capitalized }
+    var title: String { self == .mint ? "Follow theme" : rawValue.capitalized }
 }
 
 /// Search only local setting names and aliases. No user data or network requests.

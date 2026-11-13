@@ -59,6 +59,8 @@ struct RootView: View {
         }, onCreateRoute: {
             guard session.journey == nil, !session.isBusy, !planner.isDrawing else { showNotice("End the current route or close its editor before creating another."); return }
             selectedTab = .map
+            planner.discardDraft()
+            planner.savesToLibraryOnCompletion = true
             planner.isPresented = true
         })
         }
@@ -384,7 +386,7 @@ struct BottomControlsView: View {
                     .accessibilityHidden(canCollapse && collapsed)
                 if canCollapse { panelHandle }
                 }
-                VStack(spacing: 6) {
+                VStack(spacing: 10) {
                     primaryActions
                     if session.effectivePhase == .disconnected || session.effectivePhase == .unverified {
                         SessionRetryButton().font(.caption.weight(.semibold))
@@ -394,7 +396,7 @@ struct BottomControlsView: View {
                 }
                 .padding(.bottom, 4)
             }
-            .padding(.horizontal, 12).padding(.top, 4)
+            .padding(.horizontal, 14).padding(.top, 12)
             .modifier(ControlPanelStyle(useGlass: preferences.glassPanel))
             .shadow(color: .black.opacity(0.12), radius: 20, y: 8)
             }
@@ -583,10 +585,10 @@ struct BottomControlsView: View {
                 HStack(alignment: .center, spacing: 8) {
                     traySymbol(session.pinIsPreview ? "mappin" : session.hasSession ? "location.fill" : "map")
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(session.isStopping ? "Stopping session" : session.pinIsPreview ? "Selected place" : session.isSpoofing ? "Holding location" : session.hasSession || session.lastError != nil ? session.statusTitle : "Where to next?")
+                        Text(session.isStopping ? "Stopping session" : session.pinIsPreview ? session.pin.map { session.suggestedFavoriteName(for: $0) } ?? "Dropped pin" : session.isSpoofing ? "Holding location" : session.hasSession || session.lastError != nil ? session.statusTitle : "Where to next?")
                             .font(.subheadline.weight(.semibold))
                         if let point = session.pinIsPreview ? session.pin : session.simulated {
-                            Text(session.suggestedFavoriteName(for: point)).font(.caption).foregroundStyle(.secondary)
+                            Text(session.pinIsPreview ? session.selectedPinAddress ?? String(format: "%.5f, %.5f", point.latitude, point.longitude) : session.suggestedFavoriteName(for: point)).font(.caption).foregroundStyle(.secondary)
                                 .lineLimit(2)
                         } else {
                             Text("Search or draw a route.").font(.caption).foregroundStyle(.secondary)
@@ -693,7 +695,7 @@ struct BottomControlsView: View {
         Button {
             if let pin = session.pin { session.teleport(to: pin, pairing: pairing) }
         } label: {
-            Label("Teleport to pin", systemImage: "location.fill")
+            Label("Teleport", systemImage: "location.fill")
                 .font(.subheadline.weight(.semibold)).frame(maxWidth: .infinity, minHeight: 44)
                 .contentShape(Rectangle())
         }
@@ -746,6 +748,7 @@ struct BottomControlsView: View {
 }
 
 private struct PreparedRouteControls: View {
+    @EnvironmentObject private var library: TripLibrary
     @EnvironmentObject private var session: SpoofSession
     @EnvironmentObject private var pairing: PairingStore
     @EnvironmentObject private var planner: RoutePlanner
@@ -769,7 +772,11 @@ private struct PreparedRouteControls: View {
             }
             HStack(spacing: 10) {
                 Button {
-                    session.startPreparedRoute(prepared, pairing: pairing) { [weak planner = planner, routeID = prepared.id] in
+                    var linked = prepared
+                    if linked.editingTripID == nil, let id = linked.historyID, library.trips.contains(where: { $0.id == id }) {
+                        linked.editingTripID = id
+                    }
+                    session.startPreparedRoute(linked, pairing: pairing) { [weak planner = planner, routeID = prepared.id] in
                         planner?.discardPreparedRoute(ifMatching: routeID)
                     }
                 } label: {

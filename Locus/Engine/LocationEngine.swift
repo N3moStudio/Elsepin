@@ -177,14 +177,14 @@ enum LocationEngine {
     }
 
     static func set(latitude: Double, longitude: Double, pairingPath: String, deviceIP: String,
-                    explicit: Bool = false) async -> Result<Void, LocationEngineError> {
+                    explicit: Bool = false, checkInterval: TimeInterval = 10) async -> Result<Void, LocationEngineError> {
         await withCheckedContinuation { continuation in
             queue.async {
                 // A successful TCP connect does not validate a cached DVT
                 // service after a VPN change. Explicit actions must handshake
                 // again; continuous playback retains its working connection.
                 if explicit { cleanup() }
-                guard validateTunnel(deviceIP, explicit: explicit) else {
+                guard validateTunnel(deviceIP, explicit: explicit, interval: checkInterval) else {
                     continuation.resume(returning: .failure(.tunnelUnreachable)); return
                 }
                 let code = setLocked(latitude: latitude, longitude: longitude, pairingPath: pairingPath, deviceIP: deviceIP)
@@ -261,10 +261,18 @@ enum LocationEngine {
         }
     }
 
-    private static func validateTunnel(_ ip: String, explicit: Bool) -> Bool {
+    /// Invalidate only the liveness hint; don't tear down a working route connection.
+    static func invalidateProbe() {
+        queue.async {
+            probeCheckedAt = nil
+            probeEndpoint = nil
+        }
+    }
+
+    private static func validateTunnel(_ ip: String, explicit: Bool, interval: TimeInterval = 10) -> Bool {
         let now = ProcessInfo.processInfo.systemUptime
         guard ConnectionProbePolicy.needsProbe(explicit: explicit, endpoint: ip,
-            previousEndpoint: probeEndpoint, checkedAt: probeCheckedAt, now: now) else { return true }
+            previousEndpoint: probeEndpoint, checkedAt: probeCheckedAt, now: now, interval: interval) else { return true }
         let reachable = DeveloperTunnelProbe.reaches(ip)
         DeveloperLogStore.shared.record("developer_endpoint_check", ["reachable": String(reachable),
             "explicit": String(explicit), "duration_ms": String(Int((ProcessInfo.processInfo.systemUptime - now) * 1000))])

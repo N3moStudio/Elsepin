@@ -16,8 +16,12 @@ extension SavedPlaceTint {
 struct SavedPlaceBadge: View {
     var symbol: SavedPlaceSymbol
     var tint: SavedPlaceTint
+    var emoji: String? = nil
     var body: some View {
-        Image(systemName: symbol.rawValue).font(.body.weight(.semibold))
+        Group {
+            if let emoji, PinAppearance.isSingleEmoji(emoji) { Text(emoji) }
+            else { Image(systemName: symbol.rawValue) }
+        }.font(.body.weight(.semibold))
             .foregroundStyle(tint.swatch).frame(width: 40, height: 40)
             .background(tint.swatch.opacity(0.13), in: RoundedRectangle(cornerRadius: 13))
             .accessibilityHidden(true)

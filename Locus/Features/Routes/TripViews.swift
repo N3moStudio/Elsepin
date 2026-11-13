@@ -4,8 +4,30 @@ import MapKit
 struct ArrivalControls: View {
     @EnvironmentObject private var session: SpoofSession
     @EnvironmentObject private var planner: RoutePlanner
+    @EnvironmentObject private var pairing: PairingStore
     var body: some View {
-        if session.journey?.state == .arrived {
+        if let next = session.nextRoutePlan {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Label("Next: \(next.route.destination.name)", systemImage: "arrow.turn.down.right")
+                        .font(.subheadline.weight(.semibold)).lineLimit(1)
+                    Spacer(minLength: 8)
+                    Button("Cancel next route") { session.cancelNextRoute() }.font(.caption).frame(minHeight: 44)
+                }
+                if let due = session.nextRouteDueAt, due > Date() {
+                    HStack(spacing: 4) {
+                        Text("Starts in")
+                        Text(timerInterval: Date()...due, countsDown: true).monospacedDigit()
+                    }.font(.caption).foregroundStyle(.secondary)
+                } else if session.journey?.state == .arrived, !next.automatically {
+                    Button("Start next route", systemImage: "play.fill") { _ = session.startNextRoute(pairing: pairing) }
+                        .disabled(session.isBusy || session.effectivePhase != .active).frame(minHeight: 44)
+                } else {
+                    Text(next.automatically ? "Continues automatically · \(next.summary)" : "Waits for your Start after arrival")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
+        } else if session.journey?.state == .arrived {
             VStack(spacing: 8) {
                 Picker("Next", selection: $session.arrivalChoice) {
                     ForEach(ArrivalChoice.allCases) { Text($0.title).tag($0) }
@@ -50,10 +72,10 @@ struct SavedTripsSection: View {
         Section {
             if library.trips.filter({ !favoritesOnly || $0.isFavorite }).isEmpty {
                 Text(favoritesOnly ? "Star a saved route to find it here." : "Name a route in the planner to save its path, speed, and stops.").foregroundStyle(.secondary)
-                if let onCreate, !favoritesOnly {
-                    Button("Create a route", systemImage: "point.topleft.down.to.point.bottomright.curvepath", action: onCreate)
-                        .frame(minHeight: 44)
-                }
+            }
+            if let onCreate, !favoritesOnly {
+                Button("Create a route", systemImage: "point.topleft.down.to.point.bottomright.curvepath", action: onCreate)
+                    .frame(minHeight: 44)
             }
             ForEach(library.trips.filter {
                 (!favoritesOnly || $0.isFavorite) && (folder == nil || $0.folder == folder) && SavedNameSearch.matches(search, trip: $0)
