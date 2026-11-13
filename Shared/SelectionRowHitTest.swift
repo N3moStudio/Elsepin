@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(CoreGraphics)
+import CoreGraphics
+#endif
 
 /// Gesture positions and row frames must use the same coordinate space.
 /// Prefer containment over center distance so tall rows remain selectable
