@@ -3,7 +3,7 @@
 Read this before applying new design skills or continuing the video-inspired
 polish. Current implementation and device evidence are in [CURRENT-WORK](CURRENT-WORK.md).
 
-## Post-build-80 pin feedback (unbuilt)
+## Build 81 pin feedback (compiled; phone acceptance pending)
 
 - No address row or address request in the Library pin editor. Address lookup
   belongs to main-map selection; retain addresses in Recents where useful.

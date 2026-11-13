@@ -1,6 +1,6 @@
 # Elsepin changelog
 
-## Build 81 - pin editing and search clarity (validation pending)
+## Build 81 - pin editing and search clarity (unpublished test build)
 
 - Keep the Library pin editor steady by removing address lookup and its changing
   address row. Main-map selection can still resolve an address later.
@@ -14,9 +14,10 @@
 - Separate Recent pins from Recent routes, label pin and saved-route rows, and
   distinguish Saved pins from Saved routes in search results. Pin actions now
   say Plan a route here. Existing callbacks, saved geometry and data are unchanged.
-- Source syntax/encoding and 17 resource checks passed. Six new Swift regression
-  cases await execution on Mac. These changes are not in the delivered build 80
-  IPA and have not undergone native/device validation.
+- GitHub run 43493662140 at 2dc937e passed 692 automated checks and compiled
+  both native targets with zero compiler warnings/errors. The verified build 81
+  IPA replaced build 80 in the personal delivery folder. Phone acceptance of
+  these changes remains pending; no release published.
 
 ## Build 80 validated and delivered - 12 November 2026
 

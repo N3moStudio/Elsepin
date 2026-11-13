@@ -1,5 +1,20 @@
 # Elsepin build history
 
+## Build 81 validated and delivered - 13 November 2026
+
+GitHub run `43493662140` built `2dc937e76df21f1d321c4eea1bfae5fb8a7f8572` from
+`codex/pins-search-69`. 692 checks passed: 553 Swift (including six new emoji/zoom
+cases), 104 cloud, 18 Companion and 17 resources; one Windows-only case skipped.
+Native app and Live Activity extension compiled without compiler warnings/errors.
+Both bundles are 2.6.1 (81), arm64; identities, entitlements, icons, helper
+archives, notices and package integrity verified.
+
+Delivered only `Elsepin 2.6.1 build 81.ipa` (19,083,873 bytes) to the usual Desktop
+IPA folder, replacing build 80 and preserving other apps. Full original logs,
+artifact metadata and internal verification receipt are under
+`.build/artifacts/github-43493662140/`. No release, main merge or paid build.
+Signed-phone keyboard, zoom and layout acceptance remain pending.
+
 ## Build 80 validated and delivered - 12 November 2026
 
 GitHub run 43376928555 succeeded at 6a1a29c: 686 checks passed (547 Swift,

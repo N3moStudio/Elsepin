@@ -1,11 +1,20 @@
 # Elsepin current handoff
 
-## Build 81 preparation - pin editing, map visibility and search clarity (13 November 2026)
+## Build 81 validated and delivered - 13 November 2026
 
-User authorized building and delivering this patch. Both targets now request
-2.6.1 (81); native compilation/package verification remain pending until the
-new GitHub run succeeds. Keep the release unpublished. Deliver only the verified
-IPA to the usual Desktop folder, replacing build 80 only after verification.
+GitHub run 43493662140 succeeded at 2dc937e76df21f1d321c4eea1bfae5fb8a7f8572.
+692 checks passed: 553 Swift, 104 cloud, 18 Companion and 17 resource/package
+tests; one Windows-only Companion case skipped on Mac. Native app/extension
+compiled with zero compiler warnings/errors. Both bundles are 2.6.1 (81), arm64;
+entitlements, icons, helpers, notices and IPA integrity verified.
+
+Delivered only Elsepin 2.6.1 build 81.ipa (19,083,873 bytes) to
+C:/Users/naith/Desktop/ipa/My Projects (N3mo Studio), replacing build 80.
+Original logs/package receipt: .build/artifacts/github-43493662140/.
+No release published. Phone acceptance of the new keyboard/layout/zoom behavior
+remains pending; compilation does not prove those interactions.
+
+### Changes included
 
 New device feedback confirms bike/e-bike walking fallback, route Save / Favorite /
 Unfavorite, and Recently Deleted worked in build 80. This is focused acceptance,
@@ -26,18 +35,16 @@ not proof that every feature or crash scenario passed.
   queued. It uses the existing cancellation path and leaves the current trip
   running. Before starting: planner > After arrival > Remove next route.
 
-Validation: seven changed/new Swift files parse; source encoding and diff checks
-pass; 17 resource/package checks pass. Six new Swift regression cases cover emoji
-edits and zoom visibility, but require the next Mac run. No native compiler,
-keyboard/VoiceOver or physical map-layout verification performed for this patch.
-Do not count build 80's earlier compilation as validation of these changes.
+Seven changed/new Swift files parsed locally; source encoding and diff checks
+passed. All six new emoji-edit/zoom-visibility regression cases passed in the
+553-case Swift suite above. Keyboard/VoiceOver and physical map-layout acceptance
+remain pending on the signed phone installation.
 
 User confirmed the screenshot selected the Demo Garden pin, not Demo Garden Walk.
 `RoutePlaceSearchSheet.swift` now separates recent pins/routes and labels their
 types; saved search sections use Saved pins / Saved routes. The location action
 reads Plan a route here. Selection callbacks and stored data are unchanged.
-Syntax/encoding and diff checks pass. Build 80 remains the latest delivered IPA
-until the authorized build 81 passes. Native rendering still needs phone acceptance.
+These search changes are included in build 81. Native rendering still needs phone acceptance.
 
 ## Build 80 validated and delivered - 12 November 2026
 
