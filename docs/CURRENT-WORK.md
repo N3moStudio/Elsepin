@@ -1,5 +1,14 @@
 # Elsepin current handoff
 
+## Unbuilt follow-up - search clarity
+
+User confirmed the screenshot selected the Demo Garden pin, not Demo Garden Walk.
+`RoutePlaceSearchSheet.swift` now separates recent pins/routes and labels their
+types; saved search sections use Saved pins / Saved routes. The location action
+reads Plan a route here. Selection callbacks and stored data are unchanged.
+Syntax/encoding and diff checks pass. No IPA/release requested for this follow-up;
+build 80 remains installed/delivered. Native rendering still needs the next build.
+
 ## Build 80 validated and delivered - 12 November 2026
 
 GitHub run 43376928555 succeeded at 6a1a29c: 686 checks passed (547 Swift,

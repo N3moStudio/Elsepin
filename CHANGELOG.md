@@ -1,5 +1,13 @@
 # Elsepin changelog
 
+## Unreleased - clearer search item types (after build 80)
+
+- Separate Recent pins from Recent routes, label pin and saved-route rows, and
+  distinguish Saved pins from Saved routes in search results. Pin actions now
+  say Plan a route here. Existing callbacks, saved geometry and data are unchanged.
+- Source syntax/encoding checks passed; this UI-only follow-up is not in the
+  delivered build 80 IPA and has not undergone native/device validation.
+
 ## Build 80 validated and delivered - 12 November 2026
 
 GitHub run 43376928555 succeeded at 6a1a29c: 686 checks passed (547 Swift,

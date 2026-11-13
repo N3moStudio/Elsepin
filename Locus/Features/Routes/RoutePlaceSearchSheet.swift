@@ -73,24 +73,28 @@ struct RoutePlaceSearchSheet: View {
                             }
                         }
                     }
-                    Section("Recent pins & routes") {
+                    Section("Recent pins") {
                         ForEach(session.recents.prefix(8)) { place in
                             let current = session.savedPin(at: place.coordinate) ?? place
                             Button { choose(RoutePlace(name: current.displayName, coordinate: current.coordinate)) } label: {
                                 HStack(spacing: 10) {
-                                    placeRow(current.displayName, subtitle: current.address ?? "")
+                                    placeRow(current.displayName, subtitle: current.address ?? "", kind: "Pin")
                                     if current.isFavorite && session.savedPin(at: current.coordinate) != nil {
                                         Image(systemName: "star.fill").font(.caption)
                                     }
                                 }
                             }
                         }
-                        if onChooseTrip != nil {
+                    }
+                    if onChooseTrip != nil, !session.recentRoutes.isEmpty {
+                        Section("Recent routes") {
                             ForEach(session.recentRoutes.prefix(8)) { recent in
                                 Button { chooseTrip(recent.trip) } label: {
-                                    let current = library.trips.first { $0.id == recent.trip.id } ?? recent.trip
+                                    let saved = library.trips.first { $0.id == recent.trip.id }
+                                    let current = saved ?? recent.trip
                                     HStack(spacing: 10) {
-                                        placeRow(current.name, subtitle: "\(current.originName) → \(current.destinationName)", symbol: "point.topleft.down.curvedto.point.bottomright.up")
+                                        placeRow(current.name, subtitle: "\(current.originName) → \(current.destinationName)", symbol: "point.topleft.down.curvedto.point.bottomright.up",
+                                                 kind: saved == nil ? "Recent route" : "Saved route")
                                         if current.isFavorite { Image(systemName: "star.fill").font(.caption) }
                                     }
                                 }
@@ -166,7 +170,7 @@ struct RoutePlaceSearchSheet: View {
                         selectedPlace = nil
                         dismiss()
                     }
-                    Button("Plan a route") { openPlanner(place) }
+                    Button("Plan a route here") { openPlanner(place) }
                     Button(session.savedPin(at: place.coordinate) == nil ? "Save pin" : "Rename pin") {
                         let saved = session.savedPins.first { $0.id == "\(place.coordinate.latitude),\(place.coordinate.longitude)" }
                         let draft = PinDraft(place: saved, center: place.coordinate, selectedCoordinate: place.coordinate)
@@ -194,12 +198,13 @@ struct RoutePlaceSearchSheet: View {
         }
     }
 
-    private func placeRow(_ name: String, subtitle: String, symbol: String = "mappin.and.ellipse") -> some View {
-        HStack(spacing: 14) {
+    private func placeRow(_ name: String, subtitle: String, symbol: String = "mappin.and.ellipse", kind: String? = nil) -> some View {
+        let detail = [kind, subtitle.isEmpty ? nil : subtitle].compactMap { $0 }.joined(separator: " · ")
+        return HStack(spacing: 14) {
             Image(systemName: symbol).frame(width: 24).accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 Text(name).font(.body.weight(.medium)).foregroundStyle(.primary)
-                if !subtitle.isEmpty { Text(subtitle).font(.caption).foregroundStyle(.secondary) }
+                if !detail.isEmpty { Text(detail).font(.caption).foregroundStyle(.secondary) }
             }
         }.frame(maxWidth: .infinity, minHeight: 52, alignment: .leading).contentShape(Rectangle())
     }
@@ -231,11 +236,13 @@ struct RoutePlaceSearchSheet: View {
     @ViewBuilder private var savedMatches: some View {
         let places = session.savedPins.filter { SavedNameSearch.matches(query, fields: [$0.displayName, $0.folder ?? ""]) }
         if !places.isEmpty {
-            Section("Pins") {
+            Section("Saved pins") {
                 ForEach(places.prefix(20)) { place in
                     Button { choose(RoutePlace(name: place.displayName, coordinate: place.coordinate)) } label: {
-                        Label(place.displayName, systemImage: "star")
-                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
+                        HStack(spacing: 10) {
+                            placeRow(place.displayName, subtitle: place.address ?? "", kind: "Pin")
+                            if place.isFavorite { Image(systemName: "star.fill").font(.caption) }
+                        }
                     }
                 }
                 if places.count > 20 { Text("More matches are available in Saved.").font(.caption).foregroundStyle(.secondary) }
@@ -247,15 +254,13 @@ struct RoutePlaceSearchSheet: View {
                 Section {
                     ForEach(trips) { trip in
                         Button { chooseTrip(trip) } label: {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Label(trip.name, systemImage: "point.topleft.down.curvedto.point.bottomright.up")
-                                Text("\(trip.originName) → \(trip.destinationName)").font(.caption).foregroundStyle(.secondary)
-                            }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
+                            placeRow(trip.name, subtitle: "\(trip.originName) → \(trip.destinationName)",
+                                     symbol: "point.topleft.down.curvedto.point.bottomright.up", kind: "Saved route")
                         }.disabled(session.journey != nil || session.isBusy)
                     }
-                } header: { Text("Your saved trips") } footer: {
+                } header: { Text("Saved routes") } footer: {
                     Text(session.journey != nil ? "Stop your current route before opening a saved trip."
-                         : "Opens the saved trip in the planner. Tap Show Route, then Start Route on the map when you're ready.")
+                         : "Opens the saved path and stops. Movement starts only when you tap Start route.")
                 }
             }
         }
