@@ -2,6 +2,29 @@
 
 Updated 12 November 2026. Read AGENTS.md, inspect Git status, preserve newer work.
 
+## Build 79 - integration and Mac validation in progress
+
+User authorized all post-78 changes and a test IPA, not a release. Core changes
+are in `88d5282` on `codex/pins-search-69`, synced to public GitHub and private
+GitLab. Main is older. See CHANGELOG.md for the complete scope and APP-MAP.md
+for owners and compatibility boundaries.
+
+Includes area Redo, taller/full-screen pin/area maps, pin validation and automatic
+name/address hints, emoji/fixed colors, grouped Recents, route save/favorite
+identity, Library Create route, tray spacing, global-coordinate drag selection,
+connection freshness and one optional next route with explicit automatic consent.
+Old backup fields/IDs, the annotation crash fix, stop/clear semantics, themes,
+manual widget confirmation and demo isolation are retained.
+
+Initial Mac run `43355566346` stopped in portable Swift compilation: the new
+row hit-test helper needed an explicit CoreGraphics import. Corrected in
+`b9c4e6e`. Complete log remains in `.build/artifacts/github-43355566346/`.
+Run `43355966234` checks that correction; integration review is continuing.
+Local resource/identity/appearance checks passed. No new IPA delivered yet.
+Update this section with the final source, run, test counts and package receipt
+before delivery. Device UI/gesture and real VPN/provider behavior remain phone
+acceptance checks; a compiler pass does not prove them.
+
 ## Build 78 - public GitHub build (12 November 2026)
 
 The owner authorized public visibility for `N3moStudio/Elsepin`; GitLab remains

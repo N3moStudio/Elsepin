@@ -1,19 +1,30 @@
 # Elsepin Change Ledger
 
-Updated through **8 November 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
+Updated through **12 November 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
 is the last recorded public release. Earlier entries retain their original validation context.
 
 See [the public build register](BUILD-HISTORY.md) for dates, outcomes and all recorded 2.5.x/2.6.0 native runs.
 
-## Unreleased local interaction fixes (12 November 2026)
+## Build 79 - post-78 integration (12 November 2026)
+
+Implemented the authorized library/pin/area and route changes listed in the
+[changelog](../CHANGELOG.md#build-79---library-pin-and-route-refinements-unpublished-test-build).
+New shared rules cover Redo history, row hit testing, emoji validation and bounded
+next-route timing. Pin backup additions are optional; all existing storage IDs
+and compatibility identifiers are retained. Next-route automatic consent is
+explicit, one-shot and not persisted. No release or billing change authorized.
+See [current evidence](CURRENT-WORK.md) for the Mac run and delivery status;
+individual local-only notes below describe earlier stages of this work.
+
+## Build 78 interaction fixes (12 November 2026)
 
 - Show saved-pin names during active/prepared routes without moving the destination.
 - Remove redundant collapse from dropped-pin and held-location trays.
 - Keep route smoothing out of joystick controls; clarify stick-controlled speed.
 - Make arrival an explicit menu and separate Add stop search from exact-path pauses.
 - Confirm recalculation before replacing saved/drawn geometry; preserve live-edit Hold.
-- Local resource/identity/appearance checks passed. Native build and phone checks
-  pending; no new IPA or release. Full scope and evidence are in the current handoff.
+- GitHub run 43348423568 passed 653 checks and native compilation without compiler
+  warnings/errors. Test IPA delivered; no release. Phone acceptance remains separate.
 
 ## Build 77 - saved-pin annotation crash fix (8 November 2026)
 

@@ -600,14 +600,15 @@ struct RoutePlannerSheet: View {
                     }
                 }
                 Button(action: showRoute) {
-                    Label(planner.isLoading ? "Finding route…" : planner.savesToLibraryOnCompletion ? "Save route & preview" : "Show route", systemImage: "map")
+                    Label(planner.isLoading ? "Finding route…" : nextRouteMode ? "Use this route" : planner.savesToLibraryOnCompletion ? "Save route & preview" : "Show route", systemImage: "map")
                         .font(.subheadline.weight(.semibold)).frame(maxWidth: .infinity, minHeight: 44).contentShape(Rectangle())
                 }
                 .buttonStyle(ShiftActionStyle(compact: true))
                 .disabled(!canShowRoute)
                 Text(planner.isLoading ? "Building your preview. No movement has started."
                      : planner.cyclingUnavailable ? "Choose Walking path above or change your endpoints."
-                     : route == nil ? "Choose a start and destination." : "Next: tap Start route on the map.")
+                     : route == nil ? "Choose a start and destination."
+                     : nextRouteMode ? "Returns to next-route setup." : "Next: tap Start route on the map.")
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
@@ -662,22 +663,24 @@ struct RoutePlannerSheet: View {
 
     private func showRoute() {
         guard canShowRoute else { return }
+        // Validate the complete plan before saving a Library-created route.
+        guard planner.prepareSelectedRoute(mode: displayMode, speedMPH: displaySpeed, smoothMovement: displaySmooth) else { return }
         if planner.savesToLibraryOnCompletion, let route {
             guard library.save(route: route, name: route.name, mode: displayMode,
                 speed: displaySpeed, smooth: displaySmooth, arrival: planner.draftArrival,
                 favorite: false, replacingID: planner.editingTripID) else {
-                planner.error = library.error; return
+                planner.error = library.error
+                planner.discardPreparedRoute()
+                return
             }
-            planner.editingTripID = library.lastSavedID
+            if let id = library.lastSavedID { planner.rememberSavedTrip(id, routeID: route.id) }
             planner.savesToLibraryOnCompletion = false
         }
-        if planner.prepareSelectedRoute(mode: displayMode, speedMPH: displaySpeed, smoothMovement: displaySmooth) {
-            if let onPrepared, let prepared = planner.preparedRoute {
-                onPrepared(prepared); dismiss(); return
-            }
-            if !nextRouteMode { planner.rememberDraft(in: session) }
-            dismiss()
+        if let onPrepared, let prepared = planner.preparedRoute {
+            onPrepared(prepared); dismiss(); return
         }
+        if !nextRouteMode { planner.rememberDraft(in: session) }
+        dismiss()
     }
 
     private func applyPendingSectionChoice() {

@@ -1,8 +1,8 @@
 # Elsepin app map
 
 Current status: [handoff](CURRENT-WORK.md) and [build history](BUILD-HISTORY.md).
-Build 77 is the latest privately validated and delivered feedback update.
-See CURRENT-WORK for its exact source/build evidence and pending phone acceptance.
+See CURRENT-WORK for the latest exact source/build evidence and pending phone
+acceptance; do not infer delivery from a version change alone.
 Historical cleanup: [review](CLEANUP-AND-ORBS-REVIEW.md) and [native progress](NATIVE-PROGRESS.md).
 
 Annotation safety: `SavedPinMapIcon` takes explicit presentation values; do not
@@ -45,6 +45,12 @@ Locus identifiers as safe search-and-replace targets.
 
 | Area | Main owners | Responsibilities |
 | --- | --- | --- |
+| Area edit history / larger maps (79) | `Shared/AreaCornerHistory.swift`, `NamedAreasView.swift`, `PinEditor.swift` | Redo is draft-only; new corner edits clear it. Expanded editors share draft/camera state and unmount their embedded maps. Preserve overlap checks and Cancel/Save boundaries. |
+| Pin enrichment / appearance (79) | `PinLocationLookup.swift`, `PinEditor.swift`, `PinAppearance.swift`, `SavedPlace.swift`, `LibraryBackup.swift`, `SavedPinMapIcon.swift` | Bounded, cancellable lookup only on pin selection; reject stale selection/workspace results. Names and addresses never move a pin. Preserve optional backup fields and explicit annotation presentation values. |
+| Route save/favorite identity (79) | `MapFavoriteButton.swift`, `RoutePlanner.rememberSavedTrip`, `SpoofSession.activeSavedTripID`, `RootView.PreparedRouteControls`, `TripLibrary.swift` | Star uses the existing library ID; first save offers favorite or plain save. Library-origin plans save on preview. Recovery retains the linked ID; unfavorite never deletes. |
+| One next route (79) | `NextRouteEditor.swift`, `NextRoutePlan.swift`, `NextRouteTiming.swift`, `RoutePlannerSheet.swift`, `SpoofSession.swift`, `TripViews.swift` | Independent planner; validate actual path endpoint. Automatic permission is explicit, one-shot and memory-only. Stop/interruption cancels it. Never serialize automatic-start authority or add recursive plans. |
+| Bulk-selection geometry (79) | `RecentlyDeletedView.swift`, `SelectionRowHitTest.swift`, `DeletedItemsSelectionSweep.swift` | Finger and row frames use global coordinates; containment before nearest-edge gap selection. Retain reversible sweep, native scrolling and confirmation. |
+| Connection freshness (79) | `ConnectionProbePolicy.swift`, `LocationEngine.swift`, `SpoofSession.becameActive` | Continuous writes reuse liveness for at most the selected 3-10 second interval. Explicit commands always check freshly. Foreground invalidation does not tear down a working transport. |
 | Planner interaction (74) | `RouteLegPathPolicy`, `RoutePlannerSheet`, `RouteStopSearchSheet`, `ShiftEditorContainer` | Explicit keep/recalculate; arrival/naming beside endpoints; full-map confirmation before rebuilding; preserve native edge-pop. |
 | Leg movement / staged route / recents (73) | `Shared/RouteLegEditing.swift`, `RoutePlanner.swift`, `RoutePlannerSheet.swift`, `MapHomeView.swift`, `SpoofSession.swift`, `RoutePlaceSearchSheet.swift` | Incoming-stop intervals preserve other speeds; exact paths remain exact. MapPinPlacement rejects taps while staged/active. Stable history IDs retain the newest valid draft under existing privacy retention. Selecting a recent route only opens the editor. |
 | Resource pressure / preview cache (73) | `ResourceUsageEnvironment.swift`, `DisplayEnergyPolicy.swift`, `ElsepinProgressLabel.swift`, `RoutePlannerSheet.swift` | iOS 27 hint only affects discretionary visuals. Never use it to change location-write or Stop timing. Preview line cache assumes route ID changes with geometry. See ENERGY-REVIEW. |

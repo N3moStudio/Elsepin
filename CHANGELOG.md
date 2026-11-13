@@ -1,19 +1,50 @@
 # Elsepin changelog
 
-Updated through **8 November 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
+Updated through **12 November 2026** (America/Los_Angeles). Elsepin 2.6.0 (59)
 is the official release. Earlier Shift entries retain their original names and release status.
 
 [App introduction](README.md) · [Build history](docs/BUILD-HISTORY.md) · [Detailed Change Ledger](docs/CHANGE-LEDGER.md)
 
-## Unreleased local interaction fixes (12 November 2026)
+## Build 79 - library, pin and route refinements (unpublished test build)
+
+- Add Redo corner beside Undo, preserving existing Undo behavior. New edits clear
+  Redo; saving or reopening never restores an old edit stack.
+- Give pin and area editors taller maps and a full-screen option with search.
+  Only one editor map is mounted at a time, and previewing never teleports.
+- Keep pin Save disabled until a location and a nonblank name are selected.
+  Suggest a place/address for dropped pins without moving the coordinates or
+  replacing a custom name. Nearby landmarks are labeled "Near" when appropriate.
+- Add one native emoji per pin, retaining normal emoji variants, and distinguish
+  Follow theme from fixed pin colors. Optional address/emoji fields retain old
+  backup compatibility. Recents show resolved names and compact address details.
+- Link the map's route star to the existing saved route, including routes reopened
+  from Recents. An unsaved route offers Save to Library or Save & Favorite;
+  unfavoriting retains the route. Routes created from Library save on preview.
+- Give the compact map tray more consistent internal spacing in both single-
+  and two-action states. Keep explicit Teleport and Stop controls.
+- Align Recently Deleted drag selection with the finger using consistent screen
+  coordinates and actual row edges, including differently sized rows.
+- Respect shorter connection-check intervals and invalidate cached liveness on
+  foreground entry. Explicit movement and Stop retain their fresh checks;
+  accepted writes still do not prove another app received a location.
+- Optionally plan one next route from the first route's endpoint, to its start or
+  another destination, with a wait and an explicit automatic-start toggle (off
+  by default). Stop, connection interruption, relaunch and stale timing revoke
+  automatic continuation; it is not saved in backups or restored sessions.
+
+Native test/build evidence and phone acceptance are tracked in
+[build history](docs/BUILD-HISTORY.md) and [current work](docs/CURRENT-WORK.md).
+No release published.
+
+## Build 78 - interaction fixes (12 November 2026)
 
 - Show saved-pin names during active/prepared routes without moving the destination.
 - Remove redundant collapse from dropped-pin and held-location trays.
 - Keep route smoothing out of joystick controls; clarify stick-controlled speed.
 - Make arrival an explicit menu and separate Add stop search from exact-path pauses.
 - Confirm recalculation before replacing saved/drawn geometry; preserve live-edit Hold.
-- Local resource/identity/appearance checks passed. Native build and phone checks
-  pending; no new IPA or release. Full scope and evidence are in the current handoff.
+- GitHub run 43348423568 passed 653 checks and native compilation without compiler
+  warnings/errors. Test IPA delivered; no release. Phone evidence remains separate.
 
 ## Build 77 - saved-pin annotation crash fix (8 November 2026)
 

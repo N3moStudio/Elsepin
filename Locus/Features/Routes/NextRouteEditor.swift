@@ -70,7 +70,7 @@ struct NextRouteEditor: View {
                     showSearch = false
                 }
             }
-            .sheet(isPresented: $showPlanner) {
+            .sheet(isPresented: $showPlanner, onDismiss: { nextPlanner.cancel() }) {
                 RoutePlannerSheet(nextRouteMode: true, onPrepared: { prepared in
                     chosen = prepared; showPlanner = false
                 }).environmentObject(nextPlanner)
@@ -78,6 +78,7 @@ struct NextRouteEditor: View {
         }
     }
     private func plan(to place: RoutePlace) {
+        error = nil
         nextPlanner.setOrigin(startingPlace, mode: nextPlanner.draftMode)
         nextPlanner.plan(to: place, defaultOrigin: startingPlace, mode: nextPlanner.draftMode)
         showPlanner = true

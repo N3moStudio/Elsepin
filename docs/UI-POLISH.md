@@ -3,6 +3,22 @@
 Read this before applying new design skills or continuing the video-inspired
 polish. Current implementation and device evidence are in [CURRENT-WORK](CURRENT-WORK.md).
 
+## Build 79 refinements
+
+- Keep the compact tray, but share header/action/footer spacing between one- and
+  two-button states. Do not restore collapse on a plain pin/held-location card.
+- Pin/area editors use taller maps and a full-screen expansion with search. Keep
+  the same draft and camera, unmount the hidden map, and leave Save/Cancel explicit.
+- Pin names are persistent only when saved; a dropped-pin lookup is a label hint.
+  Preserve user names. Show addresses as secondary text and retain exact coordinates.
+- Route stars first offer plain Save or Save & Favorite. Once saved, star toggles
+  favorite status on the same record; it must not duplicate or delete the route.
+- Next-route planning is optional and separate from the first route's draft.
+  Its inner confirmation returns to setup; it must not imply movement has begun.
+- Recently Deleted selection uses the same screen coordinates for finger and rows.
+  Check dragging in both directions after scrolling on a phone. Geometry tests do
+  not establish native gesture acceptance.
+
 ## Build 75 feedback follow-up (privately compiled; device checks pending)
 
 - A route label does not add a saved map pin. Say so in its editor; saved/recent

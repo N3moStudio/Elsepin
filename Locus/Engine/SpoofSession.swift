@@ -816,6 +816,7 @@ final class SpoofSession: ObservableObject {
                     } else if let state = self.journey?.state, [.moving, .waiting, .paused, .pausing, .seeking].contains(state) {
                         self.journey?.state = .interrupted
                     }
+                    if self.journey?.state != .arrived { self.cancelNextRoute() }
                     self.publishActivity(force: true)
                     if self.journey?.state == .arrived {
                         self.scheduleNextRoute(after: plan.id, pairing: pairing)
@@ -1248,6 +1249,16 @@ final class SpoofSession: ObservableObject {
             do { try await Task.sleep(nanoseconds: UInt64(next.waitSeconds * 1_000_000_000)) }
             catch { return }
             guard let self, !Task.isCancelled, self.epoch == ticket, self.nextRoutePlan != nil else { return }
+            // A held-location heartbeat can already own the native write slot
+            // at the deadline. Await its signal instead of treating that normal
+            // overlap as connection loss, while retaining the bounded deadline.
+            while self.sendInFlight {
+                let remaining = due + 30 - ProcessInfo.processInfo.systemUptime
+                guard remaining > 0 else { break }
+                let revision = self.routeConnection.revision
+                await self.routeConnection.wait(after: revision, timeout: remaining)
+                guard !Task.isCancelled, self.epoch == ticket, self.nextRoutePlan != nil else { return }
+            }
             let atOrigin = self.simulated.map {
                 RoutePoint($0).distance(to: RoutePoint(next.route.origin.coordinate)) <= 5
             } ?? false
@@ -1915,12 +1926,14 @@ final class SpoofSession: ObservableObject {
         rememberPlaceName(name, at: coordinate)
         guard preferences.saveRecentLocations else { return }
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let place = SavedPlace(
+        var place = SavedPlace(
             name: trimmed.isEmpty ? "Saved place" : trimmed,
             latitude: coordinate.latitude,
             longitude: coordinate.longitude,
             visitedAt: Date()
         )
+        place.address = savedPin(at: coordinate)?.address ??
+            (pin.map { RoutePoint($0) == RoutePoint(coordinate) } == true ? selectedPinAddress : nil)
         recents.removeAll {
             abs($0.latitude - place.latitude) < 0.00015 && abs($0.longitude - place.longitude) < 0.00015
         }
